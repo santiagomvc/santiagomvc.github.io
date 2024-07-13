@@ -2,16 +2,16 @@ project:
   type: website
 
 website:
-  title: "smvc notes"
+  title: "SMVC Notes"
   site-url: https://santiagomvc.github.io
   description: "Helpful notes for the Data Science and Machine Learning practice"
   navbar:
     right:
       - about.qmd
       - icon: github
-        href: https://github.com/
-      - icon: twitter
-        href: https://twitter.com
+        href: https://github.com/santiagomvc/
+      - icon: linkedin
+        href: https://www.linkedin.com/in/santiago-velez/
 format:
   html:
     theme: cosmo

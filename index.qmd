@@ -1,5 +1,5 @@
 ---
-title: "smvc notes"
+title: "SMVC Notes"
 listing:
   contents: posts
   sort: "date desc"

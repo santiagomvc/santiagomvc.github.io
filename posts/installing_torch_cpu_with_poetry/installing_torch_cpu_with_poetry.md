@@ -1,0 +1,94 @@
+# How to install Torch CPU in Poetry
+
+## *It sucks, at least for now*
+
+Having a working poetry environment that installs only cpu supported versions of torch is a good way to reduce the size of your docker container and speed up deployments. The following is a rough solution that seems to work (locally on Mac and Docker container) and could be used while torch and poetry solve their compatibility issues.
+
+Inside your regular `pyproject.toml` file, include in `[tool.poetry.dependencies]` the following `torch` definition:
+
+``` python
+torch = [
+     {url="https://download.pytorch.org/whl/cpu/torch-2.0.0%2Bcpu-cp39-cp39-linux_x86_64.whl", markers="platform_system == \"Linux\""},
+     {url="https://download.pytorch.org/whl/cpu/torch-2.0.0-cp39-none-macosx_10_9_x86_64.whl", markers="platform_system == \"Darwin\" and platform_machine == \"x86_64\""},
+     {url="https://download.pytorch.org/whl/cpu/torch-2.0.0-cp39-none-macosx_11_0_arm64.whl", markers="platform_system == \"Darwin\" and platform_machine == \"arm64\""}
+ ]
+```
+
+Why is such an ugly solution required? Here are some apparent torch-poetry compatibility issues:
+
+* `poetry install torch==2.0.1` omits required gpu drivers for linux, which makes the container small but unusable [Pytorch 2.0.1 pypi wheel does not install dependent cuda libraries pytorch/pytorch#100974](https://github.com/pytorch/pytorch/issues/100974).
+* pip and poetry install by default torch-cpu in mac and torch-gpu in linux . When specifying [https://download.pytorch.org/whl/cpu](https://download.pytorch.org/whl/cpu) as package source to install torch-cpu-linux, Poetry is unable to find a torch-cpu-mac version to use (Does not find a `*+cpu` version for mac). [poetry add with --index-url option python-poetry/poetry#7685](https://github.com/python-poetry/poetry/issues/7685), [Instructions for installing PyTorch python-poetry/poetry#6409 (comment)](https://github.com/python-poetry/poetry/issues/6409#issue-1361622121).
+* poetry may have issues dynamically selecting python wheels based on platforms (doesn't happen if you use the wheel link) [Install wheel based on platform python-poetry/poetry#1616](https://github.com/python-poetry/poetry/issues/1616).
+
+Here are some (so far) unsuccessful attempts to find a more elegant solution:
+
+Attempt 1:
+
+```python
+[tool.poetry.dependencies]
+torch = { version = "2.0.0", source="torch"}
+
+[[tool.poetry.source]]
+name = "torch"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit" or "suplemental"
+```
+
+Attempt 2:
+
+```python
+[tool.poetry.dependencies]
+torch = [
+     {version = "^2.0.0", platform = "darwin"},
+     {version = "^2.0.0", platform = "linux", source = "torch"},
+     {version = "^2.0.0", platform = "win32", source = "torch"},
+]
+
+[[tool.poetry.source]]
+name = "torch"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+```
+
+Attempt 3:
+
+```python
+[[tool.poetry.source]]
+name = "torch_cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "supplemental"
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[tool.poetry.dependencies]
+torch = { version = ">=2.0.0, !=2.0.1", source="torch_cpu" }
+```
+
+Attempt 4:
+
+```python
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "linux_cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "supplemental"
+
+[tool.poetry.group.linux_cpu]
+optional = true
+
+[tool.poetry.group.linux_cpu.dependencies]
+torch = { version = ">=2.0.0, !=2.0.1", source="linux_cpu"}
+
+[tool.poetry.group.darwin_cpu]
+optional = true
+
+[tool.poetry.group.darwin_cpu.dependencies]
+torch = { version = ">=2.0.0, !=2.0.1"}
+```
+
+In most attempts, the error was around the inability to find a torch-cpu-mac version to install when the [https://download.pytorch.org/whl/cpu](https://download.pytorch.org/whl/cpu) repo was included.

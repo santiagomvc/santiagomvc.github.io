@@ -9,7 +9,7 @@ about:
       href: https://www.linkedin.com/in/santiago-velez/
     - icon: github
       text: Github
-      href: https://github.com/santiagomvc
+      href: https://github.com/santiagomvc/
 
 ---
 
