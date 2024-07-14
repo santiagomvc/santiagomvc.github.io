@@ -5,54 +5,1489 @@
       xmlns:dc="http://purl.org/dc/elements/1.1/" 
       version="2.0">
 <channel>
-<title>smvc notes</title>
+<title>SMVC Notes</title>
 <link>https://santiagomvc.github.io/</link>
 <atom:link href="https://santiagomvc.github.io/index.xml" rel="self" type="application/rss+xml"/>
-<description>Helpful notes for the Data Science and Machine Learning practice</description>
+<description>Notes from building Machine Learning solutions in the wild</description>
 <generator>quarto-1.4.550</generator>
-<lastBuildDate>Fri, 05 Jul 2024 05:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 14 Jul 2024 05:00:00 GMT</lastBuildDate>
 <item>
-  <title>Post With Code</title>
-  <dc:creator>Harlow Malloc</dc:creator>
-  <link>https://santiagomvc.github.io/posts/post-with-code/</link>
+  <title>Applied Intro to Search Algorithms</title>
+  <dc:creator>Santiago Velez</dc:creator>
+  <link>https://santiagomvc.github.io/posts/intro_to_search_algorithms/intro_to_search_algorithms.html</link>
   <description><![CDATA[ 
 
 
 
 
 
-<p>This is a post with executable code.</p>
+<p>You can run the following code on Google Colab clicking here.</p>
+<p><a target="_blank" href="https://colab.research.google.com/github/santiagomvc/search_methods_intro/blob/main/search_methods.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"> </a></p>
+<section id="install-required-libraries" class="level3">
+<h3 class="anchored" data-anchor-id="install-required-libraries">Install required libraries</h3>
+<p>Tested with python 3.10.1</p>
+<div id="cell-3" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!</span>pip install numpy panda torch langchain<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>text<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>splitters sentence<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>transformers rank_bm25 faiss<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>cpu ranx ragatouille<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span><span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.0.8</span> llama<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>index<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span><span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.9.48</span></span></code></pre></div>
+</div>
+</section>
+<section id="import-libraries" class="level3">
+<h3 class="anchored" data-anchor-id="import-libraries">Import libraries</h3>
+<div id="cell-5" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> pd</span>
+<span id="cb2-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> langchain_text_splitters <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> RecursiveCharacterTextSplitter</span>
+<span id="cb2-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sentence_transformers <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> SentenceTransformer</span>
+<span id="cb2-4"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> faiss</span>
+<span id="cb2-5"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> ragatouille <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> RAGPretrainedModel</span>
+<span id="cb2-6"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> rank_bm25 <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> BM25Okapi</span>
+<span id="cb2-7"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> ranx <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> Qrels, Run, fuse, evaluate</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/threadpoolctl.py:1214: RuntimeWarning: 
+Found Intel OpenMP ('libiomp') and LLVM OpenMP ('libomp') loaded at
+the same time. Both libraries are known to be incompatible and this
+can cause random crashes or deadlocks on Linux when loaded in the
+same Python program.
+Using threadpoolctl may cause crashes or deadlocks. For more
+information and possible workarounds, please see
+    https://github.com/joblib/threadpoolctl/blob/master/multiple_openmp.md
+
+  warnings.warn(msg, RuntimeWarning)</code></pre>
+</div>
+</div>
+</section>
+<section id="define-utility-functions" class="level3">
+<h3 class="anchored" data-anchor-id="define-utility-functions">Define utility functions</h3>
+<p>We define a simple text processing function. Possible improvements include tokenization, stemming, stopword removal, etc.</p>
+<div id="cell-7" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> text_preprocess(text):</span>
+<span id="cb4-2">    text <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> text.lower()</span>
+<span id="cb4-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> text</span></code></pre></div>
+</div>
+<div id="cell-8" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> build_run(results_df, doc_id_col<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_id"</span>):</span>
+<span id="cb5-2">    run_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> results_df.copy()</span>
+<span id="cb5-3">    run <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> Run.from_df(</span>
+<span id="cb5-4">        df<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>run_df,</span>
+<span id="cb5-5">        q_id_col<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"query_id"</span>,</span>
+<span id="cb5-6">        doc_id_col<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>doc_id_col,</span>
+<span id="cb5-7">        score_col<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>,</span>
+<span id="cb5-8">    )</span>
+<span id="cb5-9">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> run</span></code></pre></div>
+</div>
+</section>
+<section id="prepare-data" class="level3">
+<h3 class="anchored" data-anchor-id="prepare-data">Prepare data</h3>
+<section id="load-data" class="level4">
+<h4 class="anchored" data-anchor-id="load-data">Load data</h4>
+<div id="cell-11" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">texts_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.read_csv(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://raw.githubusercontent.com/santiagomvc/search_methods_intro/main/data/texts.csv"</span>)</span>
+<span id="cb6-2">queries_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.read_csv(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://raw.githubusercontent.com/santiagomvc/search_methods_intro/main/data/queries.csv"</span>)</span></code></pre></div>
+</div>
+</section>
+<section id="chunking-configuration" class="level4">
+<h4 class="anchored" data-anchor-id="chunking-configuration">Chunking configuration</h4>
+<div id="cell-13" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">text_splitter <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> RecursiveCharacterTextSplitter(</span>
+<span id="cb7-2">    chunk_size<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">256</span>,</span>
+<span id="cb7-3">    chunk_overlap<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">64</span>,</span>
+<span id="cb7-4">    length_function<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>,</span>
+<span id="cb7-5">    is_separator_regex<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>,</span>
+<span id="cb7-6">)</span></code></pre></div>
+</div>
+</section>
+<section id="split-data-and-process-chunks" class="level4">
+<h4 class="anchored" data-anchor-id="split-data-and-process-chunks">Split data and process chunks</h4>
+<div id="cell-15" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">doc_ids <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> []</span>
+<span id="cb8-2">chunk_ids <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> []</span>
+<span id="cb8-3">chunk_texts <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> []</span>
+<span id="cb8-4"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> _, row <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> texts_df.iterrows():</span>
+<span id="cb8-5">    doc_id <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>(row[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>])</span>
+<span id="cb8-6">    doc_chunk_texts <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> text_splitter.split_text(row[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_text"</span>])</span>
+<span id="cb8-7">    n_chunk_texts <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(doc_chunk_texts)</span>
+<span id="cb8-8">    doc_chunk_ids <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>doc_id<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">-</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>(i)<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> i <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">range</span>(n_chunk_texts)]</span>
+<span id="cb8-9">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># basic text processing</span></span>
+<span id="cb8-10">    doc_chunk_texts <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [text_preprocess(chunk) <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> chunk <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> doc_chunk_texts]</span>
+<span id="cb8-11">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># save results</span></span>
+<span id="cb8-12">    doc_ids.extend([doc_id] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> n_chunk_texts)</span>
+<span id="cb8-13">    chunk_ids.extend(doc_chunk_ids)</span>
+<span id="cb8-14">    chunk_texts.extend(doc_chunk_texts)</span></code></pre></div>
+</div>
+</section>
+<section id="save-results-as-df" class="level4">
+<h4 class="anchored" data-anchor-id="save-results-as-df">Save results as df</h4>
+<div id="cell-17" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1">chunks_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.DataFrame({</span>
+<span id="cb9-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>: doc_ids,</span>
+<span id="cb9-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_id"</span>: chunk_ids,</span>
+<span id="cb9-4">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_text"</span>: chunk_texts,</span>
+<span id="cb9-5">})</span></code></pre></div>
+</div>
+</section>
+</section>
+<section id="indexing-data" class="level3">
+<h3 class="anchored" data-anchor-id="indexing-data">Indexing data</h3>
+<section id="bm25" class="level4">
+<h4 class="anchored" data-anchor-id="bm25">BM25</h4>
+<div id="cell-20" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1">bm_25_tokenized_corpus <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [chunk.split(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" "</span>) <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> chunk <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> chunk_texts]</span>
+<span id="cb10-2">bm25_index <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> BM25Okapi(bm_25_tokenized_corpus)</span></code></pre></div>
+</div>
+</section>
+<section id="sentence-transformers-faiss-index" class="level4">
+<h4 class="anchored" data-anchor-id="sentence-transformers-faiss-index">Sentence Transformers + Faiss Index</h4>
+<div id="cell-22" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">sentsim_model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> SentenceTransformer(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"all-mpnet-base-v2"</span>)</span>
+<span id="cb11-2">sentsim_embeddings <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sentsim_model.encode(chunk_texts)</span>
+<span id="cb11-3">sentsim_embedding_size <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sentsim_embeddings.shape[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]</span>
+<span id="cb11-4">sentsim_index <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> faiss.IndexFlatL2(sentsim_embedding_size)</span>
+<span id="cb11-5">sentsim_index.add(sentsim_embeddings)</span></code></pre></div>
+</div>
+</section>
+<section id="colbert-ragatuille" class="level4">
+<h4 class="anchored" data-anchor-id="colbert-ragatuille">Colbert + RAGatuille</h4>
+<div id="cell-24" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">__name__</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"__main__"</span>:   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Required so ragatouille runs safely</span></span>
+<span id="cb12-2">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">try</span>:</span>
+<span id="cb12-3">        colbert_index <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> RAGPretrainedModel.from_index(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">".ragatouille/colbert/indexes/index"</span>)</span>
+<span id="cb12-4">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">except</span>:</span>
+<span id="cb12-5">        colbert_index <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> RAGPretrainedModel.from_pretrained(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"colbert-ir/colbertv2.0"</span>)</span>
+<span id="cb12-6">        colbert_index.index(</span>
+<span id="cb12-7">            index_name<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"index"</span>, </span>
+<span id="cb12-8">            collection<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>chunk_texts, </span>
+<span id="cb12-9">            document_ids<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>chunk_ids, </span>
+<span id="cb12-10">            use_faiss<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>,</span>
+<span id="cb12-11">            max_document_length<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1024</span>,</span>
+<span id="cb12-12">            split_documents<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>,</span>
+<span id="cb12-13">        )</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[Jul 02, 18:29:22] Loading segmented_maxsim_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/cuda/amp/grad_scaler.py:126: UserWarning: torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.
+  warnings.warn(</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="search-functions" class="level3">
+<h3 class="anchored" data-anchor-id="search-functions">Search Functions</h3>
+<section id="bm25-1" class="level4">
+<h4 class="anchored" data-anchor-id="bm25-1">BM25</h4>
+<div id="cell-27" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> bm25_search(query_text, bm25_index<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>bm25_index, chunks_df<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>chunks_df):</span>
+<span id="cb15-2">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Preprocess query same as docs</span></span>
+<span id="cb15-3">    query_text <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> text_preprocess(query_text)</span>
+<span id="cb15-4">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Transform query</span></span>
+<span id="cb15-5">    tokenized_query <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> query_text.split(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" "</span>)</span>
+<span id="cb15-6">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Search with bm25 index</span></span>
+<span id="cb15-7">    doc_scores <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> bm25_index.get_scores(tokenized_query)</span>
+<span id="cb15-8">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Format as dataframe</span></span>
+<span id="cb15-9">    bm25_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> chunks_df.copy()</span>
+<span id="cb15-10">    bm25_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> doc_scores</span>
+<span id="cb15-11">    bm25_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> bm25_df.loc[bm25_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]</span>
+<span id="cb15-12">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Drop to get docs, no chunks</span></span>
+<span id="cb15-13">    bm25_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> bm25_df.sort_values(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>, ascending<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span>
+<span id="cb15-14">    bm25_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> bm25_df.drop_duplicates(subset<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>], keep<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"first"</span>)</span>
+<span id="cb15-15">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Return results</span></span>
+<span id="cb15-16">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> bm25_df</span></code></pre></div>
+</div>
+</section>
+<section id="single-vector-sentece-similarity" class="level4">
+<h4 class="anchored" data-anchor-id="single-vector-sentece-similarity">Single Vector Sentece Similarity</h4>
+<div id="cell-29" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> sentsim_search(query_text, sentsim_model<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>sentsim_model, sentsim_index<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>sentsim_index, chunks_df<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>chunks_df, k<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>):</span>
+<span id="cb16-2">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Preprocess query same as docs</span></span>
+<span id="cb16-3">    query_text <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> text_preprocess(query_text)</span>
+<span id="cb16-4">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Encode query</span></span>
+<span id="cb16-5">    sentsim_query_emb <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sentsim_model.encode(query_text).reshape(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>,<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb16-6">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Search with embedding</span></span>
+<span id="cb16-7">    D, I <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sentsim_index.search(sentsim_query_emb, k)</span>
+<span id="cb16-8">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Format as dataframe</span></span>
+<span id="cb16-9">    sentsim_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> chunks_df.copy()</span>
+<span id="cb16-10">    sentsim_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sentsim_df.loc[I[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]]</span>
+<span id="cb16-11">    sentsim_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> D[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>].astype(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">float</span>)</span>
+<span id="cb16-12">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Drop to get docs, no chunks</span></span>
+<span id="cb16-13">    sentsim_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sentsim_df.sort_values(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>, ascending<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span>
+<span id="cb16-14">    sentsim_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sentsim_df.drop_duplicates(subset<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>], keep<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"first"</span>)</span>
+<span id="cb16-15">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> sentsim_df</span></code></pre></div>
+</div>
+</section>
+<section id="colbert" class="level4">
+<h4 class="anchored" data-anchor-id="colbert">Colbert</h4>
+<div id="cell-31" class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> colbert_search(query_text, colbert_index<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>colbert_index, chunks_df<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>chunks_df, k<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>):</span>
+<span id="cb17-2">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Preprocess query same as docs</span></span>
+<span id="cb17-3">    query_text <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> text_preprocess(query_text)</span>
+<span id="cb17-4">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Run query</span></span>
+<span id="cb17-5">    colbert_results <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> colbert_index.search(query_text, k<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>k)</span>
+<span id="cb17-6">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Save results as a df</span></span>
+<span id="cb17-7">    colbert_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.DataFrame(colbert_results)</span>
+<span id="cb17-8">    colbert_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> colbert_df.rename({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"document_id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_id"</span>}, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb17-9">    colbert_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> colbert_df.merge(chunks_df, how<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"left"</span>, on<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_id"</span>)</span>
+<span id="cb17-10">    colbert_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> colbert_df[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_text"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>]]</span>
+<span id="cb17-11">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Drop to get docs, no chunks</span></span>
+<span id="cb17-12">    colbert_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> colbert_df.sort_values(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>, ascending<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span>
+<span id="cb17-13">    colbert_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> colbert_df.drop_duplicates(subset<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>], keep<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"first"</span>)</span>
+<span id="cb17-14">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> colbert_df</span></code></pre></div>
+</div>
+</section>
+<section id="rank-fusion-min-max-norm-combmax-fusion" class="level4">
+<h4 class="anchored" data-anchor-id="rank-fusion-min-max-norm-combmax-fusion">Rank Fusion (Min-Max Norm, CombMAX fusion)</h4>
+<div id="cell-33" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> combined_search(query_text, fusion_norm<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"min-max"</span>, fusion_method<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"max"</span>, chunks_df<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>chunks_df):</span>
+<span id="cb18-2">    runs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> []</span>
+<span id="cb18-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> search_fun <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> [bm25_search, sentsim_search, colbert_search]:</span>
+<span id="cb18-4">        <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Save results in Run format</span></span>
+<span id="cb18-5">        run_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> search_fun(query_text)</span>
+<span id="cb18-6">        run_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"query_id"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"0"</span>   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># query id is required for the run</span></span>
+<span id="cb18-7">        <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># run_df["chunk_id"] = run_df["chunk_id"].astype(str)</span></span>
+<span id="cb18-8">        run <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> build_run(run_df)</span>
+<span id="cb18-9">        runs.append(run)</span>
+<span id="cb18-10">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">## Combining runs</span></span>
+<span id="cb18-11">    combined_run <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> fuse(</span>
+<span id="cb18-12">        runs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>runs,</span>
+<span id="cb18-13">        norm<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>fusion_norm,</span>
+<span id="cb18-14">        method<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>fusion_method,</span>
+<span id="cb18-15">    )</span>
+<span id="cb18-16">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">## Saving as dataframe</span></span>
+<span id="cb18-17">    combined_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> combined_run.to_dataframe()</span>
+<span id="cb18-18">    combined_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> combined_df.drop(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"q_id"</span>, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb18-19">    combined_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> combined_df.rename({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_id"</span>}, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb18-20">    combined_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> combined_df.merge(chunks_df, how<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"left"</span>, on<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_id"</span>)</span>
+<span id="cb18-21">    combined_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> combined_df[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chunk_text"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>]]</span>
+<span id="cb18-22">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Drop to get docs, no chunks</span></span>
+<span id="cb18-23">    combined_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> combined_df.sort_values(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>, ascending<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span>
+<span id="cb18-24">    combined_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> combined_df.drop_duplicates(subset<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>], keep<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"first"</span>)</span>
+<span id="cb18-25">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">## Return similar format to other responses</span></span>
+<span id="cb18-26">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> combined_df</span></code></pre></div>
+</div>
+</section>
+<section id="global-search-function" class="level4">
+<h4 class="anchored" data-anchor-id="global-search-function">Global Search Function</h4>
+<div id="cell-35" class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> search(query_text, mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"bm25"</span>):</span>
+<span id="cb19-2">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"bm25"</span>:</span>
+<span id="cb19-3">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> bm25_search(query_text)</span>
+<span id="cb19-4">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">elif</span> mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sentsim"</span>:</span>
+<span id="cb19-5">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> sentsim_search(query_text)</span>
+<span id="cb19-6">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">elif</span> mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"colbert"</span>:</span>
+<span id="cb19-7">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> colbert_search(query_text)</span>
+<span id="cb19-8">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">elif</span> mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"combined"</span>:</span>
+<span id="cb19-9">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> combined_search(query_text)</span></code></pre></div>
+</div>
+</section>
+</section>
+<section id="evaluates-search-with-labeled-queries" class="level3">
+<h3 class="anchored" data-anchor-id="evaluates-search-with-labeled-queries">Evaluates search with labeled queries</h3>
+<section id="evaluation-function" class="level4">
+<h4 class="anchored" data-anchor-id="evaluation-function">Evaluation function</h4>
+<div id="cell-38" class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> evaluate_search(mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"bm25"</span>, queries_df<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>queries_df):</span>
+<span id="cb20-2">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Preprocess df</span></span>
+<span id="cb20-3">    queries_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"query_id"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> queries_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"query_id"</span>].astype(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>)</span>
+<span id="cb20-4">    queries_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> queries_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>].astype(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>)</span>
+<span id="cb20-5">    queries_df.loc[queries_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Replace all positive scores with 1</span></span>
+<span id="cb20-6">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Create Qrel for evaluation</span></span>
+<span id="cb20-7">    qrels <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> Qrels.from_df(</span>
+<span id="cb20-8">        df<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>queries_df,</span>
+<span id="cb20-9">        q_id_col<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"query_id"</span>,</span>
+<span id="cb20-10">        doc_id_col<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>,</span>
+<span id="cb20-11">        score_col<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"score"</span>,</span>
+<span id="cb20-12">    )</span>
+<span id="cb20-13"></span>
+<span id="cb20-14">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Get search responses</span></span>
+<span id="cb20-15">    unique_queries_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> queries_df[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"query_id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"query_text"</span>]].drop_duplicates()</span>
+<span id="cb20-16">    unique_queries_list <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> unique_queries_df.values.tolist()</span>
+<span id="cb20-17">    responses_list <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> []</span>
+<span id="cb20-18">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> query_id, query_text <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> unique_queries_list:</span>
+<span id="cb20-19">        response_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> search(query_text, mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>mode)</span>
+<span id="cb20-20">        response_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"query_id"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> query_id</span>
+<span id="cb20-21">        responses_list.append(response_df)</span>
+<span id="cb20-22"></span>
+<span id="cb20-23">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Build run dataframe</span></span>
+<span id="cb20-24">    run_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.concat(responses_list)</span>
+<span id="cb20-25">    run_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> run_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>].astype(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>)</span>
+<span id="cb20-26">    run <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> build_run(run_df, doc_id_col<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"doc_id"</span>)</span>
+<span id="cb20-27"></span>
+<span id="cb20-28">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">## Evaluate run</span></span>
+<span id="cb20-29">    metrics <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> evaluate(qrels, run, [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"f1"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"mrr"</span>])</span>
+<span id="cb20-30">    <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(mode, metrics)</span></code></pre></div>
+</div>
+</section>
+<section id="evaluate-bm25" class="level4">
+<h4 class="anchored" data-anchor-id="evaluate-bm25">Evaluate BM25</h4>
+<div id="cell-40" class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"bm25"</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>bm25 {'f1': 0.6981481481481481, 'mrr': 0.9166666666666666}</code></pre>
+</div>
+</div>
+</section>
+<section id="evaluate-single-vector-sentence-similarity" class="level4">
+<h4 class="anchored" data-anchor-id="evaluate-single-vector-sentence-similarity">Evaluate Single Vector Sentence Similarity</h4>
+<div id="cell-42" class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sentsim"</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>sentsim {'f1': 0.6555555555555556, 'mrr': 0.8888888888888888}</code></pre>
+</div>
+</div>
+</section>
+<section id="evaluate-colbert" class="level4">
+<h4 class="anchored" data-anchor-id="evaluate-colbert">Evaluate Colbert</h4>
+<div id="cell-44" class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"colbert"</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Loading searcher for index index for the first time... This may take a few seconds
+[Jul 02, 18:29:35] #&gt; Loading codec...
+[Jul 02, 18:29:35] #&gt; Loading IVF...
+[Jul 02, 18:29:35] Loading segmented_lookup_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...
+[Jul 02, 18:29:36] #&gt; Loading doclens...
+[Jul 02, 18:29:36] #&gt; Loading codes and residuals...
+[Jul 02, 18:29:36] Loading filter_pids_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...
+[Jul 02, 18:29:36] Loading decompress_residuals_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...
+Searcher loaded!
+
+#&gt; QueryTokenizer.tensorize(batch_text[0], batch_background[0], bsize) ==
+#&gt; Input: . juneteenth,          True,       None
+#&gt; Output IDs: torch.Size([32]), tensor([  101,     1,  2238, 17389,  3372,  2232,   102,   103,   103,   103,
+          103,   103,   103,   103,   103,   103,   103,   103,   103,   103,
+          103,   103,   103,   103,   103,   103,   103,   103,   103,   103,
+          103,   103])
+#&gt; Output Mask: torch.Size([32]), tensor([1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0])
+
+colbert {'f1': 0.7944444444444444, 'mrr': 1.0}</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/cuda/amp/grad_scaler.py:126: UserWarning: torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.
+  warnings.warn(
+100%|████████████████████████████████████████████| 1/1 [00:00&lt;00:00, 603.06it/s]
+100%|█████████████████████████████████████████████| 1/1 [00:00&lt;00:00, 65.29it/s]
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(</code></pre>
+</div>
+</div>
+</section>
+<section id="evaluate-rank-fusion-min-max-norm-combmax-fusion" class="level4">
+<h4 class="anchored" data-anchor-id="evaluate-rank-fusion-min-max-norm-combmax-fusion">Evaluate Rank Fusion (Min-Max Norm, CombMAX fusion)</h4>
+<div id="cell-46" class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"combined"</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(
+/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>combined {'f1': 0.6814814814814815, 'mrr': 0.8888888888888888}</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="try-it-yourself" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself">Try it yourself!</h3>
+<div id="cell-48" class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1">query_text <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">input</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Enter your query:"</span>)</span>
+<span id="cb31-2">search_mode <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">input</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Enter the search mode (bm25, sentsim, colbert, combined):"</span>)</span>
+<span id="cb31-3">search(query_text, search_mode).to_dict(orient<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"records"</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Enter your query: health
+Enter the search mode (bm25, sentsim, colbert, combined): combined</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="24">
+<pre><code>[{'doc_id': '16',
+  'chunk_id': '16-4',
+  'chunk_text': "13 vacation rentals or short-term rentals as follows:\n14 1. to protect the public's health and safety, including rules and\n15 regulations related to fire and building codes, health and sanitation,",
+  'score': 1.0},
+ {'doc_id': '10',
+  'chunk_id': '10-48',
+  'chunk_text': '110 of social work, psychologist licensed by the board of psychology, or other licensed counseling\n111 professional with appropriate experience and training, provided that any such individual makes progress',
+  'score': 1.0},
+ {'doc_id': '17',
+  'chunk_id': '17-56',
+  'chunk_text': '41 (10) "health care provider" or "provider" means any person or entity li-\n42 censed, certified, or otherwise authorized by law to administer health care\n43 in the ordinary course of business or practice of a profession, including',
+  'score': 1.0},
+ {'doc_id': '14',
+  'chunk_id': '14-76',
+  'chunk_text': '176 analysts, and other licensed health and behavioral positions, which may either be employed by the\n177 school board or provided through contracted services.',
+  'score': 0.439275072516164},
+ {'doc_id': '12',
+  'chunk_id': '12-42',
+  'chunk_text': '100 deduction for such taxable year for long-term health care insurance premiums paid by him.\n101 11. contract payments to a producer of quota tobacco or a tobacco quota holder, or their spouses, as',
+  'score': 0.1682393388722695},
+ {'doc_id': '13',
+  'chunk_id': '13-6',
+  'chunk_text': '19 conditions of employment of the workforce \n20 \n21 . however, no locality shall adopt any workplace rule, other than for the purposes of a\n22 community services board or behavioral health authority as defined in § 37.2-100, that prevents an',
+  'score': 0.01917413339973471},
+ {'doc_id': '5',
+  'chunk_id': '5-7',
+  'chunk_text': '18 \n19 \n20 \n21 \n22 \n23 \n24 \n25 \n26 \n27 5. the mental and physical health of all individuals involved.\n28 6. which parent is more likely to allow the child frequent,\n29 meaningful and continuing contact with the other parent. this paragraph',
+  'score': 0.0}]</code></pre>
+</div>
+</div>
 
 
+</section>
 
  ]]></description>
-  <category>news</category>
+  <category>search</category>
+  <category>reranking</category>
   <category>code</category>
-  <category>analysis</category>
-  <guid>https://santiagomvc.github.io/posts/post-with-code/</guid>
-  <pubDate>Fri, 05 Jul 2024 05:00:00 GMT</pubDate>
-  <media:content url="https://santiagomvc.github.io/posts/post-with-code/image.jpg" medium="image" type="image/jpeg"/>
+  <category>python</category>
+  <category>bm25</category>
+  <category>colbert</category>
+  <category>sentence-transformers</category>
+  <guid>https://santiagomvc.github.io/posts/intro_to_search_algorithms/intro_to_search_algorithms.html</guid>
+  <pubDate>Sun, 14 Jul 2024 05:00:00 GMT</pubDate>
+  <media:content url="https://santiagomvc.github.io/posts/intro_to_search_algorithms/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
-  <title>Welcome To My Blog</title>
-  <dc:creator>Tristan O&#39;Malley</dc:creator>
-  <link>https://santiagomvc.github.io/posts/sample_welcome/</link>
+  <title>Installing Torch CPU with Poetry</title>
+  <dc:creator>Santiago Velez</dc:creator>
+  <link>https://santiagomvc.github.io/posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html</link>
   <description><![CDATA[ 
 
 
 
 
 
-<p>This is the first post in a Quarto blog. Welcome!</p>
-<p><img src="https://santiagomvc.github.io/posts/sample_welcome/thumbnail.jpg" class="img-fluid"></p>
-<p>Since this post doesn’t specify an explicit <code>image</code>, the first image in the post will be used in the listing page of posts.</p>
+<p>Having a working poetry environment that installs only cpu supported versions of torch is a good way to reduce the size of your docker container and speed up deployments. The following is a rough solution that seems to work (locally on Mac and Docker container) and could be used while torch and poetry solve their compatibility issues.</p>
+<p>Inside your regular <code>pyproject.toml</code> file, include in <code>[tool.poetry.dependencies]</code> the following <code>torch</code> definition:</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1">torch <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [</span>
+<span id="cb1-2">     {url<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://download.pytorch.org/whl/cpu/torch-2.0.0%2Bcpu-cp39-cp39-linux_x86_64.whl"</span>, markers<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"platform_system == </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">Linux</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>},</span>
+<span id="cb1-3">     {url<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://download.pytorch.org/whl/cpu/torch-2.0.0-cp39-none-macosx_10_9_x86_64.whl"</span>, markers<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"platform_system == </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">Darwin</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> and platform_machine == </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">x86_64</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>},</span>
+<span id="cb1-4">     {url<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://download.pytorch.org/whl/cpu/torch-2.0.0-cp39-none-macosx_11_0_arm64.whl"</span>, markers<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"platform_system == </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">Darwin</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> and platform_machine == </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">arm64</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\"</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>}</span>
+<span id="cb1-5"> ]</span></code></pre></div>
+<p>Why is such an ugly solution required? Here are some apparent torch-poetry compatibility issues:</p>
+<ul>
+<li><code>poetry install torch==2.0.1</code> omits required gpu drivers for linux, which makes the container small but unusable <a href="https://github.com/pytorch/pytorch/issues/100974">Pytorch 2.0.1 pypi wheel does not install dependent cuda libraries pytorch/pytorch#100974</a>.</li>
+<li>pip and poetry install by default torch-cpu in mac and torch-gpu in linux . When specifying <a href="https://download.pytorch.org/whl/cpu">https://download.pytorch.org/whl/cpu</a> as package source to install torch-cpu-linux, Poetry is unable to find a torch-cpu-mac version to use (Does not find a <code>*+cpu</code> version for mac). <a href="https://github.com/python-poetry/poetry/issues/7685">poetry add with –index-url option python-poetry/poetry#7685</a>, <a href="https://github.com/python-poetry/poetry/issues/6409#issue-1361622121">Instructions for installing PyTorch python-poetry/poetry#6409 (comment)</a>.</li>
+<li>poetry may have issues dynamically selecting python wheels based on platforms (doesn’t happen if you use the wheel link) <a href="https://github.com/python-poetry/poetry/issues/1616">Install wheel based on platform python-poetry/poetry#1616</a>.</li>
+</ul>
+<p>Here are some (so far) unsuccessful attempts to find a more elegant solution:</p>
+<p>Attempt 1:</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">[tool.poetry.dependencies]</span>
+<span id="cb2-2">torch <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> { version <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2.0.0"</span>, source<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"torch"</span>}</span>
+<span id="cb2-3"></span>
+<span id="cb2-4">[[tool.poetry.source]]</span>
+<span id="cb2-5">name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"torch"</span></span>
+<span id="cb2-6">url <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://download.pytorch.org/whl/cpu"</span></span>
+<span id="cb2-7">priority <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"explicit"</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">or</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"suplemental"</span></span></code></pre></div>
+<p>Attempt 2:</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">[tool.poetry.dependencies]</span>
+<span id="cb3-2">torch <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [</span>
+<span id="cb3-3">     {version <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"^2.0.0"</span>, platform <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"darwin"</span>},</span>
+<span id="cb3-4">     {version <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"^2.0.0"</span>, platform <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"linux"</span>, source <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"torch"</span>},</span>
+<span id="cb3-5">     {version <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"^2.0.0"</span>, platform <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"win32"</span>, source <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"torch"</span>},</span>
+<span id="cb3-6">]</span>
+<span id="cb3-7"></span>
+<span id="cb3-8">[[tool.poetry.source]]</span>
+<span id="cb3-9">name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"torch"</span></span>
+<span id="cb3-10">url <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://download.pytorch.org/whl/cpu"</span></span>
+<span id="cb3-11">priority <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"explicit"</span></span></code></pre></div>
+<p>Attempt 3:</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">[[tool.poetry.source]]</span>
+<span id="cb4-2">name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"torch_cpu"</span></span>
+<span id="cb4-3">url <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://download.pytorch.org/whl/cpu"</span></span>
+<span id="cb4-4">priority <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"supplemental"</span></span>
+<span id="cb4-5"></span>
+<span id="cb4-6">[[tool.poetry.source]]</span>
+<span id="cb4-7">name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"PyPI"</span></span>
+<span id="cb4-8">priority <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"primary"</span></span>
+<span id="cb4-9"></span>
+<span id="cb4-10">[tool.poetry.dependencies]</span>
+<span id="cb4-11">torch <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> { version <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>, source<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"torch_cpu"</span> }</span></code></pre></div>
+<p>Attempt 4:</p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1">[[tool.poetry.source]]</span>
+<span id="cb5-2">name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"PyPI"</span></span>
+<span id="cb5-3">priority <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"primary"</span></span>
+<span id="cb5-4"></span>
+<span id="cb5-5">[[tool.poetry.source]]</span>
+<span id="cb5-6">name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"linux_cpu"</span></span>
+<span id="cb5-7">url <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"https://download.pytorch.org/whl/cpu"</span></span>
+<span id="cb5-8">priority <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"supplemental"</span></span>
+<span id="cb5-9"></span>
+<span id="cb5-10">[tool.poetry.group.linux_cpu]</span>
+<span id="cb5-11">optional <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> true</span>
+<span id="cb5-12"></span>
+<span id="cb5-13">[tool.poetry.group.linux_cpu.dependencies]</span>
+<span id="cb5-14">torch <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> { version <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>, source<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"linux_cpu"</span>}</span>
+<span id="cb5-15"></span>
+<span id="cb5-16">[tool.poetry.group.darwin_cpu]</span>
+<span id="cb5-17">optional <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> true</span>
+<span id="cb5-18"></span>
+<span id="cb5-19">[tool.poetry.group.darwin_cpu.dependencies]</span>
+<span id="cb5-20">torch <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> { version <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
+<p>In most attempts, the error was around the inability to find a torch-cpu-mac version to install when the <a href="https://download.pytorch.org/whl/cpu">https://download.pytorch.org/whl/cpu</a> repo was included.</p>
 
 
 
  ]]></description>
-  <category>news</category>
-  <guid>https://santiagomvc.github.io/posts/sample_welcome/</guid>
-  <pubDate>Tue, 02 Jul 2024 05:00:00 GMT</pubDate>
+  <category>code</category>
+  <category>python</category>
+  <category>torch</category>
+  <category>poetry</category>
+  <guid>https://santiagomvc.github.io/posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html</guid>
+  <pubDate>Mon, 11 Sep 2023 05:00:00 GMT</pubDate>
+  <media:content url="https://santiagomvc.github.io/posts/installing_torch_cpu_with_poetry/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 </channel>
 </rss>
