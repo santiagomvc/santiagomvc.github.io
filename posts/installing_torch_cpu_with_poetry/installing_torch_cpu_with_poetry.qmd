@@ -1,6 +1,13 @@
-# How to install Torch CPU in Poetry
-
-## *It sucks, at least for now*
+---
+title: "Installing Torch CPU with Poetry"
+description: "It sucks, at least for now"
+image: "thumbnail.png"
+categories: [code, python, torch, poetry]
+author: "Santiago Velez"
+date: "9/11/2023"
+date-modified: "7/14/2024"
+draft: false
+---
 
 Having a working poetry environment that installs only cpu supported versions of torch is a good way to reduce the size of your docker container and speed up deployments. The following is a rough solution that seems to work (locally on Mac and Docker container) and could be used while torch and poetry solve their compatibility issues.
 

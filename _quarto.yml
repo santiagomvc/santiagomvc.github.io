@@ -4,7 +4,7 @@ project:
 website:
   title: "SMVC Notes"
   site-url: https://santiagomvc.github.io
-  description: "Helpful notes for the Data Science and Machine Learning practice"
+  description: "Notes from building Machine Learning solutions in the wild"
   navbar:
     right:
       - about.qmd

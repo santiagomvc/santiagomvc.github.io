@@ -1,8 +1,0 @@
----
-title: "Intro to Search Methods for Retrieval and Ranking"
-description: ""
-author: "Santiago Velez"
-date: "7/05/2024"
-date-modified: "7/05/2024"
-draft: true
----
