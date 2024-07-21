@@ -5,7 +5,7 @@ website:
   title: "SMVC Notes"
   site-url: https://santiagomvc.github.io
   description: "Notes from building Machine Learning solutions in the wild"
-  margin-header: subscribe.html
+  margin-footer: subscribe.html
   navbar:
     right:
       - about.qmd

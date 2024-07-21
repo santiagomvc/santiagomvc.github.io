@@ -10,6 +10,12 @@ about:
     - icon: github
       text: Github
       href: https://github.com/santiagomvc/
+    - icon: file-earmark-person-fill
+      text: CV
+      href: https://raw.githubusercontent.com/santiagomvc/santiagomvc.github.io/main/santiago_velez_resume.pdf
+    - icon: envelope-fill
+      text: Email
+      href: mailto:santiagomvc@gmail.com
 
 ---
 
