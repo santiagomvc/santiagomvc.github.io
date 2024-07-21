@@ -1,0 +1,98 @@
+---
+title: "Is Artificial Intelligence a Risk for Public Policy?"
+description: "Someone needs to talk about it"
+image: "thumbnail.png"
+categories: [ai, public policy]
+author: "Santiago Velez"
+date: "5/22/2023"
+date-modified: "7/21/2024"
+draft: false
+---
+
+*This is an extended version of the article published in Plural's blog. You can find a shorter version [here](https://pluralpolicy.com/blog/ai-risks-public-policy/)*.
+
+Current Machine Learning models have the potential to automate and enhance activities in multiple fields, including Public Policy. Large Language Models can be used to summarize bills, extract entities, and even propose legislation. However, the same technology can be used to muffle the legislative process with biased responses, or help bad actors astroturf and hide harmful legislation. The complexity behind drafting and passing legislation makes the impact of AI even more difficult to understand.
+
+
+## Policy-Making is Complex
+
+Policy-making is a years-long process influenced by multiple actors, so the road from grassroots activism to executive signing can take significant time. The political nature of the work also makes it harder to get agreements even on fundamental levels. Bureaucracy combines with complexity to make the process inefficient and time-consuming, making most of the gains available to powerful organizations.
+
+Traditional data analysis and statistics have affected policy for a long time, from supporting data-based policies to predicting bill passing and election outcomes. However, the advent of powerful Machine Learning models and the advances in Natural Language Processing have allowed new and incredible use cases like identifying policy topics, extracting named entity jurisdictions, summarizing bills, and even chat-like question answering. This new technology has the ability to exert positive and negative influence on the policy-making process.
+
+
+## The Risks of Using AI for Public Policy Work
+
+Machine Learning and statistics can have a negative impact on Public Policy either by misunderstanding how models work or by using the models correctly for non-democratic objectives.
+
+
+### Bias in AI Data
+
+Machine Learning models learn from the data they are trained with, which means the input data has a defining effect on the model results. Since models are usually trained to minimize errors and maximize accuracy, it's possible for models to learn artifacts that correlate with certain scenarios but are not causes of it. Models can also have great performance in average but regular performance for specific and important subgroups, which were likely less represented in the training data.
+
+Research at MIT showed that around 2017 some commercial Gender Classification models displayed [significant disparities](https://www.media.mit.edu/publications/gender-shades-intersectional-accuracy-disparities-in-commercial-gender-classification/) in the classification of darker-skinned females and lighter-skinned males, with error rates of up to 34.7%. 
+
+Given the complexity, nuance, and variety in biases, there’s not a single and clear solution to the problems it raises. Google tried to improve its face recognition for its Pixel 4 phone, but it raised [some criticism](https://www.vox.com/recode/2019/10/17/20917285/google-pixel-4-facial-recognition-tech-black-people-reset-podcast) for the methods it used to gather the required data. This is a complex problem that must be treated accordingly.
+
+
+### Personal Information and Privacy Risks
+
+Since modern ML Models are being trained with terabytes and terabytes of data, it is almost impossible to manually verify that there’s no PII, private, or copyrighted information in the training sets. This means that, if the dataset was not cleaned correctly, your pictures, social security number, and medical information may be available without your permission. Even worse, some companies are consciously trying to collect this personal data with shady means.
+
+There have been multiple cases in which police units have [wrongfully jailed](https://arstechnica.com/tech-policy/2023/01/facial-recognition-error-led-to-wrongful-arrest-of-black-man-report-says/) people due to errors in Face Recognition models, and more recently Samsung had to restrict access to ChatGPT due to [leaked confidential information](https://www.theverge.com/2023/5/2/23707796/samsung-ban-chatgpt-generative-ai-bing-bard-employees-security-concerns).
+
+AI providers are taking steps both to improve their data collection and the cases in which the technology can be used. OpenAI recently [changed](https://techcrunch.com/2023/03/01/addressing-criticism-openai-will-no-longer-use-customer-data-to-train-its-models-by-default/) its policies to avoid collecting customers' data for training by default, and multiple companies now [restrict](https://www.washingtonpost.com/technology/2020/06/11/microsoft-facial-recognition/) their Face Detection models to avoid military and police uses. At the end of the day though, companies will always want more data to train their models and more users to buy them, so this is a constant struggle. 
+
+
+### Lack of Transparency in How Algorithms Work
+
+The mathematical aspect of AI, ranging from linear algebra to information theory and density functions, is another source of opacity when integrating AI with public policy workers. This issue is amplified in Neural Networks, the building block to the best generative models, since there’s no simple interpretation of the parameters the model is learning, resulting in black box systems that experts find hard to trust. Adding to the transparency issues, the traditional openness around Machine Learning models and techniques is partially being replaced by shallow reports and closed releases, due in part to the strong competition in commercial AI.
+
+[GPT4 Technical Report](https://arxiv.org/abs/2303.08774) is an example of the current trend in AI development. While a few years back state-of-the-art models were shared publicly along with replication techniques, today most state-of-the-art models are kept private, and there’s [not enough information](https://www.technologyreview.com/2023/03/14/1069823/gpt-4-is-bigger-and-better-chatgpt-openai/) shared to understand improvements and much less to try to replicate them. While some [argue](https://www.theverge.com/2023/3/15/23640180/openai-gpt-4-launch-closed-research-ilya-sutskever-interview) that this is part of Responsible AI principles to avoid misuse, others [argue](https://www.nytimes.com/2023/05/18/technology/ai-meta-open-source.html) that it’s mostly about protecting private interests.
+
+Given the tradition of open research in AI, there has been pushback around the new closed tendencies, like Facebook’s non-commercial release of their [language models](https://research.facebook.com/publications/llama-open-and-efficient-foundation-language-models/). And on the model opacity, there’s continued [research](https://arxiv.org/abs/1810.03993) around understanding how models work and impact different areas.
+
+
+### Models are not perfect
+
+Most state-of-the-art AI models are probabilistic in nature, which means that they return the most likely answer, but there’s no strict enforcement on correctness, logic, or causality. Given the impressive results of Generative AI and the complexity behind it, it’s very easy for laypeople to misunderstand model results and use them in the wrong situations. To make matters worse, this complexity is often used by dishonest actors for their own personal gains.
+
+Given the current capabilities of Language Models such as GPT4 and Bard, it’s easy to believe that they’re able to solve any task we ask. Memorizing large amounts of training data and being hyped by grifters does not help with the situation. However, multiple researchers have [shown](https://arxiv.org/pdf/2205.09712.pdf) that the algorithms behind Language Models are unable to consistently solve multistep logical reasoning problems, for now. 
+
+Language Models continue improving, and they may be able to evolve logical and analytical capabilities in the near future, whether by growing in size, improving world models, or other techniques we don’t even know yet. However, it’s important to understand and communicate the [limitations](https://www.noemamag.com/ai-and-the-limits-of-language/) of the current models we do have.
+
+
+### No Standards for AI Regulation
+
+The growing complexity of Machine Learning and Generative algorithms, the quality jumps in model performance, the lack of technical knowledge in government, and the powerful actors involved are a brewing pot of issues for any attempt at regulation. 
+
+An example of the current regulatory status is the open discussion around AI Art. Tools like Stable Diffusion and Midjourney are incredible technologies that generate brand-new images in seconds, based on prompts made by users. These tools however are built using artists' work and menace their monetizing abilities, since art with similar [characteristics](https://www.businessinsider.com/ai-image-generators-artists-copying-style-thousands-images-2022-10) can be done in seconds. While artists have valid concerns, relying on copyright to address them may not be the best [answer](https://www.eff.org/deeplinks/2023/04/how-we-think-about-copyright-and-ai-art-0). 
+
+It seems like governments around the world are starting to understand Generative AI [risks and opportunities](https://www.axios.com/2023/05/02/white-house-ai-leaders-ceos-meeting), but there’s no clear path around regulation, and it’s important to note that some players may try to use it to stop competitors and maintain a [competitive advantage](https://www.reddit.com/r/MachineLearning/comments/13jhduh/n_sam_altman_ceo_of_openai_calls_for_us_to/). 
+
+
+### Lack of Well-Defined Policy Goals
+
+The Public Policy nature also contributes to the challenges around AI applications.The legal documents where public policy is supported are usually long, tangled, and full of legal terminology and technicalities. As any lawyer can confirm, words tend to have non-vernacular meanings and simple changes such as synonymous can significantly alter the legal meaning. Lastly, public policy is strongly connected to politics, where nuance and consensus are hard to find, and emotions are strong on either side of the aisle.   
+
+An example of this is bills, which propose changes to current statutes. As such, what may seem like a simple change in a letter or a number can provoke meaningful transformations in public society, such as changing the minimum wage from $10 to $19. [Arizona SCR 1023](https://app.pluralpolicy.com/legislative-tracking/bill/details/state-az-56th_1stregular-scr1023/1211945) is a good example of how small changes can significantly affect the meaning of the law.
+
+There have been efforts to improve model performance in specific fields, as in Google’s latest release of [med-palm 2](https://cloud.google.com/blog/topics/healthcare-life-sciences/sharing-google-med-palm-2-medical-large-language-model), and there’s even open source work around specialized [legal models](https://aclanthology.org/2020.findings-emnlp.261/). However, we need more targeted resources to work on the intersection of Public Policy and AI.
+
+
+### Uses cases that hurt democracy
+
+While most of the risks we described are provoked by misunderstandings or incompetence, there's a very important issue left. Clever actors who understand AI and Public Policy can use modern technology in ways that undermine democracy. Those actions can be as simple as misleading descriptive statistics or as complex as deep-fake political images and simulated grassroots movements.
+
+Researchers at Stanford University [displayed](https://hai.stanford.edu/news/ais-powers-political-persuasion) how GPT3 can be used to draft persuasive political messages. Similar models have been used to generate [fake reviews](https://www.cnbc.com/2023/04/25/amazon-reviews-are-being-written-by-ai-chatbots.html) on Amazon and to cheat in high school homework, and they could be used just as easily to fake public interest in relevant policy topics or to draft bills with undemocratic objectives. 
+
+There’s a growing understanding in policy circles that this technology can affect public policy, and senators have publically interacted with some of the [tools](https://www.bloomberg.com/news/articles/2023-05-16/a-us-senator-just-used-chatgpt-for-opening-remarks-at-a-hearing#xj4y7vzkg). Even AI companies are [limiting](https://openai.com/policies/usage-policies) the ways the models can be used in policy settings, but it’s not enough. This technology exists and is being used right now, and the Plural, Public, and Private sectors need to agree on the ways AI should not be used to affect public policy.
+
+
+## The Biggest Challenge
+
+Public Policy impacts everyone, and there’s a real risk in how slowly government and public institutions will adapt and how fast will actors move and break things. We can see how unregulated new technology can [impact](https://www.bloomberg.com/features/2023-crypto-winter/) the lives of thousands of people, and how sooner action could have prevented some of the harm.
+
+Right now we need strong pressure from the public and grassroots organizations to accelerate government action and guarantee that corporate interests are aligned with the public benefit, like Google employees did with [Project Maven](https://www.nytimes.com/2018/06/01/technology/google-pentagon-project-maven.html), while maintaining incentives to continue research that improves the lives of the community.
+
+While this article focuses on risks around ML and Generative AI, it’s also clear that the technology can be used to make the public policy process more accessible and democratic, as we argue in [Summarizing Bills With Generative AI](https://www.pluralpolicy.com/enview-blog/summarizing-bills-with-generative-ai).
