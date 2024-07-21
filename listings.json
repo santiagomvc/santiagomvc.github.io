@@ -3,7 +3,8 @@
     "listing": "/index.html",
     "items": [
       "/posts/intro_to_search_algorithms/intro_to_search_algorithms.html",
-      "/posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html"
+      "/posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html",
+      "/posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html"
     ]
   }
 ]
