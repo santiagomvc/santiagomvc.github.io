@@ -2,7 +2,7 @@
 title: "Is Artificial Intelligence a Risk for Public Policy?"
 description: "Someone needs to talk about it"
 image: "thumbnail.png"
-categories: [ai, public policy]
+categories: [ai, lm, public policy]
 author: "Santiago Velez"
 date: "5/22/2023"
 date-modified: "7/21/2024"
