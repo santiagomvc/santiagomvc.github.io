@@ -2,9 +2,11 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/entity_matching_intro/entity_matching_intro.html",
       "/posts/intro_to_search_algorithms/intro_to_search_algorithms.html",
       "/posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html",
-      "/posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html"
+      "/posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html",
+      "/posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html"
     ]
   }
 ]

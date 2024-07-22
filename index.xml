@@ -10,7 +10,1790 @@
 <atom:link href="https://santiagomvc.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Notes from building Machine Learning solutions in the wild</description>
 <generator>quarto-1.4.550</generator>
-<lastBuildDate>Sun, 14 Jul 2024 05:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 21 Jul 2024 05:00:00 GMT</lastBuildDate>
+<item>
+  <title>Intro to Entity Matching</title>
+  <dc:creator>Santiago Velez</dc:creator>
+  <link>https://santiagomvc.github.io/posts/entity_matching_intro/entity_matching_intro.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>Entity matching is the process of identifying entity descriptions from different sources that refer to the same real-world entity. This post is an applied introduction to some common approaches used for entity matching. Since even for small datasets the number of possible matches can become excessive, the process is usually split in two:</p>
+<ul>
+<li><p><strong>Blocking</strong>: Generates the possible combinations and removes most of them based on simple metrics (ex: number of shared letters)</p></li>
+<li><p><strong>Disambiguation</strong>: Evaluates the likelihood that two entity descriptions refer to the same real-world entity. For Entity Disambiguation, the approaches can be split into the following categories:</p>
+<ul>
+<li>Prompting trained Large Language Models</li>
+<li>Bert-like Language Models Fine Tuned on Entity Tasks</li>
+<li>Similarity Metrics and traditional ML Models</li>
+<li>Rule systems developed by human experts</li>
+</ul></li>
+</ul>
+<p>There are multiple tasks related to Entity Matching. Though they are different, some approaches may solve common issues.</p>
+<ul>
+<li><strong>Entity Disambiguation</strong>: Evaluates the likelihood that two entity descriptions refer to the same real-world entity. Does not include the candidate generation and blocking process.</li>
+<li><strong>Entity Linking</strong>: Identifies characters in a text that match an entity in an existing Knowledge Base.</li>
+<li><strong>Named Entity Recognition</strong>: Identifies characters in a text that could be identified as Named Entities. Some of them also use Knowledge Bases or Disambiguation.</li>
+</ul>
+<p><strong>TL;DR</strong>: This paragraph in “Entity Matching using Large Language Models” is a good summary of the current status of Entity Matching in 2024:</p>
+<p><em>“We can summarize the high-level implications of our findings concerning the selection of matching techniques in the following rules of thumb: For use cases that do not involve many unseen entities and for which a decent amount of training data is available, PLM-based matchers are a suitable option which does not require much compute due to the smaller size of the models. For use cases that involve a relevant amount of unseen entities and for which it is costly to gather and maintain a decent size training set, LLM-based matchers should be preferred due to their high zero-shot performance and ability to generalize to unseen entities. If using the best performing hosted LLMs is not an option due to their high usage costs, fine-tuning a cheaper hosted model is an alternative that can deliver a similar F1 performance. If using using hosted models is no option due to privacy concerns, using an open-source LLM on local hardware can be an alternative providing a slightly lower F1 performance given that some task-specific training data or domain-specific matching rules are available.”</em></p>
+<p><em>Ralph Peeters &amp; Christian Bizer, <a href="https://arxiv.org/pdf/2310.11244">“Entity Matching using Large Language Models”</a>, 2024</em></p>
+<p>A more detailed explanation of Entity Matching can be found <a href="http://anhaidgroup.github.io/py_entitymatching/v0.4.0/user_manual/overview.html">here</a></p>
+<section id="when-to-use-ai-for-entity-matching" class="level2">
+<h2 class="anchored" data-anchor-id="when-to-use-ai-for-entity-matching">When to use AI for Entity Matching</h2>
+<ul>
+<li>If a human can find a match with the presented data, is likely that a Modern AI approach can do it too</li>
+<li>If a human is having issues finding a match, AI won’t be likely to help</li>
+<li>If there’s not enough information presented to the model, AI won’t be able to find the match, even if a human has enough internal information to do it</li>
+</ul>
+<p>You can run the following code on Google Colab clicking here.</p>
+<p><a target="_blank" href="https://colab.research.google.com/github/santiagomvc/santiagomvc.github.io/blob/main/posts/entity_matching_intro/entity_matching_intro.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"> </a></p>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<div id="cell-4" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Downloading required libraries and packages</span></span>
+<span id="cb1-2"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!</span>pip install transformers spacy numpy scipy py_entitymatching python<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>dotenv openai</span></code></pre></div>
+</div>
+<div id="cell-5" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Downloading spacy english package</span></span>
+<span id="cb2-2"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!</span>python <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>m spacy download en_core_web_sm</span></code></pre></div>
+</div>
+<div id="cell-6" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Creating data for training/few-shot and evaluation</span></span>
+<span id="cb3-2">synt_data <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [</span>
+<span id="cb3-3">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"John A. Smith"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"John A. Smith"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span>},</span>
+<span id="cb3-4">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Emily J. Clarke"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Emily T. Clarke"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"no"</span>},</span>
+<span id="cb3-5">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Sarah M. Johnson"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Sarah Marie Johnson"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span>},</span>
+<span id="cb3-6">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"James P. Miller"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"James P. Miles"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"no"</span>},</span>
+<span id="cb3-7">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Michael O'Leary"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Michael OLeary"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span>},</span>
+<span id="cb3-8">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Nancy L. Wright"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Nancy W. Wright"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"no"</span>},</span>
+<span id="cb3-9">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Catherine G. Davis"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Catherine Grace Davis"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span>},</span>
+<span id="cb3-10">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Richard A. Lee"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Richard A. Lin"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"no"</span>},</span>
+<span id="cb3-11">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Robert K. Brown"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Robert K. Brown Jr."</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span>},</span>
+<span id="cb3-12">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Karen M. Harris"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Karen M. Harrison"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"no"</span>},</span>
+<span id="cb3-13">]</span>
+<span id="cb3-14"></span>
+<span id="cb3-15">real_data <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [</span>
+<span id="cb3-16">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Spann-Wilder, Tiffany"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Tiffany Spann-Wilder"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span>},</span>
+<span id="cb3-17">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Landon C. Dais"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Landon Dais"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span>},</span>
+<span id="cb3-18">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Giglio JA"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Jodi Giglio"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span>},</span>
+<span id="cb3-19">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Brown, M"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Marla Gallo Brown"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span>},</span>
+<span id="cb3-20">    {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"chamber_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"house"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"J.T. 'Jabo' Waggoner  "</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Jabo Waggoner"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span>},</span>
+<span id="cb3-21">]</span></code></pre></div>
+</div>
+</section>
+<section id="language-models" class="level2">
+<h2 class="anchored" data-anchor-id="language-models">Language Models</h2>
+<p>Currently the best performing approach to Entity Disambiguation based on <a href="https://arxiv.org/pdf/2310.11244">recent research</a>. It usually consists of building a set of examples and assembling a prompt, in order to pass an unseen pair to the Language Model and get the relevant response. There’s some exploration into using LM to enhance existing Entity Linking models.</p>
+<section id="advantages" class="level3">
+<h3 class="anchored" data-anchor-id="advantages">Advantages</h3>
+<ul>
+<li>Easy to use: create examples, compose a prompt, call an API, and parse the results.</li>
+<li>Performance above older models trained specifically for entity matching</li>
+<li>May not require structuring the data as much as other options, just collapsing all the information in a single string.</li>
+<li>LM approach can be used to generate explanations and categories. Categories can be used to find common error cases (year, mixed words, etc.)</li>
+</ul>
+</section>
+<section id="disadvantages" class="level3">
+<h3 class="anchored" data-anchor-id="disadvantages">Disadvantages</h3>
+<ul>
+<li>Prompting is very sensible to changes</li>
+<li>Most powerful models are paid or hard to use</li>
+<li>No candidate generation and blocking (can be done with other tools)</li>
+</ul>
+</section>
+<section id="best-lm-configuration---based-on-entity-matching-using-lms" class="level3">
+<h3 class="anchored" data-anchor-id="best-lm-configuration---based-on-entity-matching-using-lms">Best LM Configuration - based on <a href="(https://arxiv.org/pdf/2310.11244)"><em>Entity Matching using LMs</em></a>:</h3>
+<ul>
+<li>Model: GPT4</li>
+<li>Prompt: Domain specific, complex prompt, free-form response (use regex to find ‘yes’)</li>
+<li>Few Shot: Yes, related examples</li>
+<li>Fine-tuning helps, especially smaller models, without losing generalization</li>
+</ul>
+<div id="cell-8" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Loading libraries</span></span>
+<span id="cb4-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> openai <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> OpenAI</span>
+<span id="cb4-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> dotenv <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> load_dotenv</span>
+<span id="cb4-4"></span>
+<span id="cb4-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Loading env and openai client</span></span>
+<span id="cb4-6">load_dotenv(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">".env"</span>)   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Create an ENV file with OPENAI_API_KEY</span></span>
+<span id="cb4-7">client <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> OpenAI()</span>
+<span id="cb4-8"></span>
+<span id="cb4-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Building prompts for few shot learning</span></span>
+<span id="cb4-10">task_description <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Do the two legislator names refer to the same real-world legislator?"</span></span>
+<span id="cb4-11">demostration <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"legislator_1: '</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{entity_1}</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\n</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">legislator_2: '</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{entity_2}</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'"</span></span></code></pre></div>
+</div>
+<div id="cell-9" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Creating examples for few shot learning</span></span>
+<span id="cb5-2">few_shot_messages <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> []</span>
+<span id="cb5-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># System Prompt</span></span>
+<span id="cb5-4">few_shot_messages.append({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"role"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"system"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"content"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"You are a helpful assistant."</span>})</span>
+<span id="cb5-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Few shot Examples</span></span>
+<span id="cb5-6"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> example <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> synt_data:</span>
+<span id="cb5-7">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Adds description</span></span>
+<span id="cb5-8">    few_shot_messages.append({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"role"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"content"</span>: task_description})</span>
+<span id="cb5-9">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Adds example</span></span>
+<span id="cb5-10">    few_shot_messages.append({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"role"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"content"</span>: demostration.<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">format</span>(entity_1<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>example[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>], entity_2<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>example[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>])})</span>
+<span id="cb5-11">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Adds correct answer</span></span>
+<span id="cb5-12">    few_shot_messages.append({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"role"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"assistant"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"content"</span>: example[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>]})</span></code></pre></div>
+</div>
+<div id="cell-10" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Running the model for each real example</span></span>
+<span id="cb6-2"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> sample <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> real_data:</span>
+<span id="cb6-3">  messages <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> few_shot_messages.copy()</span>
+<span id="cb6-4">  messages.append({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"role"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"content"</span>: task_description})</span>
+<span id="cb6-5">  messages.append({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"role"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"user"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"content"</span>: demostration.<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">format</span>(entity_1<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>sample[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>], entity_2<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>sample[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>])})</span>
+<span id="cb6-6">  response <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> client.chat.completions.create(</span>
+<span id="cb6-7">    model<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"gpt-4o"</span>,</span>
+<span id="cb6-8">    messages<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>messages,</span>
+<span id="cb6-9">  )</span>
+<span id="cb6-10">  <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Entity 1: "</span>, sample[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_1"</span>])</span>
+<span id="cb6-11">  <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Entity 2: "</span>, sample[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"entity_2"</span>])</span>
+<span id="cb6-12">  <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Same Entity: "</span>, response.choices[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>].message.content)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Entity 1:  Spann-Wilder, Tiffany
+Entity 2:  Tiffany Spann-Wilder
+Same Entity:  yes
+Entity 1:  Landon C. Dais
+Entity 2:  Landon Dais
+Same Entity:  yes
+Entity 1:  Giglio JA
+Entity 2:  Jodi Giglio
+Same Entity:  No, the two names 'Giglio JA' and 'Jodi Giglio' do not seem to refer to the same real-world legislator. 'Giglio JA' is likely an abbreviation or a format that includes initials, and 'Jodi Giglio' is a full name. Without additional context, they are likely different individuals.
+Entity 1:  Brown, M
+Entity 2:  Marla Gallo Brown
+Same Entity:  no
+Entity 1:  J.T. 'Jabo' Waggoner 
+Entity 2:  Jabo Waggoner
+Same Entity:  yes</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="bert-type-models-fine-tuned-for-entity-tasks" class="level2">
+<h2 class="anchored" data-anchor-id="bert-type-models-fine-tuned-for-entity-tasks">Bert-type Models Fine Tuned for Entity Tasks</h2>
+<p>Older and smaller generation of Language Models, trained with general data but fine-tuned for entity tasks. Though some are trained for other tasks, most are trained for entity linking, which requires defining a Trie or Knowledge Base (usually WikiData). Changing the KB may require retraining the model</p>
+<section id="advantages-1" class="level3">
+<h3 class="anchored" data-anchor-id="advantages-1">Advantages</h3>
+<ul>
+<li>The Blocking process is performed automatically for the existing Trie/Knowledge Base</li>
+<li>Good performance for data within training distribution</li>
+<li>May not require additional training (depending on the model)</li>
+<li>You can run it locally at no cost</li>
+</ul>
+</section>
+<section id="disadvantages-1" class="level3">
+<h3 class="anchored" data-anchor-id="disadvantages-1">Disadvantages</h3>
+<ul>
+<li>Hard to train from scratch, which is recommended if data is out of distribution</li>
+<li>Limited Out of Distribution performance out of the box</li>
+<li>Need to build a custom TRIE/KB or use generic KBs like WikiData</li>
+</ul>
+</section>
+<section id="recommended-models" class="level3">
+<h3 class="anchored" data-anchor-id="recommended-models">Recommended Models</h3>
+<ul>
+<li><a href="https://github.com/facebookresearch/GENRE">Facebook GENRE</a></li>
+</ul>
+</section>
+<section id="facebook-genre-using-genre-default-trie" class="level3">
+<h3 class="anchored" data-anchor-id="facebook-genre-using-genre-default-trie">Facebook Genre (Using Genre default Trie)</h3>
+<div id="cell-13" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Loading libraries</span></span>
+<span id="cb8-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> transformers <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> AutoTokenizer, AutoModelForSeq2SeqLM</span>
+<span id="cb8-3"></span>
+<span id="cb8-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Loading model and tokenizers</span></span>
+<span id="cb8-5">tokenizer <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> AutoTokenizer.from_pretrained(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"facebook/genre-linking-aidayago2"</span>)</span>
+<span id="cb8-6">model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> AutoModelForSeq2SeqLM.from_pretrained(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"facebook/genre-linking-aidayago2"</span>).<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">eval</span>()</span>
+<span id="cb8-7"></span>
+<span id="cb8-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Processing text</span></span>
+<span id="cb8-9">sentences <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> []</span>
+<span id="cb8-10"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> example <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> real_data:</span>
+<span id="cb8-11">    sentences.append(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"[START_ENT] </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>example[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_1'</span>]<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> [END_ENT]"</span>)</span>
+<span id="cb8-12">    sentences.append(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"[START_ENT] </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>example[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_2'</span>]<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> [END_ENT]"</span>)</span>
+<span id="cb8-13"></span>
+<span id="cb8-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Running inference</span></span>
+<span id="cb8-15">num_beams <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span></span>
+<span id="cb8-16">outputs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> model.generate(</span>
+<span id="cb8-17">    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">**</span>tokenizer(</span>
+<span id="cb8-18">        sentences, </span>
+<span id="cb8-19">        return_tensors<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"pt"</span>, </span>
+<span id="cb8-20">        padding<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>, </span>
+<span id="cb8-21">        truncation<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>,</span>
+<span id="cb8-22">    ),</span>
+<span id="cb8-23">    num_beams<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>num_beams,</span>
+<span id="cb8-24">    num_return_sequences<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>num_beams,</span>
+<span id="cb8-25">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># OPTIONAL: use constrained beam search</span></span>
+<span id="cb8-26">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># prefix_allowed_tokens_fn=lambda batch_id, sent: trie.get(sent.tolist()),</span></span>
+<span id="cb8-27">)</span>
+<span id="cb8-28">preds <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> tokenizer.batch_decode(outputs, skip_special_tokens<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)</span>
+<span id="cb8-29"></span>
+<span id="cb8-30"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Printing results</span></span>
+<span id="cb8-31">i <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span></span>
+<span id="cb8-32"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> example <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> real_data:</span>
+<span id="cb8-33">    <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Entity 1: "</span>, example[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_1'</span>])</span>
+<span id="cb8-34">    <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Entity 1 KB Candidates: "</span>, preds[i:i<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span>num_beams])</span>
+<span id="cb8-35">    <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Entity 2: "</span>, example[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_2'</span>])</span>
+<span id="cb8-36">    <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Entity 2 KB Candidates: "</span>, preds[i<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span>num_beams:i<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span>(num_beams<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)])</span>
+<span id="cb8-37">    <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"--"</span>)</span>
+<span id="cb8-38">    i <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span>(num_beams<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/exp/lib/python3.10/site-packages/transformers/generation/utils.py:1168: UserWarning: Using the model-agnostic default `max_length` (=20) to control the generation length. We recommend setting `max_new_tokens` to control the maximum length of the generation.
+  warnings.warn(</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Entity 1:  Spann-Wilder, Tiffany
+Entity 1 KB Candidates:  ['Tiffany Spann-Wilder', 'Spann-Wilder, Tiffany', 'Tiffany Spann-Wilder, Tiffany']
+Entity 2:  Tiffany Spann-Wilder
+Entity 2 KB Candidates:  ['Tiffany Spann-Wilder', 'Tiffany Spann- Wilder', 'Tiffani Spann-Wilder']
+--
+Entity 1:  Landon C. Dais
+Entity 1 KB Candidates:  ['Landon C. Dais', 'Landon Dais', 'Landon C.Dais']
+Entity 2:  Landon Dais
+Entity 2 KB Candidates:  ['Landon Dais', 'LandonDais', 'Landon dais']
+--
+Entity 1:  Giglio JA
+Entity 1 KB Candidates:  ['Juan Antonio Giglio', 'Antonio Giglio', 'Jorge Antonio Giglio']
+Entity 2:  Jodi Giglio
+Entity 2 KB Candidates:  ['Jodi Giglio', 'Jodi Giglio (actress)', 'Jodi Giglio (singer)']
+--
+Entity 1:  Brown, M
+Entity 1 KB Candidates:  ['Mark Brown (American football)', 'Michael J. Brown', 'Michael Brown (American football)']
+Entity 2:  Marla Gallo Brown
+Entity 2 KB Candidates:  ['Marla Gallo Brown', 'Marla Gallo-Brown', 'Marla Gallo']
+--
+Entity 1:  J.T. 'Jabo' Waggoner 
+Entity 1 KB Candidates:  ['J. T. Waggoner', "J. T. 'Jabo' Waggoner", 'Jabo Waggoner']
+Entity 2:  Jabo Waggoner
+Entity 2 KB Candidates:  ['Jabo Waggoner', 'Jabo Waggoner', 'Jambo Waggoner']
+--</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="matching-systems-with-small-to-no-training" class="level2">
+<h2 class="anchored" data-anchor-id="matching-systems-with-small-to-no-training">Matching systems with Small to No Training</h2>
+<p>This group encompasses traditional Entity Matching techniques that use similarity metrics or classic ML models to evaluate how likely are the entities to match. Some of these approaches will require labeled examples to train models, though training is mostly managed by the library. This approach is popular for tabular datasets with multiple attributes</p>
+<section id="advantages-2" class="level3">
+<h3 class="anchored" data-anchor-id="advantages-2">Advantages</h3>
+<ul>
+<li>Simpler matching algorithms (though libraries can be outdated)</li>
+<li>Usually includes candidate generation and blocking</li>
+<li>Fast</li>
+</ul>
+</section>
+<section id="disadvantages-2" class="level3">
+<h3 class="anchored" data-anchor-id="disadvantages-2">Disadvantages</h3>
+<ul>
+<li>Worse performance in Entity Disambiguation compared to LM-based approaches</li>
+<li>Requires training data for some of the algorithms</li>
+<li>Some libraries are old and have not been updated for some time</li>
+</ul>
+</section>
+<section id="matching-algorithms-examples" class="level3">
+<h3 class="anchored" data-anchor-id="matching-algorithms-examples">Matching Algorithms Examples</h3>
+<ul>
+<li>Jaccard similarity</li>
+<li>Levenstein distance</li>
+<li>Cosine similarity of vectors</li>
+<li>Random Forest Similarity Classifier</li>
+</ul>
+</section>
+<section id="related-libraries" class="level3">
+<h3 class="anchored" data-anchor-id="related-libraries">Related libraries:</h3>
+<ul>
+<li><a href="https://github.com/anhaidgroup/py_entitymatching">https://github.com/anhaidgroup/py_entitymatching</a></li>
+<li><a href="https://docs.dedupe.io/en/latest/">https://docs.dedupe.io/en/latest/</a></li>
+<li><a href="https://github.com/anhaidgroup/deepmatcher">https://github.com/anhaidgroup/deepmatcher</a></li>
+<li><a href="https://huggingface.co/shahrukhx01/paraphrase-mpnet-base-v2-fuzzy-matcher?text=fuzzformer">https://huggingface.co/shahrukhx01/paraphrase-mpnet-base-v2-fuzzy-matcher?text=fuzzformer</a></li>
+</ul>
+</section>
+<section id="py_entitymatching-random-forest" class="level3">
+<h3 class="anchored" data-anchor-id="py_entitymatching-random-forest">py_entitymatching + Random Forest</h3>
+<div id="cell-16" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Loading libraries</span></span>
+<span id="cb11-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> pd</span>
+<span id="cb11-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> py_entitymatching <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> em</span></code></pre></div>
+</div>
+<div id="cell-17" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Formatting data in required library configuration </span></span>
+<span id="cb12-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Train set</span></span>
+<span id="cb12-3">df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.DataFrame(synt_data)</span>
+<span id="cb12-4">df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> df.reset_index(names<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>).reset_index(names<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ltable_id"</span>).reset_index(names<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rtable_id"</span>)</span>
+<span id="cb12-5">df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>].<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">apply</span>(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">lambda</span> x: <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> x<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">else</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)</span>
+<span id="cb12-6">A <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> df[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_1'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_1'</span>]].rename({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_id'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_1'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_1'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity'</span>}, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb12-7">B <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> df[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_2'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_2'</span>]].rename({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_id'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_2'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_2'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity'</span>}, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb12-8">C <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> df[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ltable_id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rtable_id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>]]</span>
+<span id="cb12-9"></span>
+<span id="cb12-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Test set</span></span>
+<span id="cb12-11">test_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.DataFrame(real_data)</span>
+<span id="cb12-12">test_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> test_df.reset_index(names<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>).reset_index(names<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ltable_id"</span>).reset_index(names<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rtable_id"</span>)</span>
+<span id="cb12-13">test_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> test_df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>].<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">apply</span>(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">lambda</span> x: <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> x<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"yes"</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">else</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)</span>
+<span id="cb12-14">X <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> df[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_1'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_1'</span>]].rename({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_id'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_1'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_1'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity'</span>}, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb12-15">Y <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> df[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_2'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_2'</span>]].rename({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_id'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_2'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_2'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity'</span>}, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb12-16">Z <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> df[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ltable_id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rtable_id"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"match"</span>]]</span></code></pre></div>
+</div>
+<div id="cell-18" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Registering tables metadata in the library</span></span>
+<span id="cb13-2">em.set_key(A, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>)</span>
+<span id="cb13-3">em.set_key(B, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>)</span>
+<span id="cb13-4">em.set_key(C, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>)</span>
+<span id="cb13-5">em.set_ltable(C, B)</span>
+<span id="cb13-6">em.set_ltable(C, A)</span>
+<span id="cb13-7"></span>
+<span id="cb13-8">em.set_key(X, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>)</span>
+<span id="cb13-9">em.set_key(Y, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>)</span>
+<span id="cb13-10">em.set_key(Z, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>)</span>
+<span id="cb13-11">em.set_ltable(Z, X)</span>
+<span id="cb13-12">em.set_ltable(Z, Y)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<pre><code>True</code></pre>
+</div>
+</div>
+<div id="cell-19" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Creating and blocking candidate matches (just for display)</span></span>
+<span id="cb15-2">ob <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> em.OverlapBlocker()</span>
+<span id="cb15-3">C <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> ob.block_tables(A, B, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity'</span>, </span>
+<span id="cb15-4">                    l_output_attrs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber'</span>], </span>
+<span id="cb15-5">                    r_output_attrs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber'</span>],</span>
+<span id="cb15-6">                    overlap_size<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, show_progress<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/exp/lib/python3.10/site-packages/py_entitymatching/blocker/overlap_blocker.py:258: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  l_df[l_dummy_overlap_attr] = l_df[l_overlap_attr]
+/Users/santiagovelez/anaconda3/envs/exp/lib/python3.10/site-packages/py_entitymatching/blocker/overlap_blocker.py:259: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  r_df[r_dummy_overlap_attr] = r_df[r_overlap_attr]
+/Users/santiagovelez/anaconda3/envs/exp/lib/python3.10/site-packages/py_entitymatching/blocker/overlap_blocker.py:615: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  table[overlap_attr] = values</code></pre>
+</div>
+</div>
+<div id="cell-20" class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Workaround - Saving labeled data so we are able to load it in the library with the right metadata</span></span>
+<span id="cb17-2">df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> df.rename({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>:<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_1'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_chamber'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_2'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_chamber'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_1'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_entity'</span>,</span>
+<span id="cb17-3">       <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_2'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_entity'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'match'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'gold'</span>}, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb17-4">df.to_csv(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"temp_df.csv"</span>)</span>
+<span id="cb17-5">test_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> test_df.rename({<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'id'</span>:<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_1'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_chamber'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'chamber_2'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_chamber'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_1'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_entity'</span>,</span>
+<span id="cb17-6">       <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'entity_2'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_entity'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'match'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'gold'</span>}, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb17-7">test_df.to_csv(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"temp_test_df.csv"</span>)</span></code></pre></div>
+</div>
+<div id="cell-21" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Load training data with metadata</span></span>
+<span id="cb18-2">G <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> em.read_csv_metadata(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"temp_df.csv"</span>, </span>
+<span id="cb18-3">                         key<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'_id'</span>,</span>
+<span id="cb18-4">                         ltable<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>A, rtable<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>B, </span>
+<span id="cb18-5">                         fk_ltable<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_id'</span>, fk_rtable<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_id'</span>)</span>
+<span id="cb18-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Load test data with metadata</span></span>
+<span id="cb18-7">Z <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> em.read_csv_metadata(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"temp_test_df.csv"</span>, </span>
+<span id="cb18-8">                         key<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'_id'</span>,</span>
+<span id="cb18-9">                         ltable<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>X, rtable<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>Y, </span>
+<span id="cb18-10">                         fk_ltable<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_id'</span>, fk_rtable<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_id'</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Metadata file is not present in the given path; proceeding to read the csv file.
+Metadata file is not present in the given path; proceeding to read the csv file.</code></pre>
+</div>
+</div>
+<div id="cell-22" class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Selecting features for Entity Matching Model</span></span>
+<span id="cb20-2">feature_table <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> em.get_features_for_matching(A, B, validate_inferred_attr_types<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span></code></pre></div>
+</div>
+<div id="cell-23" class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Building feature vectors for entity matching model</span></span>
+<span id="cb21-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Select the attrs. to be included in the feature vector table</span></span>
+<span id="cb21-3">attrs_from_table <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_entity'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_chamber'</span>,</span>
+<span id="cb21-4">                    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_entity'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_chamber'</span>,]</span>
+<span id="cb21-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Convert the labeled data to feature vectors using the feature table</span></span>
+<span id="cb21-6">H <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> em.extract_feature_vecs(G, </span>
+<span id="cb21-7">                            feature_table<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>feature_table, </span>
+<span id="cb21-8">                            attrs_before <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> attrs_from_table,</span>
+<span id="cb21-9">                            attrs_after<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'gold'</span>,</span>
+<span id="cb21-10">                            show_progress<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/exp/lib/python3.10/site-packages/numpy/core/fromnumeric.py:59: FutureWarning: 'DataFrame.swapaxes' is deprecated and will be removed in a future version. Please use 'DataFrame.transpose' instead.
+  return bound(*args, **kwds)</code></pre>
+</div>
+</div>
+<div id="cell-24" class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Training entity matching model with training data</span></span>
+<span id="cb23-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Instantiate the RF Matcher</span></span>
+<span id="cb23-3">rf <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> em.RFMatcher()</span>
+<span id="cb23-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Get the attributes to be projected while training</span></span>
+<span id="cb23-5">attrs_to_be_excluded <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> []</span>
+<span id="cb23-6">attrs_to_be_excluded.extend([<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'gold'</span>])</span>
+<span id="cb23-7">attrs_to_be_excluded.extend(attrs_from_table)</span>
+<span id="cb23-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Train using feature vectors from the labeled data.</span></span>
+<span id="cb23-9">rf.fit(table<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>H, exclude_attrs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>attrs_to_be_excluded, target_attr<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'gold'</span>)</span></code></pre></div>
+</div>
+<div id="cell-25" class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Prepare test data for inference</span></span>
+<span id="cb24-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Select the attrs. to be included in the feature vector table</span></span>
+<span id="cb24-3">attrs_from_table <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_entity'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_chamber'</span>,</span>
+<span id="cb24-4">                    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_entity'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_chamber'</span>,]</span>
+<span id="cb24-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Convert the cancidate set to feature vectors using the feature table</span></span>
+<span id="cb24-6">L <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> em.extract_feature_vecs(Z, feature_table<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>feature_table,</span>
+<span id="cb24-7">                             attrs_before<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> attrs_from_table,</span>
+<span id="cb24-8">                             show_progress<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>, n_jobs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb24-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Get the attributes to be excluded while predicting </span></span>
+<span id="cb24-10">attrs_to_be_excluded <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> []</span>
+<span id="cb24-11">attrs_to_be_excluded.extend([<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ltable_id'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'rtable_id'</span>])</span>
+<span id="cb24-12">attrs_to_be_excluded.extend(attrs_from_table)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/exp/lib/python3.10/site-packages/numpy/core/fromnumeric.py:59: FutureWarning: 'DataFrame.swapaxes' is deprecated and will be removed in a future version. Please use 'DataFrame.transpose' instead.
+  return bound(*args, **kwds)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+    - Avoid using `tokenizers` before the fork if possible
+    - Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+    - Avoid using `tokenizers` before the fork if possible
+    - Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+    - Avoid using `tokenizers` before the fork if possible
+    - Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+    - Avoid using `tokenizers` before the fork if possible
+    - Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+    - Avoid using `tokenizers` before the fork if possible
+    - Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+    - Avoid using `tokenizers` before the fork if possible
+    - Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)</code></pre>
+</div>
+</div>
+<div id="cell-26" class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Predict the matches on inference data</span></span>
+<span id="cb26-2">predictions <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> rf.predict(table<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>L, exclude_attrs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>attrs_to_be_excluded,                          </span>
+<span id="cb26-3">              append<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>, target_attr<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'predicted'</span>, inplace<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span>
+<span id="cb26-4">predictions.head()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<div>
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">_id</th>
+<th data-quarto-table-cell-role="th">ltable_id</th>
+<th data-quarto-table-cell-role="th">rtable_id</th>
+<th data-quarto-table-cell-role="th">ltable_entity</th>
+<th data-quarto-table-cell-role="th">ltable_chamber</th>
+<th data-quarto-table-cell-role="th">rtable_entity</th>
+<th data-quarto-table-cell-role="th">rtable_chamber</th>
+<th data-quarto-table-cell-role="th">id_id_exm</th>
+<th data-quarto-table-cell-role="th">id_id_anm</th>
+<th data-quarto-table-cell-role="th">id_id_lev_dist</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">chamber_chamber_jac_qgm_3_qgm_3</th>
+<th data-quarto-table-cell-role="th">entity_entity_jac_qgm_3_qgm_3</th>
+<th data-quarto-table-cell-role="th">entity_entity_cos_dlm_dc0_dlm_dc0</th>
+<th data-quarto-table-cell-role="th">entity_entity_jac_dlm_dc0_dlm_dc0</th>
+<th data-quarto-table-cell-role="th">entity_entity_mel</th>
+<th data-quarto-table-cell-role="th">entity_entity_lev_dist</th>
+<th data-quarto-table-cell-role="th">entity_entity_lev_sim</th>
+<th data-quarto-table-cell-role="th">entity_entity_nmw</th>
+<th data-quarto-table-cell-role="th">entity_entity_sw</th>
+<th data-quarto-table-cell-role="th">predicted</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>Spann-Wilder, Tiffany</td>
+<td>house</td>
+<td>Tiffany Spann-Wilder</td>
+<td>house</td>
+<td>1</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>...</td>
+<td>1.0</td>
+<td>1.000000</td>
+<td>1.000000</td>
+<td>1.000000</td>
+<td>1.000000</td>
+<td>0.0</td>
+<td>1.000000</td>
+<td>13.0</td>
+<td>13.0</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>Landon C. Dais</td>
+<td>house</td>
+<td>Landon Dais</td>
+<td>house</td>
+<td>1</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>...</td>
+<td>1.0</td>
+<td>0.700000</td>
+<td>0.666667</td>
+<td>0.500000</td>
+<td>0.973333</td>
+<td>1.0</td>
+<td>0.933333</td>
+<td>14.0</td>
+<td>14.0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>Giglio JA</td>
+<td>house</td>
+<td>Jodi Giglio</td>
+<td>house</td>
+<td>1</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>...</td>
+<td>1.0</td>
+<td>0.625000</td>
+<td>0.666667</td>
+<td>0.500000</td>
+<td>0.945395</td>
+<td>4.0</td>
+<td>0.789474</td>
+<td>12.0</td>
+<td>12.0</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>3</td>
+<td>3</td>
+<td>3</td>
+<td>Brown, M</td>
+<td>house</td>
+<td>Marla Gallo Brown</td>
+<td>house</td>
+<td>1</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>...</td>
+<td>1.0</td>
+<td>0.571429</td>
+<td>0.666667</td>
+<td>0.500000</td>
+<td>0.959048</td>
+<td>2.0</td>
+<td>0.866667</td>
+<td>12.0</td>
+<td>12.0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>J.T. 'Jabo' Waggoner\t</td>
+<td>house</td>
+<td>Jabo Waggoner</td>
+<td>house</td>
+<td>1</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>...</td>
+<td>1.0</td>
+<td>0.736842</td>
+<td>0.500000</td>
+<td>0.333333</td>
+<td>0.986667</td>
+<td>1.0</td>
+<td>0.933333</td>
+<td>13.0</td>
+<td>13.0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+
+<p>5 rows × 26 columns</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sources" class="level2">
+<h2 class="anchored" data-anchor-id="sources">Sources</h2>
+<section id="python-libraries" class="level3">
+<h3 class="anchored" data-anchor-id="python-libraries">Python Libraries</h3>
+<ul>
+<li><a href="https://github.com/wbsg-uni-mannheim/MatchGPT/blob/main/LLMForEM">https://github.com/wbsg-uni-mannheim/MatchGPT/blob/main/LLMForEM</a></li>
+<li><a href="https://huggingface.co/facebook/mgenre-wiki">https://huggingface.co/facebook/mgenre-wiki</a></li>
+<li><a href="https://github.com/explosion/projects/tree/v3/tutorials/nel_emerson">https://github.com/explosion/projects/tree/v3/tutorials/nel_emerson</a></li>
+<li><a href="https://pypi.org/project/spacy-entity-linker/">https://pypi.org/project/spacy-entity-linker/</a></li>
+<li><a href="https://huggingface.co/shahrukhx01/paraphrase-mpnet-base-v2-fuzzy-matcher?text=fuzzformer">https://huggingface.co/shahrukhx01/paraphrase-mpnet-base-v2-fuzzy-matcher?text=fuzzformer</a></li>
+<li><a href="https://github.com/megagonlabs/ditto">https://github.com/megagonlabs/ditto</a></li>
+<li><a href="https://dedupe.io">https://dedupe.io</a></li>
+<li><a href="https://github.com/anhaidgroup/deepmatcher">https://github.com/anhaidgroup/deepmatcher</a></li>
+<li><a href="https://nbviewer.org/github/anhaidgroup/py_entitymatching/blob/master/notebooks/guides/end_to_end_em_guides/Basic%20EM%20Workflow%20Restaurants%20-%201.ipynb">https://nbviewer.org/github/anhaidgroup/py_entitymatching</a></li>
+<li><a href="https://github.com/facebookresearch/GENRE">https://github.com/facebookresearch/GENRE</a></li>
+<li><a href="https://github.com/Babelscape/multinerd?tab=readme-ov-file">https://github.com/Babelscape/multinerd?tab=readme-ov-file</a></li>
+<li><a href="https://github.com/SapienzaNLP/extend?tab=readme-ov-file">https://github.com/SapienzaNLP/extend?tab=readme-ov-file</a></li>
+<li><a href="https://github.com/Lucaterre/spacyfishing">https://github.com/Lucaterre/spacyfishing</a></li>
+</ul>
+</section>
+<section id="papers" class="level3">
+<h3 class="anchored" data-anchor-id="papers">Papers</h3>
+<ul>
+<li><a href="https://arxiv.org/pdf/2407.04020">LLMAEL: Large Language Models are Good Context Augmenters for Entity Linking</a></li>
+<li><a href="https://arxiv.org/pdf/2310.11244">Entity Matching using Large Language Models</a></li>
+<li><a href="https://arxiv.org/pdf/2402.06738">EntGPT: Linking Generative Large Language Models with Knowledge Bases</a></li>
+<li><a href="https://arxiv.org/pdf/2401.03426">On Leveraging Large Language Models for Enhancing Entity Resolution</a></li>
+<li><a href="https://arxiv.org/pdf/2305.03423">Using ChatGPT for Entity Matching</a></li>
+<li><a href="https://towardsdatascience.com/is-this-you-entity-matching-in-the-modern-data-stack-with-large-language-models-19a730373b26">“Is This You?” Entity Matching in the Modern Data Stack with Large Language models</a></li>
+<li><a href="https://arxiv.org/pdf/1802.01021">DeepType: Multilingual Entity Linking by Neural Type System Evolution</a></li>
+<li><a href="https://aclanthology.org/2022.findings-naacl.60.pdf">MultiNERD: A Multilingual, Multi-Genre and Fine-Grained Dataset for Named Entity Recognition (and Disambiguation)</a></li>
+<li><a href="https://arxiv.org/pdf/2010.00904">AUTOREGRESSIVE ENTITY RETRIEVAL</a></li>
+<li><a href="https://arxiv.org/pdf/2004.00584">Deep Entity Matching with Pre-Trained Language Models</a></li>
+<li><a href="https://github.com/sebastianruder/NLP-progress/blob/master/english/entity_linking.md">https://github.com/sebastianruder/NLP-progress/blob/master/english/entity_linking.md</a></li>
+<li><a href="https://openai.com/index/discovering-types-for-entity-disambiguation/">https://openai.com/index/discovering-types-for-entity-disambiguation/</a></li>
+</ul>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>entity-matching</category>
+  <category>nlp</category>
+  <category>code</category>
+  <category>python</category>
+  <category>lm</category>
+  <category>gpt4</category>
+  <category>genre</category>
+  <category>rf</category>
+  <guid>https://santiagomvc.github.io/posts/entity_matching_intro/entity_matching_intro.html</guid>
+  <pubDate>Sun, 21 Jul 2024 05:00:00 GMT</pubDate>
+  <media:content url="https://santiagomvc.github.io/posts/entity_matching_intro/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
+</item>
 <item>
   <title>Applied Intro to Search Algorithms</title>
   <dc:creator>Santiago Velez</dc:creator>
@@ -1592,10 +3375,104 @@ font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
 
  ]]></description>
   <category>ai</category>
+  <category>lm</category>
   <category>public policy</category>
   <guid>https://santiagomvc.github.io/posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html</guid>
   <pubDate>Mon, 22 May 2023 05:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/ai_risks_for_public_policy/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
+</item>
+<item>
+  <title>Summarizing Bills With Generative AI</title>
+  <dc:creator>Santiago Velez</dc:creator>
+  <link>https://santiagomvc.github.io/posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p><em>This is an old version of an article published in Plural’s blog. You can find the new version <a href="https://pluralpolicy.com/blog/summarizing-bills-with-generative-ai/">here</a>.</em></p>
+<p>So far in 2023, thousands of bills have been introduced in jurisdictions across the country. The sooner people understand them, the sooner they can start advocating for what they care about. Since bills can be long and complex, it’s often helpful to have a summary of the changes the bill is proposing.&nbsp;</p>
+<p>Let’s take <a href="https://app.pluralpolicy.com/legislative-tracking/bill/details/state-ar-2023-sb396/1180536">SB 396</a>:</p>
+<p><em>“TO CREATE THE SOCIAL MEDIA SAFETY ACT; TO REQUIRE AGE VERIFICATION FOR USE OF SOCIAL MEDIA; AND TO CLARIFY LIABILITY FOR FAILURE TO PERFORM AGE VERIFICATION FOR USE OF SOCIAL MEDIA AND ILLEGAL RETENTION OF DATA.”</em>.</p>
+<p>This bill, from Arkansas’s 2023 Session,&nbsp; regulates minors’ use of social media, like verifying users’ age and requiring minors to have parental consent. The bill is pages long with technical jargon and multiple textual changes. In this case, as for most Arkansas bills, the release does not include a legislature provided summary.</p>
+<p>Given the advancements of Artificial Intelligence in language tasks, we believe Language Models can help us understand bills. Here’s an AI summary for SB 396:&nbsp;</p>
+<p><em>“In SB 396, the bill proposes the creation of the Social Media Safety Act, which requires social media companies to verify the age of account holders, obtain parental consent for minors, and use reasonable age verification methods, which may include obtaining digitized identification or using other commercially reasonable age verification methods. The bill specifies that social media companies that knowingly violate the proposed act will be liable for damages resulting from a minor accessing a social media platform. The bill also outlines liability for commercial entities and third-party vendors related to the retention of identifying information after access to a social media platform has been granted.”</em></p>
+<section id="summarizing-bill-texts" class="level2">
+<h2 class="anchored" data-anchor-id="summarizing-bill-texts">Summarizing Bill Texts</h2>
+<p>Language Models (LM) are specific generative models trained with big amounts of unstructured text data, with the goal of predicting the next word or the words adjacent inside the text corpus. With enough training data, number of parameters and computing power, these models can perform language tasks at human level and even maintain logical conversations. Language models are at the base of technologies such as ChatGPT, Bard, and others.</p>
+<p>Given the current capabilities of LM and generative AI, we decided to try using it to summarize bills. There’s ample evidence of using LLM to summarize new articles, emails, contracts, and even short stories. Longer texts such as books still present a challenge. Given the success in other fields, we decided to analyze bill texts using common summarization techniques.&nbsp;</p>
+<p>But it’s not a trivial task! Our first round of testing revealed some barriers and rough edges to this approach. Here are a few examples of our first round of AI generated summaries, with corresponding Policy Expert Evaluations:</p>
+<table class="table">
+<tbody>
+<tr class="odd">
+<td><strong>Bill Name </strong></td>
+<td><strong>AI Model-Generated Summary</strong></td>
+<td><strong>Policy Expert Evaluation</strong></td>
+</tr>
+<tr class="even">
+<td><a href="https://app.pluralpolicy.com/legislative-tracking/bill/details/state-mn-2023_2024-sf13/1050240">SF 13</a>: Juneteenth (June 19) state holiday recognition - Minnesota 2023-2024 REGULAR SESSION</td>
+<td>This bill recognizes Juneteenth, June 19th, as a state holiday and amends Minnesota Statutes 2022, sections 10.55 and 645.44, subdivision 5. It also requires the governor to issue a proclamation honoring the observance and recognizing the contributions African-Americans have made to Minnesota’s communities, culture, and economy. Additionally, public schools may offer instruction and programs on the occasion. The bill also states that when Juneteenth falls on a Sunday or Saturday, the following or preceding day shall be a holiday.</td>
+<td>Capturing the main intent of the bill, establishing Juneteenth as a state holiday, is quite impressive given that this would be a difficult bill for a layperson to understand. However, the summary indicates that the bill creates new requirements for the governor to issue a proclamation and encourages public school instruction on Juneteenth. In this, the summary is incorrect as that text already existed in statute and is not newly added by this legislation.&nbsp;</td>
+</tr>
+<tr class="odd">
+<td><a href="https://app.pluralpolicy.com/legislative-tracking/bill/details/state-mn-2023_2024-sf23/1129019">SF 23</a>: Conversion therapy prohibition establishment - Minnesota 2023-2024 REGULAR SESSION</td>
+<td>This bill prohibits conversion therapy with children or vulnerable adults, prohibits medical assistance coverage for conversion therapy, and prohibits the misrepresentation of conversion therapy services or products. It defines conversion therapy as any practice by a mental health practitioner or professional that seeks to change an individual’s sexual orientation or gender identity, and prohibits the use of any fraud, false pretense, false promise, false guarantee, misrepresentation, false or misleading statements, or deceptive practice when advertising or offering conversion therapy services.</td>
+<td>This summary does an excellent job of concisely summarizing the bills main actions and the details that really matter, like how these terms are defined.&nbsp;&nbsp;</td>
+</tr>
+<tr class="even">
+<td><a href="https://app.pluralpolicy.com/legislative-tracking/bill/details/state-mn-2023_2024-sf15/1050263">SF 15</a>: Full Social Security benefit subtraction and public pension benefit subtraction establishment - Minnesota 2023-2024 REGULAR SESSION</td>
+<td>This bill amends Minnesota Statutes 2022 to establish a public pension benefit subtraction for individual income taxation. It sets out the maximum subtraction and threshold amounts for married taxpayers filing a joint return, single or head-of-household taxpayers, and married taxpayers filing separate returns. It also defines provisional income, public pension exclusion, qualified benefits, and the maximum state exclusion. It also amends Minnesota Statutes 2022, section 290.091, subdivision 2, to define alternative minimum taxable income, investment interest, net minimum tax, regular tax, and tentative minimum tax. This section is effective for taxable years beginning after December 31, 2022.</td>
+<td>The summary doesn’t include the bill’s proposed removal of the cap on social security income that a taxpayer can subtract, which is a huge part of the impact of the bill.&nbsp;The latter half of the summary, starting with “it also defines provisional”, is also inaccurate as the bill itself makes no changes to law here. The model is interpreting existing statute text as if it is what the bill is proposing.</td>
+</tr>
+</tbody>
+</table>
+<p>As you can see, while the model is able to summarize some bills successfully, there are other cases where the model confuses statute and bill text, giving an incorrect summary of the proposed bill.</p>
+</section>
+<section id="summarizing-bill-changes" class="level2">
+<h2 class="anchored" data-anchor-id="summarizing-bill-changes">Summarizing Bill Changes</h2>
+<p>Using AI and LM to summarize bills may be more complex than it seems. Since bills are mainly proposed changes to current statutes, if we pass the proposed text to a summarization model, it is often not able to differentiate between current and proposed law. However, if we pass only the changes in text, the model won’t have the necessary context to understand what the bill is proposing to change —&nbsp; for instance, modifying the minimum wage from $12 to $15 may be a single character change.</p>
+<p>After additional research and help from our policy experts, we were able to find a combination of models and prompts that correctly identify most of the changes, with a better understanding of the current statutes and proposed law. Although it’s not perfect, the performance is significantly better.</p>
+<table class="table">
+<tbody>
+<tr class="odd">
+<td><strong>Bill Name</strong></td>
+<td><strong>Model Summary</strong></td>
+<td><strong>Policy Expert Evaluation</strong></td>
+</tr>
+<tr class="even">
+<td><a href="https://app.pluralpolicy.com/legislative-tracking/bill/details/state-mn-2023_2024-sf13/1050240">SF 13</a>: Juneteenth (June 19) state holiday recognition - Minnesota 2023-2024 REGULAR SESSION</td>
+<td>SF 13 proposes to amend Minnesota Statutes 2022, sections 10.55 and 645.44, subdivision 5, to recognize Juneteenth, June 19, as a state holiday in Minnesota. It specifies that Juneteenth is to be observed annually on the third Saturday in June and includes Juneteenth as a holiday in the definition of “Holiday” along with other nationally recognized holidays. The bill also mandates the governor to issue a proclamation honoring the observance and recognizing the contributions made by African-Americans to Minnesota’s communities, culture, and economy.</td>
+<td>This is a really hard one to get, but it does a pretty good job. Ideally, it would indicate that the first section of the bill changes Juneteenth from being recognized on the third Saturday, to being recognized on June 19th.</td>
+</tr>
+<tr class="odd">
+<td><a href="https://app.pluralpolicy.com/legislative-tracking/bill/details/state-mn-2023_2024-sf23/1129019">SF 23</a>: Conversion therapy prohibition establishment - Minnesota 2023-2024 REGULAR SESSION</td>
+<td>The bill proposed in SF 23 aims to prohibit conversion therapy with minors and vulnerable adults, prohibit medical assistance coverage for conversion therapy, and prohibit the misrepresentation of conversion therapy services or products. It also proposes amending Minnesota Statutes to add a new law to protect individuals from conversion therapy and to add definitions for conversion therapy and related terms, as well as outlining penalties for those who engage in or advertise conversion therapy.</td>
+<td>Very good again. 100% accurate.</td>
+</tr>
+<tr class="even">
+<td><a href="https://app.pluralpolicy.com/legislative-tracking/bill/details/state-mn-2023_2024-sf15/1050263">SF 15</a>: Full Social Security benefit subtraction and public pension benefit subtraction establishment - Minnesota 2023-2024 REGULAR SESSION</td>
+<td>SF 15 is proposing an amendment to Minnesota Statutes related to taxation and individual income. The bill proposes to establish a public pension benefit subtraction and make amendments to sections 290.0132 and 290.091 of the Minnesota Statutes.The bill would add a new subdivision 31 to section 290.0132 to establish a public pension income subtraction. The subtraction would be determined by the sum of the federal and state exclusions, with the maximum state exclusion being $5,450 for a joint return, half that amount for a married taxpayer filing a separate return, and $4,260 for all other taxpayers.The bill would also amend subdivision 26 of section 290.0132 related to Social Security benefits. It would allow a portion of taxable Social Security benefits received by a taxpayer in a taxable year as a subtraction. The maximum subtraction would be determined based on the taxpayer’s filing status and provisional income.Finally, the bill would amend subdivision 2 of section 290.091 related to the definitions of terms used in the tax imposed by that section.</td>
+<td>This summarization is accurate and valuable. There are some things that are slightly incorrect — for example, in paragraph 3, it says “it would allow a portion of taxable social….”, when in fact the bill allows all social security taxes to be subtracted, not a portion.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">Next steps</h2>
+<p>Despite improved performance, there are still hurdles to overcome. <a href="https://dl.acm.org/doi/10.1145/3442188.3445922">LMs can hallucinate, confidently share wrong answers, and even give biased responses</a>. LMs also have a hard time analyzing very long texts, so large omnibus bills may be out of the question for now. Finally, there’s a lot of room for improvement in the model and prompting area besides this experiment.</p>
+<p>While limitations exist, it’s likely that LMs and Generative AI can support and improve policy analysis, as it has been shown in other text based fields. While this remains a hard problem, we’re committed to keep exploring the edges of the intersection between AI and Public Policy.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>ai</category>
+  <category>lm</category>
+  <category>public policy</category>
+  <guid>https://santiagomvc.github.io/posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html</guid>
+  <pubDate>Thu, 20 Apr 2023 05:00:00 GMT</pubDate>
+  <media:content url="https://santiagomvc.github.io/posts/summarizing_bills_with_genai/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 </channel>
 </rss>
