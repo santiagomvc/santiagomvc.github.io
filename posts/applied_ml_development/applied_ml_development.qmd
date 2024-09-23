@@ -1,0 +1,135 @@
+---
+title: "ML Practice: Features"
+description: "Build what the business needs, based on what they said they want"
+image: "thumbnail.png"
+categories: [ml, startup]
+author: "Santiago Velez"
+date: "8/02/2024"
+date-modified: "8/02/2024"
+draft: true
+---
+
+This article is part of a group of learnings that have been useful when starting a ML Practice at tech companies. Each organization is different, so take everything with a grain of salt.
+
+## Building Features
+
+Business problems should be solved in the simplest way possible, but not simpler. The process of analyzing and modeling data is usually complex since it requires interdisciplinary work, historical data (usually in large amounts) and specialized algorithmic knowledge to tackle open-ended problems that may not have a solution. As a result, model building should be used in cases where traditional business rules and domain expertise comes short. Simple heuristics can go a long way, especially in never addressed issues. Though there are common problems and existing solutions, most insights features will have to go through an experimental process due to quirks in the data and specifics in the problem.
+
+There's no single way to separate ML (DS, AI, etc.) and Data Engineering work. Nevertheless, here are some ideas that can be used to identify problems suited for ML:
+
+* Unstructured data problems with existing ML solutions (ex: Face recognition, Voice to Text translation, Short Text Summarization)
+* Unstructured data problems commonly solved with ML (Text classification, image classification)
+* Problems commonly solved with statistical models (Uplift modeling, multi-armed bandits, survival analysis)
+* Classification and regression problems commonly solved with ML (Churn detection, sales forecasts)
+* Industry-specific problems with imperfect solutions (Tumor detection, bill summarization, weather forecasting)
+
+Even if a problem matches one of the categories above, it may not be suitable at the moment. Some possible reasons are:
+
+* The problem nature makes it hard to solve through available methods (ex: predicting stocks, weather)
+* Business rules or domain expertise works sufficiently well
+* There's no clear reason why a data-based approach may improve current performance
+* Not enough quality data available
+* Very low to no margin of error (ex: autonomous weapons)
+* Deep domain expertise is required and not available (ex: Public Policy, Medical Imaging)
+* Specialized technical knowledge is required and not available (Reinforcement Learning, Distributed Learning)
+* The infrastructure required is not available or affordable (ex: Large GPU training cluster, Large inference cluster)
+
+Before starting work on an ML project, here are some useful questions to ask:
+
+* Why should this problem be solved with a data-based approach?
+* What data could be used to solve this issue?
+* Do we have the data to try to solve this issue?
+* Can the data be trusted?
+* When and how is the data updated?
+* What is the process to get the required data?
+* What family of models is best suited to solve this issue?
+* How much data do I have for modeling/analysis?
+* What metrics should I use?
+* How is the data distribution changing over time?
+
+## Machine Learning Lifecycle
+
+The increased uncertainty in ML projects makes quick iteration and user validation even more relevant. There are multiple frameworks proposed to manage the Data Science and Machine Learning lifecycle, some of them are:
+
+### Knowledge Discovery in Databases (KDD)
+
+![KDD](https://infovis-wiki.net/w/images/4/4d/Fayyad96kdd-process.png)
+
+[https://www.sciencedirect.com/topics/computer-science/knowledge-discovery-in-database](https://www.sciencedirect.com/topics/computer-science/knowledge-discovery-in-database)
+
+### Cross Industry Standard Process for Data Mining (CRISP-DM)
+
+![CRISP DM](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/CRISP-DM_Process_Diagram.png/1920px-CRISP-DM_Process_Diagram.png)
+
+[https://en.wikipedia.org/wiki/Cross-industry_standard_process_for_data_mining](https://en.wikipedia.org/wiki/Cross-industry_standard_process_for_data_mining)
+
+### Team Data Science Process (TDSP)
+
+![TDSP](https://learn.microsoft.com/en-us/azure/architecture/data-science-process/media/overview/tdsp-lifecycle2.png)
+
+[https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview](https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview)
+
+### Common patterns in ML Lifecycle Frameworks
+
+* Business understanding is usually the starting point
+* Data analysis and transformations are higly relevant
+* There's always continual iteration between modeling and deployment
+* Metrics and evaluations enable improvements between deployments 
+
+## The ML Development Process
+
+Developing ML features can be divided into a continual iteration of 4 steps, three required and one optional depending on the specific project:
+
+* Experimentation
+* Evaluation
+* Deployment
+* *Integration*: 
+  
+Some features will require additional work from external teams (DE, Web developers) to be used. Though it's not ML teams reponsability, if it fails the feature won't reach the final user. 
+
+Iterating through this process as soon as possible allows to gather user feedback and reduce uncertainty. However, to do so in a safe way, you need to set minimal requirements.
+
+### Requirements to start the initial iteration
+
+* Business problem description
+* Sample of input data
+* Sample of labeled data (if required)
+* Defined deployment pattern
+* Defined integration plan
+* Measurable success criteria
+* Implemented baseline metrics (if possible)
+* Defined usage metrics (with direct or indirect feedback)
+* Defined model metrics
+  * First deployment threshold
+  * Final deployment threshold (proposed)
+
+### Requirements to end the the initial iteration
+
+* Deployment threshold met
+* Replicable experimental code
+* Basic deployment code
+* Basic integration code (if required)
+* Modular deployment/integration to allow quick model changes
+* Usage metrics collection implemented
+
+### Requirements to close the final iteration
+
+* Production-ready training and inference code with tests
+* Final deployment metrics met
+* Complete input data available
+* Success metrics collection implemented (if required)
+* Data drift metrics implemented
+
+Though this may be the final part of active ML development, as long as the model is in production some evaluations metrics should be required. 
+
+### Issues to try to avoid
+
+* No integration resources are available
+* Short projects with a single iteration
+
+## Resources
+
+* [https://www.ibm.com/docs/en/spss-modeler/saas?topic=dm-crisp-help-overview]
+* [https://link.springer.com/chapter/10.1007/978-1-4471-0351-6_12]
+* [https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview]
+* [https://martin.zinkevich.org/rules_of_ml/rules_of_ml.pdf]
