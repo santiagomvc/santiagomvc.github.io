@@ -1,40 +1,40 @@
 ---
 title: "ML Practice: Features"
-description: "Build what the business needs, based on what they said they want"
+description: "Listen what the business wants, build what they need, and always verify"
 image: "thumbnail.png"
 categories: [ml, startup]
 author: "Santiago Velez"
 date: "8/02/2024"
 date-modified: "8/02/2024"
-draft: true
+draft: false
 ---
 
-This article is part of a group of learnings that have been useful when starting a ML Practice at tech companies. Each organization is different, so take everything with a grain of salt.
+This article is part of a group of learnings that have been useful when building a ML Practice at Tech companies. Each organization is different, so take everything with a grain of salt.
 
 ## Building Features
 
-Business problems should be solved in the simplest way possible, but not simpler. The process of analyzing and modeling data is usually complex since it requires interdisciplinary work, historical data (usually in large amounts) and specialized algorithmic knowledge to tackle open-ended problems that may not have a solution. As a result, model building should be used in cases where traditional business rules and domain expertise comes short. Simple heuristics can go a long way, especially in never addressed issues. Though there are common problems and existing solutions, most insights features will have to go through an experimental process due to quirks in the data and specifics in the problem.
+Business problems should be solved in the simplest way possible, but not simpler. The process of analyzing and modeling data is frequently complex since it requires interdisciplinary work, historical data (usually in large amounts), and specialized algorithmic knowledge to tackle open-ended problems that may not have a solution. As a result, model training should be used in cases where traditional business rules and domain expertise comes short. Simple heuristics can go a long way, especially in issues never addressed before. Though there are common business problems and existing solutions, most ML features will go through an experimental phase due to quirks in the data and specifics in the problem.
 
-There's no single way to separate ML (DS, AI, etc.) and Data Engineering work. Nevertheless, here are some ideas that can be used to identify problems suited for ML:
+There's no single way to separate ML (DS, AI, etc.) from other engineering work. Nevertheless, here are some ideas that can be used to identify problems best suited for ML:
 
-* Unstructured data problems with existing ML solutions (ex: Face recognition, Voice to Text translation, Short Text Summarization)
-* Unstructured data problems commonly solved with ML (Text classification, image classification)
-* Problems commonly solved with statistical models (Uplift modeling, multi-armed bandits, survival analysis)
-* Classification and regression problems commonly solved with ML (Churn detection, sales forecasts)
-* Industry-specific problems with imperfect solutions (Tumor detection, bill summarization, weather forecasting)
+* Unstructured data problems with existing ML solutions (ex: Face recognition, Voice to Text translation, Short Text Summarization).
+* Unstructured data problems commonly solved by training ML models (Text classification, custom image classification).
+* Problems commonly solved with statistical models (Uplift modeling, multi-armed bandits, survival analysis).
+* Structured classification and regression problems commonly solved with ML (Churn detection, sales forecasts).
+* Industry-specific problems with imperfect solutions (Tumor detection, bill summarization, weather forecasting).
 
-Even if a problem matches one of the categories above, it may not be suitable at the moment. Some possible reasons are:
+Even if a problem matches one of the categories above, it may not be fixable at the moment. Some possible reasons are:
 
-* The problem nature makes it hard to solve through available methods (ex: predicting stocks, weather)
-* Business rules or domain expertise works sufficiently well
-* There's no clear reason why a data-based approach may improve current performance
-* Not enough quality data available
-* Very low to no margin of error (ex: autonomous weapons)
-* Deep domain expertise is required and not available (ex: Public Policy, Medical Imaging)
-* Specialized technical knowledge is required and not available (Reinforcement Learning, Distributed Learning)
-* The infrastructure required is not available or affordable (ex: Large GPU training cluster, Large inference cluster)
+* The problem's nature makes it hard to solve through existing methods (ex: predicting stocks, weather).
+* Business rules or domain expertise works sufficiently well.
+* There's no clear reason why a data-based approach may improve current performance.
+* Not enough quality data available.
+* Very low to no margin of error (autonomous weapons).
+* Deep domain expertise is required and not available (Public Policy, Medical Imaging).
+* Specialized technical knowledge is required and not available (Reinforcement Learning, Distributed Learning).
+* The infrastructure required is not available or affordable (Large GPU training clusters, Large inference clusters).
 
-Before starting work on an ML project, here are some useful questions to ask:
+Before starting ML development to build a business feature, here are some useful questions to ask:
 
 * Why should this problem be solved with a data-based approach?
 * What data could be used to solve this issue?
@@ -46,10 +46,11 @@ Before starting work on an ML project, here are some useful questions to ask:
 * How much data do I have for modeling/analysis?
 * What metrics should I use?
 * How is the data distribution changing over time?
+* How does the existing research approach the problem?
 
-## Machine Learning Lifecycle
+## ML Lifecycle Frameworks
 
-The increased uncertainty in ML projects makes quick iteration and user validation even more relevant. There are multiple frameworks proposed to manage the Data Science and Machine Learning lifecycle, some of them are:
+The increased uncertainty in ML projects makes quick iteration and user validation even more relevant. There are multiple frameworks proposed to manage the Data Science and Machine Learning lifecycle. Though we won't explain them in detail, some of them are:
 
 ### Knowledge Discovery in Databases (KDD)
 
@@ -71,31 +72,31 @@ The increased uncertainty in ML projects makes quick iteration and user validati
 
 ### Common patterns in ML Lifecycle Frameworks
 
-* Business understanding is usually the starting point
-* Data analysis and transformations are higly relevant
-* There's always continual iteration between modeling and deployment
-* Metrics and evaluations enable improvements between deployments 
+* Business understanding is usually the starting point.
+* Data analysis and transformations are very important.
+* There's always continual iteration between modeling and deployment.
+* Metrics and evaluations enable improvements in the cycle.
 
-## The ML Development Process
+## ML Feature Development
 
-Developing ML features can be divided into a continual iteration of 4 steps, three required and one optional depending on the specific project:
+Developing ML features can be divided into continual iteration of four steps, three required and one optional depending on the specific project:
 
 * Experimentation
 * Evaluation
 * Deployment
-* *Integration*: 
+* *Integration*
   
-Some features will require additional work from external teams (DE, Web developers) to be used. Though it's not ML teams reponsability, if it fails the feature won't reach the final user. 
+Some features will require additional work from external teams (DE, Web developers) to be used. Though it's not ML team direct reponsability, if it fails the feature won't reach the final user. That's why *Integration* is included as part of the cycle.
 
-Iterating through this process as soon as possible allows to gather user feedback and reduce uncertainty. However, to do so in a safe way, you need to set minimal requirements.
+Iterating through this process as soon as possible allows to gather user feedback and reduce uncertainty. However, a minimal set of requirements is needed to develop ML safely and effectively.
 
-### Requirements to start the initial iteration
+### Requirements before the initial iteration
 
 * Business problem description
 * Sample of input data
 * Sample of labeled data (if required)
-* Defined deployment pattern
-* Defined integration plan
+* Expected deployment pattern
+* Expected integration plan
 * Measurable success criteria
 * Implemented baseline metrics (if possible)
 * Defined usage metrics (with direct or indirect feedback)
@@ -103,7 +104,7 @@ Iterating through this process as soon as possible allows to gather user feedbac
   * First deployment threshold
   * Final deployment threshold (proposed)
 
-### Requirements to end the the initial iteration
+### Requirements to close the the initial iteration
 
 * Deployment threshold met
 * Replicable experimental code
@@ -120,12 +121,12 @@ Iterating through this process as soon as possible allows to gather user feedbac
 * Success metrics collection implemented (if required)
 * Data drift metrics implemented
 
-Though this may be the final part of active ML development, as long as the model is in production some evaluations metrics should be required. 
+Though this may be the final part of an active ML development, as long as the model is in production some evaluations metrics should be required. 
 
-### Issues to try to avoid
+### Common issues to avoid
 
-* No integration resources are available
-* Short projects with a single iteration
+* No integration resources are available for the project
+* Very short projects with a single iteration
 
 ## Resources
 
