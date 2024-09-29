@@ -10,7 +10,179 @@
 <atom:link href="https://santiagomvc.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Notes from building Machine Learning solutions in the wild</description>
 <generator>quarto-1.4.550</generator>
-<lastBuildDate>Sun, 21 Jul 2024 05:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 28 Sep 2024 05:00:00 GMT</lastBuildDate>
+<item>
+  <title>ML Practice: Building Features</title>
+  <dc:creator>Santiago Velez</dc:creator>
+  <link>https://santiagomvc.github.io/posts/ml_practice_building_features/ml_practice_building_features.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p><em>This post shares some of the learnings from building ML practices at tech companies. Each organization is different, so take everything with a pinch of salt.</em></p>
+<p>Business problems should be solved in the simplest way possible, but not simpler. The process of analyzing and modeling data is frequently complex since it requires interdisciplinary work, historical data (usually in large amounts), and specialized algorithmic knowledge to tackle open-ended problems that may not have a solution. As a result, model training should be used in cases where traditional business rules and domain expertise come short. Simple heuristics can go a long way, especially in issues never addressed before. Though there are common business problems and existing solutions, most ML features will go through an experimental phase due to quirks in the data and specifics in the problem.</p>
+<section id="business-features-and-ml" class="level2">
+<h2 class="anchored" data-anchor-id="business-features-and-ml">Business features and ML</h2>
+<p>There’s no single way to separate ML (DS, AI, etc.) from other engineering work. Nevertheless, here are some ideas that can be used to identify problems best suited for ML:</p>
+<ul>
+<li>Unstructured data problems with existing ML solutions (ex: Face recognition, Voice to Text translation, Short Text Summarization).</li>
+<li>Unstructured data problems commonly solved by training ML models (Text classification, custom image classification).</li>
+<li>Problems commonly solved with statistical models (Uplift modeling, multi-armed bandits, survival analysis).</li>
+<li>Structured classification and regression problems commonly solved with ML (Churn detection, sales forecasts).</li>
+<li>Industry-specific problems with imperfect solutions (Tumor detection, bill summarization, weather forecasting).</li>
+</ul>
+<p>Even if a problem matches one of the categories above, it may not be fixable at the moment. Some possible reasons are:</p>
+<ul>
+<li>The problem’s nature makes it hard to solve through existing methods (ex: predicting stocks, and weather).</li>
+<li>Business rules or domain expertise works sufficiently well.</li>
+<li>There’s no clear reason why a data-based approach may improve current performance.</li>
+<li>Not enough quality data available.</li>
+<li>Very low to no margin of error (autonomous weapons).</li>
+<li>Deep domain expertise is required and not available (Public Policy, Medical Imaging).</li>
+<li>Specialized technical knowledge is required and not available (Reinforcement Learning, Distributed Learning).</li>
+<li>The infrastructure required is not available or affordable (Large GPU training clusters, Large inference clusters).</li>
+</ul>
+<p>Before starting ML development to build a business feature, here are some useful questions to ask:</p>
+<ul>
+<li>Why should this problem be solved with a data-based approach?</li>
+<li>What data could be used to solve this issue?</li>
+<li>Do we have the data to try to solve this issue?</li>
+<li>Can the data be trusted?</li>
+<li>When and how is the data updated?</li>
+<li>What is the process to get the required data?</li>
+<li>What family of models is best suited to solve this issue?</li>
+<li>How much data do I have for modeling/analysis?</li>
+<li>What metrics should I use?</li>
+<li>How is the data distribution changing over time?</li>
+<li>How does the existing research approach the problem?</li>
+</ul>
+</section>
+<section id="ml-lifecycle-frameworks" class="level2">
+<h2 class="anchored" data-anchor-id="ml-lifecycle-frameworks">ML Lifecycle Frameworks</h2>
+<p>The increased uncertainty in ML projects makes quick iteration and user validation even more relevant. There are multiple frameworks proposed to manage the Data Science and Machine Learning lifecycle. Though we won’t explain them in detail, some of them are:</p>
+<section id="knowledge-discovery-in-databases-kdd" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-discovery-in-databases-kdd">Knowledge Discovery in Databases (KDD)</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://infovis-wiki.net/w/images/4/4d/Fayyad96kdd-process.png" class="img-fluid figure-img"></p>
+<figcaption>KDD</figcaption>
+</figure>
+</div>
+<p><a href="https://www.sciencedirect.com/topics/computer-science/knowledge-discovery-in-database">https://www.sciencedirect.com/topics/computer-science/knowledge-discovery-in-database</a></p>
+</section>
+<section id="cross-industry-standard-process-for-data-mining-crisp-dm" class="level3">
+<h3 class="anchored" data-anchor-id="cross-industry-standard-process-for-data-mining-crisp-dm">Cross Industry Standard Process for Data Mining (CRISP-DM)</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/CRISP-DM_Process_Diagram.png/1920px-CRISP-DM_Process_Diagram.png" class="img-fluid figure-img"></p>
+<figcaption>CRISP DM</figcaption>
+</figure>
+</div>
+<p><a href="https://en.wikipedia.org/wiki/Cross-industry_standard_process_for_data_mining">https://en.wikipedia.org/wiki/Cross-industry_standard_process_for_data_mining</a></p>
+</section>
+<section id="team-data-science-process-tdsp" class="level3">
+<h3 class="anchored" data-anchor-id="team-data-science-process-tdsp">Team Data Science Process (TDSP)</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://learn.microsoft.com/en-us/azure/architecture/data-science-process/media/overview/tdsp-lifecycle2.png" class="img-fluid figure-img"></p>
+<figcaption>TDSP</figcaption>
+</figure>
+</div>
+<p><a href="https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview">https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview</a></p>
+</section>
+<section id="common-patterns-in-ml-lifecycle-frameworks" class="level3">
+<h3 class="anchored" data-anchor-id="common-patterns-in-ml-lifecycle-frameworks">Common Patterns in ML Lifecycle Frameworks</h3>
+<ul>
+<li>Business understanding is usually the starting point.</li>
+<li>Data analysis and transformations are very important.</li>
+<li>There’s always continual iteration between modeling and deployment.</li>
+<li>Metrics and evaluations enable improvements in the cycle.</li>
+</ul>
+</section>
+</section>
+<section id="ml-feature-development" class="level2">
+<h2 class="anchored" data-anchor-id="ml-feature-development">ML Feature Development</h2>
+<p>Developing ML features can be divided into continual iterations of four steps, three required and one optional depending on the specific project:</p>
+<ul>
+<li>Experimentation</li>
+<li>Evaluation</li>
+<li>Deployment</li>
+<li><em>Integration</em></li>
+</ul>
+<p>Some features will require additional work from external teams (DE, Web developers) to be used. Though it’s not the ML team’s direct responsibility, if it fails the feature won’t reach the final user. That’s why <em>Integration</em> is included as part of the cycle.</p>
+<p>Iterating through this process as soon as possible allows us to gather user feedback and reduce uncertainty. However, minimal requirements are needed to develop ML safely and effectively.</p>
+<section id="requirements-before-the-initial-iteration" class="level3">
+<h3 class="anchored" data-anchor-id="requirements-before-the-initial-iteration">Requirements before the initial iteration</h3>
+<ul>
+<li>Business problem description</li>
+<li>Sample of input data</li>
+<li>Sample of labeled data (if required)</li>
+<li>Expected deployment pattern</li>
+<li>Expected integration plan</li>
+<li>Measurable success criteria</li>
+<li>Implemented baseline metrics (if possible)</li>
+<li>Defined usage metrics (with direct or indirect feedback)</li>
+<li>Defined model metrics
+<ul>
+<li>First deployment threshold</li>
+<li>Final deployment threshold (proposed)</li>
+</ul></li>
+</ul>
+</section>
+<section id="requirements-to-close-the-initial-iteration" class="level3">
+<h3 class="anchored" data-anchor-id="requirements-to-close-the-initial-iteration">Requirements to close the initial iteration</h3>
+<ul>
+<li>Deployment threshold met</li>
+<li>Replicable experimental code</li>
+<li>Basic deployment code</li>
+<li>Basic integration code (if required)</li>
+<li>Modular deployment/integration to allow quick model changes</li>
+<li>Usage metrics collection implemented</li>
+</ul>
+</section>
+<section id="requirements-to-close-the-final-iteration" class="level3">
+<h3 class="anchored" data-anchor-id="requirements-to-close-the-final-iteration">Requirements to close the final iteration</h3>
+<ul>
+<li>Production-ready training and inference code with tests</li>
+<li>Final deployment metrics met</li>
+<li>Complete input data available</li>
+<li>Success metrics collection implemented (if required)</li>
+<li>Data drift metrics implemented</li>
+</ul>
+<p>Though this may be the final part of an active ML development, as long as the model is in production some evaluation metrics should be required.</p>
+</section>
+<section id="common-issues-to-avoid" class="level3">
+<h3 class="anchored" data-anchor-id="common-issues-to-avoid">Common issues to avoid</h3>
+<ul>
+<li>No integration resources are available for the project</li>
+<li>Very short projects with a single iteration</li>
+</ul>
+</section>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<ul>
+<li><a href="https://www.ibm.com/docs/en/spss-modeler/saas?topic=dm-crisp-help-overview">https://www.ibm.com/docs/en/spss-modeler/saas?topic=dm-crisp-help-overview</a></li>
+<li><a href="https://link.springer.com/chapter/10.1007/978-1-4471-0351-6_12">https://link.springer.com/chapter/10.1007/978-1-4471-0351-6_12</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview">https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview</a></li>
+<li><a href="https://martin.zinkevich.org/rules_of_ml/rules_of_ml.pdf">https://martin.zinkevich.org/rules_of_ml/rules_of_ml.pdf</a></li>
+</ul>
+
+
+</section>
+
+ ]]></description>
+  <category>ml_practice</category>
+  <category>ml</category>
+  <category>ai</category>
+  <category>features</category>
+  <category>business</category>
+  <guid>https://santiagomvc.github.io/posts/ml_practice_building_features/ml_practice_building_features.html</guid>
+  <pubDate>Sat, 28 Sep 2024 05:00:00 GMT</pubDate>
+  <media:content url="https://santiagomvc.github.io/posts/ml_practice_building_features/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
+</item>
 <item>
   <title>Intro to Entity Matching</title>
   <dc:creator>Santiago Velez</dc:creator>
