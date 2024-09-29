@@ -1,19 +1,19 @@
 ---
-title: "ML Practice: Features"
-description: "Listen what the business wants, build what they need, and always verify"
+title: "ML Practice: Building Features"
+description: "Hear what business wants and build what users need."
 image: "thumbnail.png"
-categories: [ml, startup]
+categories: [ml_practice, ml, ai, features, business]
 author: "Santiago Velez"
-date: "8/02/2024"
-date-modified: "8/02/2024"
+date: "9/28/2024"
+date-modified: "9/28/2024"
 draft: false
 ---
 
-This article is part of a group of learnings that have been useful when building a ML Practice at Tech companies. Each organization is different, so take everything with a grain of salt.
+*This post shares some of the learnings from building ML practices at tech companies. Each organization is different, so take everything with a pinch of salt.*
 
-## Building Features
+Business problems should be solved in the simplest way possible, but not simpler. The process of analyzing and modeling data is frequently complex since it requires interdisciplinary work, historical data (usually in large amounts), and specialized algorithmic knowledge to tackle open-ended problems that may not have a solution. As a result, model training should be used in cases where traditional business rules and domain expertise come short. Simple heuristics can go a long way, especially in issues never addressed before. Though there are common business problems and existing solutions, most ML features will go through an experimental phase due to quirks in the data and specifics in the problem.
 
-Business problems should be solved in the simplest way possible, but not simpler. The process of analyzing and modeling data is frequently complex since it requires interdisciplinary work, historical data (usually in large amounts), and specialized algorithmic knowledge to tackle open-ended problems that may not have a solution. As a result, model training should be used in cases where traditional business rules and domain expertise comes short. Simple heuristics can go a long way, especially in issues never addressed before. Though there are common business problems and existing solutions, most ML features will go through an experimental phase due to quirks in the data and specifics in the problem.
+## Business features and ML
 
 There's no single way to separate ML (DS, AI, etc.) from other engineering work. Nevertheless, here are some ideas that can be used to identify problems best suited for ML:
 
@@ -25,7 +25,7 @@ There's no single way to separate ML (DS, AI, etc.) from other engineering work.
 
 Even if a problem matches one of the categories above, it may not be fixable at the moment. Some possible reasons are:
 
-* The problem's nature makes it hard to solve through existing methods (ex: predicting stocks, weather).
+* The problem's nature makes it hard to solve through existing methods (ex: predicting stocks, and weather).
 * Business rules or domain expertise works sufficiently well.
 * There's no clear reason why a data-based approach may improve current performance.
 * Not enough quality data available.
@@ -70,7 +70,7 @@ The increased uncertainty in ML projects makes quick iteration and user validati
 
 [https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview](https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview)
 
-### Common patterns in ML Lifecycle Frameworks
+### Common Patterns in ML Lifecycle Frameworks
 
 * Business understanding is usually the starting point.
 * Data analysis and transformations are very important.
@@ -79,16 +79,16 @@ The increased uncertainty in ML projects makes quick iteration and user validati
 
 ## ML Feature Development
 
-Developing ML features can be divided into continual iteration of four steps, three required and one optional depending on the specific project:
+Developing ML features can be divided into continual iterations of four steps, three required and one optional depending on the specific project:
 
 * Experimentation
 * Evaluation
 * Deployment
 * *Integration*
-  
-Some features will require additional work from external teams (DE, Web developers) to be used. Though it's not ML team direct reponsability, if it fails the feature won't reach the final user. That's why *Integration* is included as part of the cycle.
 
-Iterating through this process as soon as possible allows to gather user feedback and reduce uncertainty. However, a minimal set of requirements is needed to develop ML safely and effectively.
+Some features will require additional work from external teams (DE, Web developers) to be used. Though it's not the ML team’s direct responsibility, if it fails the feature won't reach the final user. That's why *Integration* is included as part of the cycle.
+
+Iterating through this process as soon as possible allows us to gather user feedback and reduce uncertainty. However, minimal requirements are needed to develop ML safely and effectively.
 
 ### Requirements before the initial iteration
 
@@ -104,7 +104,7 @@ Iterating through this process as soon as possible allows to gather user feedbac
   * First deployment threshold
   * Final deployment threshold (proposed)
 
-### Requirements to close the the initial iteration
+### Requirements to close the initial iteration
 
 * Deployment threshold met
 * Replicable experimental code
@@ -121,16 +121,16 @@ Iterating through this process as soon as possible allows to gather user feedbac
 * Success metrics collection implemented (if required)
 * Data drift metrics implemented
 
-Though this may be the final part of an active ML development, as long as the model is in production some evaluations metrics should be required. 
+Though this may be the final part of an active ML development, as long as the model is in production some evaluation metrics should be required.
 
 ### Common issues to avoid
 
 * No integration resources are available for the project
 * Very short projects with a single iteration
 
-## Resources
+## References
 
-* [https://www.ibm.com/docs/en/spss-modeler/saas?topic=dm-crisp-help-overview]
-* [https://link.springer.com/chapter/10.1007/978-1-4471-0351-6_12]
-* [https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview]
-* [https://martin.zinkevich.org/rules_of_ml/rules_of_ml.pdf]
+* [https://www.ibm.com/docs/en/spss-modeler/saas?topic=dm-crisp-help-overview](https://www.ibm.com/docs/en/spss-modeler/saas?topic=dm-crisp-help-overview)
+* [https://link.springer.com/chapter/10.1007/978-1-4471-0351-6_12](https://link.springer.com/chapter/10.1007/978-1-4471-0351-6_12)
+* [https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview](https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview)
+* [https://martin.zinkevich.org/rules_of_ml/rules_of_ml.pdf](https://martin.zinkevich.org/rules_of_ml/rules_of_ml.pdf)
