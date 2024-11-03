@@ -1,0 +1,138 @@
+---
+title: "Notes on Anthropic & Menlo Builder Day"
+description: "Claude keeps getting better"
+image: "thumbnail.png"
+categories: [ai, lm, anthropic, claude, menlo, events, hackathon]
+author: "Santiago Velez"
+date: "11/03/2024"
+date-modified: "11/03/2024"
+draft: false
+---
+
+Anthropic/Menlo Builder Day was a one day event set on November 2 2024, focused mainly on sharing updates on Anthropic new developments, and encouraging Claude applications with a 4 hours hackathon. Here are my lightly edited notes on the event.
+
+## Dario Fireside Chat
+
+- Driven by the question of intelligence
+- Scaling is extremely valuable
+- Text is easy to scale (lots of data, self supervised)
+- Simple for RLFH too
+- Alignment work is stronger in Anthropic (constitutional ai, interpretability)
+    - *Personal observation:* Claude's frontier models seem to have better meta understanding than other models. A few examples I have seen are better developer jokes, identifying the "needle in haystack" test, stop responses after a cycle of repeated inputs, etc.
+- Talent density is the most important factor
+- Speed-size-quality trade off for models
+- Models should be general purpose
+- The bigger model the more steerable
+- Model personality is important for final user, more art than science
+- Models should take actions (agents, ex: email legislators)
+- Agents in the world have more range to do harm than regular chatbots
+- Claude compute use still has some issues
+- Code models will advance faster because they don’t need humans in the loop
+    - *Personal observation:* Is there a path to improve system 2 reasoning there?
+- Workforce, legal, biomedicine software will grow faster
+- Startups are exponential work, AI startups' exponential grows quicker
+- Hard to know which advise to follow since current AI startups are different from previous types of startups
+- Models will continue to be expensive (no room for more than 3 foundation models general companies), lots of companies for smaller and more specific models.
+- [Machines of Loving Grace](https://darioamodei.com/machines-of-loving-grace): 
+    - Biology improvements, healthcare, etc.
+    - Defending the country and its ideals
+    - Worry about the intentional bad use of the models
+- 500k context window for enterprise customers
+- Extending the model context AND having the model perform well with the complete context is hard
+- Asking models to write more succinctly usually reduces the quality of the response
+    - *Personal observation:* I have seen this myself, models usually “think” by writing
+- Models are able to identify and respond to what users want to hear, instead of what it may be a more accurate answer. LMSys may be biased due to "People Pleasing"
+- Core models should be as good as possible, but there can be differenciation within that range
+    - *Personal observation:* What about the ARC challenge?
+
+## Anthropic API Technical Deep Dive
+
+- Upgraded 3.5 Sonnet
+    - State of the art on coding
+- 3.5 Haiku coming soon
+- Computer use
+    - Use apps, create docs, etc.
+    - Useful for developer unfriendly tasks 
+        - *Personal observation:* Web scrapers?
+    - Public data and guide available, use through the api
+    - There are prompting tips and techniques to constrain behavior and increase speed (like caching)
+    - It's a subset of tool use
+    - Limitations
+        - Latency
+        - Accuracy, specially on complex tasks
+        - Scrolling is unreliable
+        - Spreadsheets
+        - Account creations
+        - Captchas (intentionally hard)
+        - Vulnerabilities (prompt injection)
+    - Prompting tips
+        - Limit to simple well defined tasks
+        - Confirm output success
+- Prompting recommendations
+    - Develop test cases
+    - Engineer preliminary prompts and iterate
+- Workbench
+    - Supports variables
+    - Improves initial prompts
+    - Support for building evaluation sets
+    - *Personal observation:* How useful is it, are there any metrics?
+- What’s next
+    - Customize performance, improve latency, etc.
+    - Interpretability
+    - Alignment
+    - Pre-training
+        - Improve vision compared to text capabilities
+    - Enhancing retrieval
+    - Agents and orchestration
+- They take Claude docs seriously
+
+## Anthropic/Menlo Anthology Fund
+
+- 100M to invest in AI companies
+- Mention you were at Builder Day
+
+## Hackathon Development Guidelines
+
+- 4 hours of time
+- Ideally should have started the project before
+- Individuals or group of 3
+- Multi pass judge
+- Criteria
+    - Creative
+    - Improves work productivity
+    - Potential for social good
+- 5 pm prejudging
+    - 5 min per project
+- Prizes
+    - First
+        - 10k cash
+        - 50k Anthropic credits
+        - 50k AWS credits
+    - Second
+    - Third
+
+## Research Breakthroughs in Interpretability
+
+Probably the best talk of the day, but did not take notes because it was during development time.
+
+- Superposition hypothesis: Models represent many more sparse, interpretable variables than they have features. More information can be found [here](https://www.anthropic.com/research/mapping-mind-language-model)
+- [Golden Gate Claude](https://www.anthropic.com/news/golden-gate-claude) is an application of these ideas
+- There are many hidden variables that the research team has not yet discovered
+
+## Hackathon Project
+
+Using previous work on public policy and bill summaries, I built a web app that receives a jurisdictions and a legislator, and returns the legislator informations, vote history with bill summaries, and a report on the vote history. Though the demo is down for now, here's a gif for reference:
+
+![](./public_policy_app.gif)
+
+
+## Awards
+
+1. Robot arm piloting with Claude
+2. Building new captchas in the age of AI
+    - *Personal observation:* Pretty smart and creative, my favorite of the 3
+3. Improving PRDs with custom personas powered by Claude
+
+## Final Thoughts
+
+Overall it was a fun event with some really interesting talks. My main complain is that one day is not enough for multiple interesting talks and demo development (almost) from scratch, so either focusing on one or having multiple days would a be good idea.
