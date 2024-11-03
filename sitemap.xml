@@ -2,34 +2,38 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://santiagomvc.github.io/about.html</loc>
-    <lastmod>2024-07-21T16:27:31.299Z</lastmod>
+    <lastmod>2024-11-03T15:33:15.024Z</lastmod>
   </url>
   <url>
     <loc>https://santiagomvc.github.io/posts/entity_matching_intro/entity_matching_intro.html</loc>
-    <lastmod>2024-07-22T01:46:36.952Z</lastmod>
+    <lastmod>2024-11-03T15:33:15.026Z</lastmod>
   </url>
   <url>
-    <loc>https://santiagomvc.github.io/posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html</loc>
-    <lastmod>2024-07-14T15:11:40.593Z</lastmod>
-  </url>
-  <url>
-    <loc>https://santiagomvc.github.io/posts/intro_to_search_algorithms/intro_to_search_algorithms.html</loc>
-    <lastmod>2024-07-21T15:42:05.368Z</lastmod>
-  </url>
-  <url>
-    <loc>https://santiagomvc.github.io/posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html</loc>
-    <lastmod>2024-07-22T00:23:02.591Z</lastmod>
+    <loc>https://santiagomvc.github.io/posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html</loc>
+    <lastmod>2024-11-03T21:55:36.959Z</lastmod>
   </url>
   <url>
     <loc>https://santiagomvc.github.io/posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html</loc>
-    <lastmod>2024-07-22T00:21:13.364Z</lastmod>
+    <lastmod>2024-11-03T15:33:15.024Z</lastmod>
+  </url>
+  <url>
+    <loc>https://santiagomvc.github.io/posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html</loc>
+    <lastmod>2024-11-03T15:33:15.031Z</lastmod>
+  </url>
+  <url>
+    <loc>https://santiagomvc.github.io/posts/intro_to_search_algorithms/intro_to_search_algorithms.html</loc>
+    <lastmod>2024-11-03T15:33:15.029Z</lastmod>
+  </url>
+  <url>
+    <loc>https://santiagomvc.github.io/posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html</loc>
+    <lastmod>2024-11-03T15:33:15.027Z</lastmod>
   </url>
   <url>
     <loc>https://santiagomvc.github.io/posts/ml_practice_building_features/ml_practice_building_features.html</loc>
-    <lastmod>2024-09-29T00:17:39.539Z</lastmod>
+    <lastmod>2024-11-03T15:33:15.030Z</lastmod>
   </url>
   <url>
     <loc>https://santiagomvc.github.io/index.html</loc>
-    <lastmod>2024-07-13T19:47:00.790Z</lastmod>
+    <lastmod>2024-11-03T15:33:15.024Z</lastmod>
   </url>
 </urlset>

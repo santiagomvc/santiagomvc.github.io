@@ -9,8 +9,207 @@
 <link>https://santiagomvc.github.io/</link>
 <atom:link href="https://santiagomvc.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Notes from building Machine Learning solutions in the wild</description>
-<generator>quarto-1.4.550</generator>
-<lastBuildDate>Sat, 28 Sep 2024 05:00:00 GMT</lastBuildDate>
+<generator>quarto-1.6.32</generator>
+<lastBuildDate>Sun, 03 Nov 2024 04:00:00 GMT</lastBuildDate>
+<item>
+  <title>Notes on Anthropic &amp; Menlo Builder Day</title>
+  <dc:creator>Santiago Velez</dc:creator>
+  <link>https://santiagomvc.github.io/posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>Anthropic/Menlo Builder Day was a one day event set on November 2 2024, focused mainly on sharing updates on Anthropic new developments, and encouraging Claude applications with a 4 hours hackathon. Here are my lightly edited notes on the event.</p>
+<section id="dario-fireside-chat" class="level2">
+<h2 class="anchored" data-anchor-id="dario-fireside-chat">Dario Fireside Chat</h2>
+<ul>
+<li>Driven by the question of intelligence</li>
+<li>Scaling is extremely valuable</li>
+<li>Text is easy to scale (lots of data, self supervised)</li>
+<li>Simple for RLFH too</li>
+<li>Alignment work is stronger in Anthropic (constitutional ai, interpretability)
+<ul>
+<li><em>Personal observation:</em> Claude’s frontier models seem to have better meta understanding than other models. A few examples I have seen are better developer jokes, identifying the “needle in haystack” test, stop responses after a cycle of repeated inputs, etc.</li>
+</ul></li>
+<li>Talent density is the most important factor</li>
+<li>Speed-size-quality trade off for models</li>
+<li>Models should be general purpose</li>
+<li>The bigger model the more steerable</li>
+<li>Model personality is important for final user, more art than science</li>
+<li>Models should take actions (agents, ex: email legislators)</li>
+<li>Agents in the world have more range to do harm than regular chatbots</li>
+<li>Claude compute use still has some issues</li>
+<li>Code models will advance faster because they don’t need humans in the loop
+<ul>
+<li><em>Personal observation:</em> Is there a path to improve system 2 reasoning there?</li>
+</ul></li>
+<li>Workforce, legal, biomedicine software will grow faster</li>
+<li>Startups are exponential work, AI startups’ exponential grows quicker</li>
+<li>Hard to know which advise to follow since current AI startups are different from previous types of startups</li>
+<li>Models will continue to be expensive (no room for more than 3 foundation models general companies), lots of companies for smaller and more specific models.</li>
+<li><a href="https://darioamodei.com/machines-of-loving-grace">Machines of Loving Grace</a>:
+<ul>
+<li>Biology improvements, healthcare, etc.</li>
+<li>Defending the country and its ideals</li>
+<li>Worry about the intentional bad use of the models</li>
+</ul></li>
+<li>500k context window for enterprise customers</li>
+<li>Extending the model context AND having the model perform well with the complete context is hard</li>
+<li>Asking models to write more succinctly usually reduces the quality of the response
+<ul>
+<li><em>Personal observation:</em> I have seen this myself, models usually “think” by writing</li>
+</ul></li>
+<li>Models are able to identify and respond to what users want to hear, instead of what it may be a more accurate answer. LMSys may be biased due to “People Pleasing”</li>
+<li>Core models should be as good as possible, but there can be differenciation within that range
+<ul>
+<li><em>Personal observation:</em> What about the ARC challenge?</li>
+</ul></li>
+</ul>
+</section>
+<section id="anthropic-api-technical-deep-dive" class="level2">
+<h2 class="anchored" data-anchor-id="anthropic-api-technical-deep-dive">Anthropic API Technical Deep Dive</h2>
+<ul>
+<li>Upgraded 3.5 Sonnet
+<ul>
+<li>State of the art on coding</li>
+</ul></li>
+<li>3.5 Haiku coming soon</li>
+<li>Computer use
+<ul>
+<li>Use apps, create docs, etc.</li>
+<li>Useful for developer unfriendly tasks
+<ul>
+<li><em>Personal observation:</em> Web scrapers?</li>
+</ul></li>
+<li>Public data and guide available, use through the api</li>
+<li>There are prompting tips and techniques to constrain behavior and increase speed (like caching)</li>
+<li>It’s a subset of tool use</li>
+<li>Limitations
+<ul>
+<li>Latency</li>
+<li>Accuracy, specially on complex tasks</li>
+<li>Scrolling is unreliable</li>
+<li>Spreadsheets</li>
+<li>Account creations</li>
+<li>Captchas (intentionally hard)</li>
+<li>Vulnerabilities (prompt injection)</li>
+</ul></li>
+<li>Prompting tips
+<ul>
+<li>Limit to simple well defined tasks</li>
+<li>Confirm output success</li>
+</ul></li>
+</ul></li>
+<li>Prompting recommendations
+<ul>
+<li>Develop test cases</li>
+<li>Engineer preliminary prompts and iterate</li>
+</ul></li>
+<li>Workbench
+<ul>
+<li>Supports variables</li>
+<li>Improves initial prompts</li>
+<li>Support for building evaluation sets</li>
+<li><em>Personal observation:</em> How useful is it, are there any metrics?</li>
+</ul></li>
+<li>What’s next
+<ul>
+<li>Customize performance, improve latency, etc.</li>
+<li>Interpretability</li>
+<li>Alignment</li>
+<li>Pre-training
+<ul>
+<li>Improve vision compared to text capabilities</li>
+</ul></li>
+<li>Enhancing retrieval</li>
+<li>Agents and orchestration</li>
+</ul></li>
+<li>They take Claude docs seriously</li>
+</ul>
+</section>
+<section id="anthropicmenlo-anthology-fund" class="level2">
+<h2 class="anchored" data-anchor-id="anthropicmenlo-anthology-fund">Anthropic/Menlo Anthology Fund</h2>
+<ul>
+<li>100M to invest in AI companies</li>
+<li>Mention you were at Builder Day</li>
+</ul>
+</section>
+<section id="hackathon-development-guidelines" class="level2">
+<h2 class="anchored" data-anchor-id="hackathon-development-guidelines">Hackathon Development Guidelines</h2>
+<ul>
+<li>4 hours of time</li>
+<li>Ideally should have started the project before</li>
+<li>Individuals or group of 3</li>
+<li>Multi pass judge</li>
+<li>Criteria
+<ul>
+<li>Creative</li>
+<li>Improves work productivity</li>
+<li>Potential for social good</li>
+</ul></li>
+<li>5 pm prejudging
+<ul>
+<li>5 min per project</li>
+</ul></li>
+<li>Prizes
+<ul>
+<li>First
+<ul>
+<li>10k cash</li>
+<li>50k Anthropic credits</li>
+<li>50k AWS credits</li>
+</ul></li>
+<li>Second</li>
+<li>Third</li>
+</ul></li>
+</ul>
+</section>
+<section id="research-breakthroughs-in-interpretability" class="level2">
+<h2 class="anchored" data-anchor-id="research-breakthroughs-in-interpretability">Research Breakthroughs in Interpretability</h2>
+<p>Probably the best talk of the day, but did not take notes because it was during development time.</p>
+<ul>
+<li>Superposition hypothesis: Models represent many more sparse, interpretable variables than they have features. More information can be found <a href="https://www.anthropic.com/research/mapping-mind-language-model">here</a></li>
+<li><a href="https://www.anthropic.com/news/golden-gate-claude">Golden Gate Claude</a> is an application of these ideas</li>
+<li>There are many hidden variables that the research team has not yet discovered</li>
+</ul>
+</section>
+<section id="hackathon-project" class="level2">
+<h2 class="anchored" data-anchor-id="hackathon-project">Hackathon Project</h2>
+<p>Using previous work on public policy and bill summaries, I built a web app that receives a jurisdictions and a legislator, and returns the legislator informations, vote history with bill summaries, and a report on the vote history. Though the demo is down for now, here’s a gif for reference:</p>
+<p><img src="https://santiagomvc.github.io/posts/anthropic_builder_day_02112024/public_policy_app.gif" class="img-fluid"></p>
+</section>
+<section id="awards" class="level2">
+<h2 class="anchored" data-anchor-id="awards">Awards</h2>
+<ol type="1">
+<li>Robot arm piloting with Claude</li>
+<li>Building new captchas in the age of AI
+<ul>
+<li><em>Personal observation:</em> Pretty smart and creative, my favorite of the 3</li>
+</ul></li>
+<li>Improving PRDs with custom personas powered by Claude</li>
+</ol>
+</section>
+<section id="final-thoughts" class="level2">
+<h2 class="anchored" data-anchor-id="final-thoughts">Final Thoughts</h2>
+<p>Overall it was a fun event with some really interesting talks. My main complain is that one day is not enough for multiple interesting talks and demo development (almost) from scratch, so either focusing on one or having multiple days would a be good idea.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>ai</category>
+  <category>lm</category>
+  <category>anthropic</category>
+  <category>claude</category>
+  <category>menlo</category>
+  <category>events</category>
+  <category>hackathon</category>
+  <guid>https://santiagomvc.github.io/posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html</guid>
+  <pubDate>Sun, 03 Nov 2024 04:00:00 GMT</pubDate>
+  <media:content url="https://santiagomvc.github.io/posts/anthropic_builder_day_02112024/thumbnail.png" medium="image" type="image/png" height="104" width="144"/>
+</item>
 <item>
   <title>ML Practice: Building Features</title>
   <dc:creator>Santiago Velez</dc:creator>
@@ -180,7 +379,7 @@
   <category>features</category>
   <category>business</category>
   <guid>https://santiagomvc.github.io/posts/ml_practice_building_features/ml_practice_building_features.html</guid>
-  <pubDate>Sat, 28 Sep 2024 05:00:00 GMT</pubDate>
+  <pubDate>Sat, 28 Sep 2024 04:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/ml_practice_building_features/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
@@ -681,8 +880,10 @@ background-color: null;
 font-style: inherit;"># Few shot Examples</span></span>
 <span id="cb5-6"><span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">for</span> example <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">in</span> synt_data:</span>
 <span id="cb5-7">    <span class="co" style="color: #5E5E5E;
 background-color: null;
@@ -733,8 +934,10 @@ background-color: null;
 font-style: inherit;"># Running the model for each real example</span></span>
 <span id="cb6-2"><span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">for</span> sample <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">in</span> real_data:</span>
 <span id="cb6-3">  messages <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -878,8 +1081,10 @@ background-color: null;
 font-style: inherit;">=</span> []</span>
 <span id="cb8-10"><span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">for</span> example <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">in</span> real_data:</span>
 <span id="cb8-11">    sentences.append(<span class="ss" style="color: #20794D;
 background-color: null;
@@ -966,8 +1171,10 @@ background-color: null;
 font-style: inherit;">0</span></span>
 <span id="cb8-32"><span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">for</span> example <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">in</span> real_data:</span>
 <span id="cb8-33">    <span class="bu" style="color: null;
 background-color: null;
@@ -1140,16 +1347,19 @@ font-style: inherit;">"match"</span>].<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">apply</span>(<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">lambda</span> x: <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">if</span> x<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">==</span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"yes"</span> <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">else</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>)</span>
@@ -1246,16 +1456,19 @@ font-style: inherit;">"match"</span>].<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">apply</span>(<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">lambda</span> x: <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">if</span> x<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">==</span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"yes"</span> <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">else</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>)</span>
@@ -1751,10 +1964,9 @@ font-style: inherit;">False</span>)</span>
 <span id="cb26-4">predictions.head()</span></code></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="20">
 <div>
-<div>
 
 
-<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
@@ -1909,7 +2121,6 @@ font-style: inherit;">False</span>)</span>
 </div>
 </div>
 </div>
-</div>
 </section>
 </section>
 <section id="sources" class="level2">
@@ -1963,7 +2174,7 @@ font-style: inherit;">False</span>)</span>
   <category>genre</category>
   <category>rf</category>
   <guid>https://santiagomvc.github.io/posts/entity_matching_intro/entity_matching_intro.html</guid>
-  <pubDate>Sun, 21 Jul 2024 05:00:00 GMT</pubDate>
+  <pubDate>Sun, 21 Jul 2024 04:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/entity_matching_intro/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
@@ -2063,17 +2274,20 @@ information and possible workarounds, please see
 <div id="cell-8" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">def</span> text_preprocess(text):</span>
 <span id="cb4-2">    text <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> text.lower()</span>
 <span id="cb4-3">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">return</span> text</span></code></pre></div>
 </div>
 <div id="cell-9" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">def</span> build_run(results_df, doc_id_col<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
@@ -2104,6 +2318,7 @@ font-style: inherit;">"score"</span>,</span>
 <span id="cb5-8">    )</span>
 <span id="cb5-9">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">return</span> run</span></code></pre></div>
 </div>
 </section>
@@ -2168,8 +2383,10 @@ background-color: null;
 font-style: inherit;">=</span> []</span>
 <span id="cb8-4"><span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">for</span> _, row <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">in</span> texts_df.iterrows():</span>
 <span id="cb8-5">    doc_id <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -2208,8 +2425,10 @@ font-style: inherit;">}</span><span class="ss" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"</span> <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">for</span> i <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">in</span> <span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">range</span>(n_chunk_texts)]</span>
@@ -2220,8 +2439,10 @@ font-style: inherit;"># basic text processing</span></span>
 background-color: null;
 font-style: inherit;">=</span> [text_preprocess(chunk) <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">for</span> chunk <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">in</span> doc_chunk_texts]</span>
 <span id="cb8-11">    <span class="co" style="color: #5E5E5E;
 background-color: null;
@@ -2264,8 +2485,10 @@ font-style: inherit;">=</span> [chunk.split(<span class="st" style="color: #2079
 background-color: null;
 font-style: inherit;">" "</span>) <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">for</span> chunk <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">in</span> chunk_texts]</span>
 <span id="cb10-2">bm25_index <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -2301,6 +2524,7 @@ font-style: inherit;">=</span> faiss.IndexFlatL2(sentsim_embedding_size)</span>
 <div id="cell-26" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">if</span> <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">__name__</span> <span class="op" style="color: #5E5E5E;
@@ -2312,6 +2536,7 @@ background-color: null;
 font-style: inherit;"># Required so ragatouille runs safely</span></span>
 <span id="cb12-2">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">try</span>:</span>
 <span id="cb12-3">        colbert_index <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -2320,6 +2545,7 @@ background-color: null;
 font-style: inherit;">".ragatouille/colbert/indexes/index"</span>)</span>
 <span id="cb12-4">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">except</span>:</span>
 <span id="cb12-5">        colbert_index <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -2371,6 +2597,7 @@ font-style: inherit;">False</span>,</span>
 <div id="cell-29" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">def</span> bm25_search(query_text, bm25_index<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span>bm25_index, chunks_df<span class="op" style="color: #5E5E5E;
@@ -2444,6 +2671,7 @@ background-color: null;
 font-style: inherit;"># Return results</span></span>
 <span id="cb15-16">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">return</span> bm25_df</span></code></pre></div>
 </div>
 </section>
@@ -2452,6 +2680,7 @@ font-style: inherit;">return</span> bm25_df</span></code></pre></div>
 <div id="cell-31" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">def</span> sentsim_search(query_text, sentsim_model<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span>sentsim_model, sentsim_index<span class="op" style="color: #5E5E5E;
@@ -2532,6 +2761,7 @@ background-color: null;
 font-style: inherit;">"first"</span>)</span>
 <span id="cb16-15">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">return</span> sentsim_df</span></code></pre></div>
 </div>
 </section>
@@ -2540,6 +2770,7 @@ font-style: inherit;">return</span> sentsim_df</span></code></pre></div>
 <div id="cell-33" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">def</span> colbert_search(query_text, colbert_index<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span>colbert_index, chunks_df<span class="op" style="color: #5E5E5E;
@@ -2627,6 +2858,7 @@ background-color: null;
 font-style: inherit;">"first"</span>)</span>
 <span id="cb17-14">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">return</span> colbert_df</span></code></pre></div>
 </div>
 </section>
@@ -2640,6 +2872,7 @@ font-style: inherit;">return</span> colbert_df</span></code></pre></div>
 <div id="cell-35" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">def</span> combined_search(query_text, fusion_norm<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
@@ -2656,8 +2889,10 @@ background-color: null;
 font-style: inherit;">=</span> []</span>
 <span id="cb18-3">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">for</span> search_fun <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">in</span> [bm25_search, sentsim_search, colbert_search]:</span>
 <span id="cb18-4">        <span class="co" style="color: #5E5E5E;
 background-color: null;
@@ -2773,6 +3008,7 @@ background-color: null;
 font-style: inherit;">## Return similar format to other responses</span></span>
 <span id="cb18-26">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">return</span> combined_df</span></code></pre></div>
 </div>
 </section>
@@ -2781,6 +3017,7 @@ font-style: inherit;">return</span> combined_df</span></code></pre></div>
 <div id="cell-37" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">def</span> search(query_text, mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
@@ -2788,6 +3025,7 @@ background-color: null;
 font-style: inherit;">"bm25"</span>):</span>
 <span id="cb19-2">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">if</span> mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">==</span><span class="st" style="color: #20794D;
@@ -2795,9 +3033,11 @@ background-color: null;
 font-style: inherit;">"bm25"</span>:</span>
 <span id="cb19-3">        <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">return</span> bm25_search(query_text)</span>
 <span id="cb19-4">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">elif</span> mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">==</span><span class="st" style="color: #20794D;
@@ -2805,9 +3045,11 @@ background-color: null;
 font-style: inherit;">"sentsim"</span>:</span>
 <span id="cb19-5">        <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">return</span> sentsim_search(query_text)</span>
 <span id="cb19-6">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">elif</span> mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">==</span><span class="st" style="color: #20794D;
@@ -2815,9 +3057,11 @@ background-color: null;
 font-style: inherit;">"colbert"</span>:</span>
 <span id="cb19-7">        <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">return</span> colbert_search(query_text)</span>
 <span id="cb19-8">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">elif</span> mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">==</span><span class="st" style="color: #20794D;
@@ -2825,6 +3069,7 @@ background-color: null;
 font-style: inherit;">"combined"</span>:</span>
 <span id="cb19-9">        <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">return</span> combined_search(query_text)</span></code></pre></div>
 </div>
 </section>
@@ -2841,6 +3086,7 @@ font-style: inherit;">return</span> combined_search(query_text)</span></code></p
 <div id="cell-40" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">def</span> evaluate_search(mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
@@ -2928,8 +3174,10 @@ background-color: null;
 font-style: inherit;">=</span> []</span>
 <span id="cb20-18">    <span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">for</span> query_id, query_text <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">in</span> unique_queries_list:</span>
 <span id="cb20-19">        response_df <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -3019,11 +3267,33 @@ font-style: inherit;">"colbert"</span>)</span></code></pre></div>
 <pre><code>Loading searcher for index index for the first time... This may take a few seconds
 [Jul 02, 18:29:35] #&gt; Loading codec...
 [Jul 02, 18:29:35] #&gt; Loading IVF...
-[Jul 02, 18:29:35] Loading segmented_lookup_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...
-[Jul 02, 18:29:36] #&gt; Loading doclens...
-[Jul 02, 18:29:36] #&gt; Loading codes and residuals...
-[Jul 02, 18:29:36] Loading filter_pids_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...
-[Jul 02, 18:29:36] Loading decompress_residuals_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...
+[Jul 02, 18:29:35] Loading segmented_lookup_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/cuda/amp/grad_scaler.py:126: UserWarning: torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.
+  warnings.warn(</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[Jul 02, 18:29:36] #&gt; Loading doclens...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>100%|████████████████████████████████████████████| 1/1 [00:00&lt;00:00, 603.06it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[Jul 02, 18:29:36] #&gt; Loading codes and residuals...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+100%|█████████████████████████████████████████████| 1/1 [00:00&lt;00:00, 65.29it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[Jul 02, 18:29:36] Loading filter_pids_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[Jul 02, 18:29:36] Loading decompress_residuals_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...
 Searcher loaded!
 
 #&gt; QueryTokenizer.tensorize(batch_text[0], batch_background[0], bsize) ==
@@ -3034,17 +3304,10 @@ Searcher loaded!
           103,   103])
 #&gt; Output Mask: torch.Size([32]), tensor([1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0])
-
-colbert {'f1': 0.7944444444444444, 'mrr': 1.0}</code></pre>
+</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/cuda/amp/grad_scaler.py:126: UserWarning: torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.
-  warnings.warn(
-100%|████████████████████████████████████████████| 1/1 [00:00&lt;00:00, 603.06it/s]
-100%|█████████████████████████████████████████████| 1/1 [00:00&lt;00:00, 65.29it/s]
-/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
-  warnings.warn(
-/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+<pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
   warnings.warn(
 /Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
   warnings.warn(
@@ -3055,12 +3318,19 @@ colbert {'f1': 0.7944444444444444, 'mrr': 1.0}</code></pre>
 /Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
   warnings.warn(</code></pre>
 </div>
+<div class="cell-output cell-output-stdout">
+<pre><code>colbert {'f1': 0.7944444444444444, 'mrr': 1.0}</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
+  warnings.warn(</code></pre>
+</div>
 </div>
 </section>
 <section id="evaluate-rank-fusion-min-max-norm-combmax-fusion" class="level4">
 <h4 class="anchored" data-anchor-id="evaluate-rank-fusion-min-max-norm-combmax-fusion">Evaluate Rank Fusion (Min-Max Norm, CombMAX fusion)</h4>
 <div id="cell-48" class="cell" data-execution_count="21">
-<div class="sourceCode cell-code" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
+<div class="sourceCode cell-code" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
@@ -3088,21 +3358,21 @@ font-style: inherit;">"combined"</span>)</span></code></pre></div>
 <section id="try-it-yourself-only-on-interactive-mode" class="level3">
 <h3 class="anchored" data-anchor-id="try-it-yourself-only-on-interactive-mode">Try it yourself! (Only on interactive mode)</h3>
 <div id="cell-50" class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1">query_text <span class="op" style="color: #5E5E5E;
+<div class="sourceCode cell-code" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1">query_text <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> <span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">input</span>(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Enter your query:"</span>)</span>
-<span id="cb31-2">search_mode <span class="op" style="color: #5E5E5E;
+<span id="cb41-2">search_mode <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> <span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">input</span>(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Enter the search mode (bm25, sentsim, colbert, combined):"</span>)</span>
-<span id="cb31-3">search(query_text, search_mode).to_dict(orient<span class="op" style="color: #5E5E5E;
+<span id="cb41-3">search(query_text, search_mode).to_dict(orient<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
@@ -3172,7 +3442,7 @@ Enter the search mode (bm25, sentsim, colbert, combined): combined</code></pre>
   <category>colbert</category>
   <category>sentence-transformers</category>
   <guid>https://santiagomvc.github.io/posts/intro_to_search_algorithms/intro_to_search_algorithms.html</guid>
-  <pubDate>Sun, 14 Jul 2024 05:00:00 GMT</pubDate>
+  <pubDate>Sun, 14 Jul 2024 04:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/intro_to_search_algorithms/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
@@ -3296,6 +3566,7 @@ font-style: inherit;">=</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"explicit"</span> <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">or</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"suplemental"</span></span></code></pre></div>
@@ -3470,7 +3741,7 @@ font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
   <category>torch</category>
   <category>poetry</category>
   <guid>https://santiagomvc.github.io/posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html</guid>
-  <pubDate>Mon, 11 Sep 2023 05:00:00 GMT</pubDate>
+  <pubDate>Mon, 11 Sep 2023 04:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/installing_torch_cpu_with_poetry/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
@@ -3550,7 +3821,7 @@ font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
   <category>lm</category>
   <category>public policy</category>
   <guid>https://santiagomvc.github.io/posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html</guid>
-  <pubDate>Mon, 22 May 2023 05:00:00 GMT</pubDate>
+  <pubDate>Mon, 22 May 2023 04:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/ai_risks_for_public_policy/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
@@ -3575,7 +3846,7 @@ font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
 <p>Language Models (LM) are specific generative models trained with big amounts of unstructured text data, with the goal of predicting the next word or the words adjacent inside the text corpus. With enough training data, number of parameters and computing power, these models can perform language tasks at human level and even maintain logical conversations. Language models are at the base of technologies such as ChatGPT, Bard, and others.</p>
 <p>Given the current capabilities of LM and generative AI, we decided to try using it to summarize bills. There’s ample evidence of using LLM to summarize new articles, emails, contracts, and even short stories. Longer texts such as books still present a challenge. Given the success in other fields, we decided to analyze bill texts using common summarization techniques.&nbsp;</p>
 <p>But it’s not a trivial task! Our first round of testing revealed some barriers and rough edges to this approach. Here are a few examples of our first round of AI generated summaries, with corresponding Policy Expert Evaluations:</p>
-<table class="table">
+<table class="caption-top table">
 <tbody>
 <tr class="odd">
 <td><strong>Bill Name </strong></td>
@@ -3605,7 +3876,7 @@ font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
 <h2 class="anchored" data-anchor-id="summarizing-bill-changes">Summarizing Bill Changes</h2>
 <p>Using AI and LM to summarize bills may be more complex than it seems. Since bills are mainly proposed changes to current statutes, if we pass the proposed text to a summarization model, it is often not able to differentiate between current and proposed law. However, if we pass only the changes in text, the model won’t have the necessary context to understand what the bill is proposing to change —&nbsp; for instance, modifying the minimum wage from $12 to $15 may be a single character change.</p>
 <p>After additional research and help from our policy experts, we were able to find a combination of models and prompts that correctly identify most of the changes, with a better understanding of the current statutes and proposed law. Although it’s not perfect, the performance is significantly better.</p>
-<table class="table">
+<table class="caption-top table">
 <tbody>
 <tr class="odd">
 <td><strong>Bill Name</strong></td>
@@ -3643,7 +3914,7 @@ font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
   <category>lm</category>
   <category>public policy</category>
   <guid>https://santiagomvc.github.io/posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html</guid>
-  <pubDate>Thu, 20 Apr 2023 05:00:00 GMT</pubDate>
+  <pubDate>Thu, 20 Apr 2023 04:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/summarizing_bills_with_genai/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 </channel>

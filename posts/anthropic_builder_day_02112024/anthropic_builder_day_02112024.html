@@ -2,14 +2,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.550">
+<meta name="generator" content="quarto-1.6.32">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Tristan O’Malley">
-<meta name="dcterms.date" content="2024-07-02">
+<meta name="author" content="Santiago Velez">
+<meta name="dcterms.date" content="2024-11-03">
+<meta name="description" content="Claude keeps getting better">
 
-<title>santiagomvc_blog - Welcome To My Blog</title>
+<title>Notes on Anthropic &amp; Menlo Builder Day – SMVC Notes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -37,10 +38,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2486e1f0a3ee9ee1fc393803a1361cdb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-5462d0dc975739fea4b7814f85fabdb2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -73,7 +74,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top quarto-banner">
@@ -81,11 +82,11 @@ ul.task-list li input[type="checkbox"] {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
-    <span class="navbar-title">santiagomvc_blog</span>
+    <span class="navbar-title">SMVC Notes</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -95,18 +96,18 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/santiagomvc/"> <i class="bi bi-github" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com"> <i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://www.linkedin.com/in/santiago-velez/"> <i class="bi bi-linkedin" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
-          <div class="quarto-navbar-tools">
+            <div class="quarto-navbar-tools">
 </div>
       </div> <!-- /container-fluid -->
     </nav>
@@ -115,9 +116,20 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Welcome To My Blog</h1>
-                                <div class="quarto-categories">
-                <div class="quarto-category">news</div>
+      <h1 class="title">Notes on Anthropic &amp; Menlo Builder Day</h1>
+                  <div>
+        <div class="description">
+          Claude keeps getting better
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">ai</div>
+                <div class="quarto-category">lm</div>
+                <div class="quarto-category">anthropic</div>
+                <div class="quarto-category">claude</div>
+                <div class="quarto-category">menlo</div>
+                <div class="quarto-category">events</div>
+                <div class="quarto-category">hackathon</div>
               </div>
                   </div>
   </div>
@@ -128,17 +140,23 @@ ul.task-list li input[type="checkbox"] {
       <div>
       <div class="quarto-title-meta-heading">Author</div>
       <div class="quarto-title-meta-contents">
-               <p>Tristan O’Malley </p>
+               <p>Santiago Velez </p>
             </div>
     </div>
       
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">July 2, 2024</p>
+        <p class="date">November 3, 2024</p>
       </div>
     </div>
     
+      <div>
+      <div class="quarto-title-meta-heading">Modified</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date-modified">November 3, 2024</p>
+      </div>
+    </div>
       
     </div>
     
@@ -146,7 +164,11 @@ ul.task-list li input[type="checkbox"] {
   </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    <div class="quarto-margin-footer"><div class="margin-footer-item">
+<p>subscribe.html</p>
+</div></div></div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
 
@@ -154,11 +176,182 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<p>This is the first post in a Quarto blog. Welcome!</p>
-<p><img src="thumbnail.jpg" class="img-fluid"></p>
-<p>Since this post doesn’t specify an explicit <code>image</code>, the first image in the post will be used in the listing page of posts.</p>
+<p>Anthropic/Menlo Builder Day was a one day event set on November 2 2024, focused mainly on sharing updates on Anthropic new developments, and encouraging Claude applications with a 4 hours hackathon. Here are my lightly edited notes on the event.</p>
+<section id="dario-fireside-chat" class="level2">
+<h2 class="anchored" data-anchor-id="dario-fireside-chat">Dario Fireside Chat</h2>
+<ul>
+<li>Driven by the question of intelligence</li>
+<li>Scaling is extremely valuable</li>
+<li>Text is easy to scale (lots of data, self supervised)</li>
+<li>Simple for RLFH too</li>
+<li>Alignment work is stronger in Anthropic (constitutional ai, interpretability)
+<ul>
+<li><em>Personal observation:</em> Claude’s frontier models seem to have better meta understanding than other models. A few examples I have seen are better developer jokes, identifying the “needle in haystack” test, stop responses after a cycle of repeated inputs, etc.</li>
+</ul></li>
+<li>Talent density is the most important factor</li>
+<li>Speed-size-quality trade off for models</li>
+<li>Models should be general purpose</li>
+<li>The bigger model the more steerable</li>
+<li>Model personality is important for final user, more art than science</li>
+<li>Models should take actions (agents, ex: email legislators)</li>
+<li>Agents in the world have more range to do harm than regular chatbots</li>
+<li>Claude compute use still has some issues</li>
+<li>Code models will advance faster because they don’t need humans in the loop
+<ul>
+<li><em>Personal observation:</em> Is there a path to improve system 2 reasoning there?</li>
+</ul></li>
+<li>Workforce, legal, biomedicine software will grow faster</li>
+<li>Startups are exponential work, AI startups’ exponential grows quicker</li>
+<li>Hard to know which advise to follow since current AI startups are different from previous types of startups</li>
+<li>Models will continue to be expensive (no room for more than 3 foundation models general companies), lots of companies for smaller and more specific models.</li>
+<li><a href="https://darioamodei.com/machines-of-loving-grace">Machines of Loving Grace</a>:
+<ul>
+<li>Biology improvements, healthcare, etc.</li>
+<li>Defending the country and its ideals</li>
+<li>Worry about the intentional bad use of the models</li>
+</ul></li>
+<li>500k context window for enterprise customers</li>
+<li>Extending the model context AND having the model perform well with the complete context is hard</li>
+<li>Asking models to write more succinctly usually reduces the quality of the response
+<ul>
+<li><em>Personal observation:</em> I have seen this myself, models usually “think” by writing</li>
+</ul></li>
+<li>Models are able to identify and respond to what users want to hear, instead of what it may be a more accurate answer. LMSys may be biased due to “People Pleasing”</li>
+<li>Core models should be as good as possible, but there can be differenciation within that range
+<ul>
+<li><em>Personal observation:</em> What about the ARC challenge?</li>
+</ul></li>
+</ul>
+</section>
+<section id="anthropic-api-technical-deep-dive" class="level2">
+<h2 class="anchored" data-anchor-id="anthropic-api-technical-deep-dive">Anthropic API Technical Deep Dive</h2>
+<ul>
+<li>Upgraded 3.5 Sonnet
+<ul>
+<li>State of the art on coding</li>
+</ul></li>
+<li>3.5 Haiku coming soon</li>
+<li>Computer use
+<ul>
+<li>Use apps, create docs, etc.</li>
+<li>Useful for developer unfriendly tasks
+<ul>
+<li><em>Personal observation:</em> Web scrapers?</li>
+</ul></li>
+<li>Public data and guide available, use through the api</li>
+<li>There are prompting tips and techniques to constrain behavior and increase speed (like caching)</li>
+<li>It’s a subset of tool use</li>
+<li>Limitations
+<ul>
+<li>Latency</li>
+<li>Accuracy, specially on complex tasks</li>
+<li>Scrolling is unreliable</li>
+<li>Spreadsheets</li>
+<li>Account creations</li>
+<li>Captchas (intentionally hard)</li>
+<li>Vulnerabilities (prompt injection)</li>
+</ul></li>
+<li>Prompting tips
+<ul>
+<li>Limit to simple well defined tasks</li>
+<li>Confirm output success</li>
+</ul></li>
+</ul></li>
+<li>Prompting recommendations
+<ul>
+<li>Develop test cases</li>
+<li>Engineer preliminary prompts and iterate</li>
+</ul></li>
+<li>Workbench
+<ul>
+<li>Supports variables</li>
+<li>Improves initial prompts</li>
+<li>Support for building evaluation sets</li>
+<li><em>Personal observation:</em> How useful is it, are there any metrics?</li>
+</ul></li>
+<li>What’s next
+<ul>
+<li>Customize performance, improve latency, etc.</li>
+<li>Interpretability</li>
+<li>Alignment</li>
+<li>Pre-training
+<ul>
+<li>Improve vision compared to text capabilities</li>
+</ul></li>
+<li>Enhancing retrieval</li>
+<li>Agents and orchestration</li>
+</ul></li>
+<li>They take Claude docs seriously</li>
+</ul>
+</section>
+<section id="anthropicmenlo-anthology-fund" class="level2">
+<h2 class="anchored" data-anchor-id="anthropicmenlo-anthology-fund">Anthropic/Menlo Anthology Fund</h2>
+<ul>
+<li>100M to invest in AI companies</li>
+<li>Mention you were at Builder Day</li>
+</ul>
+</section>
+<section id="hackathon-development-guidelines" class="level2">
+<h2 class="anchored" data-anchor-id="hackathon-development-guidelines">Hackathon Development Guidelines</h2>
+<ul>
+<li>4 hours of time</li>
+<li>Ideally should have started the project before</li>
+<li>Individuals or group of 3</li>
+<li>Multi pass judge</li>
+<li>Criteria
+<ul>
+<li>Creative</li>
+<li>Improves work productivity</li>
+<li>Potential for social good</li>
+</ul></li>
+<li>5 pm prejudging
+<ul>
+<li>5 min per project</li>
+</ul></li>
+<li>Prizes
+<ul>
+<li>First
+<ul>
+<li>10k cash</li>
+<li>50k Anthropic credits</li>
+<li>50k AWS credits</li>
+</ul></li>
+<li>Second</li>
+<li>Third</li>
+</ul></li>
+</ul>
+</section>
+<section id="research-breakthroughs-in-interpretability" class="level2">
+<h2 class="anchored" data-anchor-id="research-breakthroughs-in-interpretability">Research Breakthroughs in Interpretability</h2>
+<p>Probably the best talk of the day, but did not take notes because it was during development time.</p>
+<ul>
+<li>Superposition hypothesis: Models represent many more sparse, interpretable variables than they have features. More information can be found <a href="https://www.anthropic.com/research/mapping-mind-language-model">here</a></li>
+<li><a href="https://www.anthropic.com/news/golden-gate-claude">Golden Gate Claude</a> is an application of these ideas</li>
+<li>There are many hidden variables that the research team has not yet discovered</li>
+</ul>
+</section>
+<section id="hackathon-project" class="level2">
+<h2 class="anchored" data-anchor-id="hackathon-project">Hackathon Project</h2>
+<p>Using previous work on public policy and bill summaries, I built a web app that receives a jurisdictions and a legislator, and returns the legislator informations, vote history with bill summaries, and a report on the vote history. Though the demo is down for now, here’s a gif for reference:</p>
+<p><img src="./public_policy_app.gif" class="img-fluid"></p>
+</section>
+<section id="awards" class="level2">
+<h2 class="anchored" data-anchor-id="awards">Awards</h2>
+<ol type="1">
+<li>Robot arm piloting with Claude</li>
+<li>Building new captchas in the age of AI
+<ul>
+<li><em>Personal observation:</em> Pretty smart and creative, my favorite of the 3</li>
+</ul></li>
+<li>Improving PRDs with custom personas powered by Claude</li>
+</ol>
+</section>
+<section id="final-thoughts" class="level2">
+<h2 class="anchored" data-anchor-id="final-thoughts">Final Thoughts</h2>
+<p>Overall it was a fun event with some really interesting talks. My main complain is that one day is not enough for multiple interesting talks and demo development (almost) from scratch, so either focusing on one or having multiple days would a be good idea.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -196,18 +389,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -239,7 +421,47 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/santiagomvc\.github\.io");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
   function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
@@ -274,7 +496,11 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
     });
   }
   const xrefs = window.document.querySelectorAll('a.quarto-xref');
