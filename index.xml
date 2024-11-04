@@ -178,7 +178,7 @@
 <section id="hackathon-project" class="level2">
 <h2 class="anchored" data-anchor-id="hackathon-project">Hackathon Project</h2>
 <p>Using previous work on public policy and bill summaries, I built a web app that receives a jurisdictions and a legislator, and returns the legislator informations, vote history with bill summaries, and a report on the vote history. Though the demo is down for now, here’s a gif for reference:</p>
-<p><img src="https://santiagomvc.github.io/posts/anthropic_builder_day_02112024/public_policy_app.gif" class="img-fluid"></p>
+<p><img src="https://santiagomvc.github.io/posts/anthropic_builder_day_02112024/demo.gif" class="img-fluid"></p>
 </section>
 <section id="awards" class="level2">
 <h2 class="anchored" data-anchor-id="awards">Awards</h2>
