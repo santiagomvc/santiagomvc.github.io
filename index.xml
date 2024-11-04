@@ -10,7 +10,7 @@
 <atom:link href="https://santiagomvc.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Notes from building Machine Learning solutions in the wild</description>
 <generator>quarto-1.6.32</generator>
-<lastBuildDate>Sun, 03 Nov 2024 04:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 03 Nov 2024 05:00:00 GMT</lastBuildDate>
 <item>
   <title>Notes on Anthropic &amp; Menlo Builder Day</title>
   <dc:creator>Santiago Velez</dc:creator>
@@ -207,7 +207,7 @@
   <category>events</category>
   <category>hackathon</category>
   <guid>https://santiagomvc.github.io/posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html</guid>
-  <pubDate>Sun, 03 Nov 2024 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 03 Nov 2024 05:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/anthropic_builder_day_02112024/thumbnail.png" medium="image" type="image/png" height="104" width="144"/>
 </item>
 <item>
@@ -379,7 +379,7 @@
   <category>features</category>
   <category>business</category>
   <guid>https://santiagomvc.github.io/posts/ml_practice_building_features/ml_practice_building_features.html</guid>
-  <pubDate>Sat, 28 Sep 2024 04:00:00 GMT</pubDate>
+  <pubDate>Sat, 28 Sep 2024 05:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/ml_practice_building_features/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
@@ -2174,7 +2174,7 @@ font-style: inherit;">False</span>)</span>
   <category>genre</category>
   <category>rf</category>
   <guid>https://santiagomvc.github.io/posts/entity_matching_intro/entity_matching_intro.html</guid>
-  <pubDate>Sun, 21 Jul 2024 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 21 Jul 2024 05:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/entity_matching_intro/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
@@ -3442,7 +3442,7 @@ Enter the search mode (bm25, sentsim, colbert, combined): combined</code></pre>
   <category>colbert</category>
   <category>sentence-transformers</category>
   <guid>https://santiagomvc.github.io/posts/intro_to_search_algorithms/intro_to_search_algorithms.html</guid>
-  <pubDate>Sun, 14 Jul 2024 04:00:00 GMT</pubDate>
+  <pubDate>Sun, 14 Jul 2024 05:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/intro_to_search_algorithms/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
@@ -3741,7 +3741,7 @@ font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
   <category>torch</category>
   <category>poetry</category>
   <guid>https://santiagomvc.github.io/posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html</guid>
-  <pubDate>Mon, 11 Sep 2023 04:00:00 GMT</pubDate>
+  <pubDate>Mon, 11 Sep 2023 05:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/installing_torch_cpu_with_poetry/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
@@ -3821,7 +3821,7 @@ font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
   <category>lm</category>
   <category>public policy</category>
   <guid>https://santiagomvc.github.io/posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html</guid>
-  <pubDate>Mon, 22 May 2023 04:00:00 GMT</pubDate>
+  <pubDate>Mon, 22 May 2023 05:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/ai_risks_for_public_policy/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 <item>
@@ -3914,7 +3914,7 @@ font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
   <category>lm</category>
   <category>public policy</category>
   <guid>https://santiagomvc.github.io/posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html</guid>
-  <pubDate>Thu, 20 Apr 2023 04:00:00 GMT</pubDate>
+  <pubDate>Thu, 20 Apr 2023 05:00:00 GMT</pubDate>
   <media:content url="https://santiagomvc.github.io/posts/summarizing_bills_with_genai/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
 </item>
 </channel>
