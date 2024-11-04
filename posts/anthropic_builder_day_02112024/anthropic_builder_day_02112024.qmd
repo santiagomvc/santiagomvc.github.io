@@ -123,7 +123,7 @@ Probably the best talk of the day, but did not take notes because it was during 
 
 Using previous work on public policy and bill summaries, I built a web app that receives a jurisdictions and a legislator, and returns the legislator informations, vote history with bill summaries, and a report on the vote history. Though the demo is down for now, here's a gif for reference:
 
-![](./public_policy_app.gif)
+![](./demo.gif)
 
 
 ## Awards
