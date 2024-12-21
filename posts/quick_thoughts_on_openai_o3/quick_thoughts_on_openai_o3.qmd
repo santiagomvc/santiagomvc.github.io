@@ -1,0 +1,41 @@
+---
+title: "Quick thoughts on OpenAI O3 launch"
+description: "Feels like a big deal"
+image: "thumbnail.png"
+categories: [ai, lm, openai, o3, dual_process_theory, decision_making]
+author: "Santiago Velez"
+date: "12/21/2024"
+date-modified: "12/21/2024"
+draft: false
+---
+
+I had to take a short walk after seeing the OpenAI O3 launch and benchmark results. Since writing is thinking, here's my attempt to understand why it had this big of an impact on me. 
+
+{{< video https://www.youtube.com/embed/SKBG1sqdyIU?si=56aWA3Ep8YUAhXQT >}}
+
+
+I use Language Models (LMs) everyday in my work and personal projects, and they are impressive. Up until Sonnet 3.5, they felt great for NLP tasks and System 1 (associative) thinking. I tried them a few times for planning or big refactors and was not impressed. You can learn more about System 1 and System 2 thinking [here](https://www.youtube.com/watch?v=CjVQJdIrDJ0&pp=ygUfa2FobmVtYW4gdGhpbmtpbmcgZmFzdCBhbmQgc2xvdw%3D%3D).
+
+![https://thedecisionlab.com/reference-guide/philosophy/system-1-and-system-2-thinking](./s1_s2.webp)
+
+This opinion was reinforced by the performance on two benchmarks: [ARC-AGI](https://arcprize.org/arc) for solving unknown tasks and [FrontierMath](https://epoch.ai/frontiermath) for exceedingly challenging math problems. Current LMs performance, even Sonnet 3.5 and O1, was lacking. O3 beat average human performance on ARC-AGI and made significant strides into FrontierMath.
+
+![FrontierMath](./frontier_benchmark.jpg)
+
+![ARC-AGI](./arc_benchmark.jpg)
+
+What is the secret ingredient? Some people say it's just scaling O1 test time inference. Does it include MCTS, is it still mostly autoregression? I don't know, but there is some gossip. **If the results hold and generalize to other tasks, we may have reached human-level System 2 (logical) thinking**. This unlocks a lot of knowledge work we humans usually do, moving AI beyond automating low complexity repetitive tasks. Who knows the exact impact on the economy, but a lot of everyday work would change, though it could take a while to get there.
+
+![https://x.com/paul_cal/status/1870523995063554195](./o3_arch.png)
+
+This doesn't mean that AI will do everything humans do the way we do it. Do we spend the equivalent of thousands of dollars in compute solving ARC-AGI tasks? Maybe, but human thinking tends to be energy efficient, we don't have time or resources to lose when a threat is nearby. Reducing compute costs will be key to making S2 thinking work for more people, and maybe we will take inspiration from human processes. If compute is the main bottleneck, I'm hopeful that improvements on hardware and architecture will make S2 thinking more accessible. [We already can run GPT4 level inference in a home server](https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/MODEL_CARD.md). 
+
+![o3_arc_cost](./o3_arc_cost.jpg)
+
+Long term memory, human level motor skills adaptation, and others have yet to be solved, but I wouldn't bet on slowing decision making improvements in the long term. Even if AI eventually beats humans on most S2 tasks, there's still value in human thinking. We may be greatly suited for subsets of problems where new LMs are not as good or efficient, and we may want to predict or understand human behavior for specific use cases.
+
+Lastly, I’m still impressed by Sonnet 3.5 and it's my daily driver. The responses sometimes feel qualitatively different than other LMs, specially around meta level behavior. Two of my favourite examples are [identifying that is being tested](https://x.com/alexalbert__/status/1764722513014329620) and [refusing to answer to repeated unreasonable messages](https://x.com/voooooogel/status/1855074381921501404). Anthropic work on [Constitutional AI](https://arxiv.org/abs/2212.08073) and [Interpretability](https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html) is great, and they have had the best publicly available model for a while. I wonder what they have in store.
+
+As a fun bonus, here's an example of current LMs answering "Who is more powerful than sun wu Kong in journey to the west?", where to my passing knowledge GTP4o clearly fails, Sonnet 3.5 is close, and O3 is correct due to the reasoning chain.
+
+![journey_to_the_west_comparison](./journey_to_the_west_comparison.png)

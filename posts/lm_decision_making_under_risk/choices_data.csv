@@ -1,0 +1,11 @@
+id,domain,description,option_a,option_b,option_a_EV,option_b_EV,option_a_PT,option_b_PT,optimal_choice,PT_predicted_choice,explanation
+1,gain,"Technology stock investment","100% chance of $5000","80% chance of $7000, 20% chance of $0",5000,5600,3180,2950,"Option B","Option A","PT value lower due to probability weighting w+(0.8)≈0.63 and diminishing sensitivity"
+2,loss,"Home insurance deductible","100% chance of -$600","90% chance of $0, 10% chance of -$7000",-600,-700,-1160,-2100,"Option A","Option A","PT value more negative due to loss aversion (λ=2.25)"
+3,mixed,"Startup job offer","$80000","60% chance of $120000, 40% chance of $50000",80000,92000,42500,38600,"Option B","Option A","Loss aversion makes potential drop from $80K reference point painful"
+4,gain,"Retirement fund choice","5% certain","65% chance of 9%, 35% chance of 2%",5.0,6.55,4.2,3.8,"Option B","Option A","Certainty effect through probability weighting"
+5,loss,"Medical procedure cost","Certain -$3000","85% chance of -$2000, 15% chance of -$8000",-3000,-2900,-5850,-4800,"Option B","Option B","Risk seeking in losses due to convex value function"
+6,mixed,"Real estate investment","3% fixed","75% chance of 8%, 25% chance of -3%",3.0,5.25,2.8,1.9,"Option B","Option A","Loss aversion magnifies impact of possible depreciation"
+7,gain,"Bonus structure","Fixed $10000","40% chance of $30000, 60% chance of $2000",10000,13200,7200,6800,"Option B","Option A","Certainty effect dominates higher expected value"
+8,loss,"Car repair decision","Pay $800 now","70% chance of $0, 30% chance of -$3000",-800,-900,-1600,-1850,"Option A","Option A","Both approaches favor certain smaller loss"
+9,mixed,"Consulting contract","Fixed $150/hr","70% chance of $250, 30% chance of $50",150,190,120,95,"Option B","Option A","Reference point effect and loss aversion"
+10,gain,"Grant funding","Guaranteed $50000","25% chance of $250000, 75% chance of $0",50000,62500,32000,35000,"Option B","Option B","Overweighting of small probability w+(0.25)≈0.35"

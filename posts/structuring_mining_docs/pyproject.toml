@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "structuring_mining_docs"
+version = "0.0.1"
+description = ""
+authors = ["Santiago Velez <santiagomvc@gmail.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">3.9,<3.12"
+
+python-dotenv = "^0.21.0"
+numpy = "^1.10.1"
+pandas = "^2.0.1"
+openai = "^1.23.2"
+tiktoken = "^0.7.0"
+ipykernel = "^6.0.3"
+anthropic = "^0.39.0"
+outlines = "^0.1.5"
+instructor = "^1.6.4"
+pymupdf = "^1.24.14"
+pillow = "^11.0.0"
