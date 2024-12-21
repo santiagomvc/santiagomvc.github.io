@@ -10,7 +10,76 @@
 <atom:link href="https://santiagomvc.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Notes from building Machine Learning solutions in the wild</description>
 <generator>quarto-1.6.32</generator>
-<lastBuildDate>Sun, 03 Nov 2024 05:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 21 Dec 2024 05:00:00 GMT</lastBuildDate>
+<item>
+  <title>Quick thoughts on OpenAI O3 launch</title>
+  <dc:creator>Santiago Velez</dc:creator>
+  <link>https://santiagomvc.github.io/posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>I had to take a short walk after seeing the OpenAI O3 launch and benchmark results. Since writing is thinking, here’s my attempt to understand why it had this big of an impact on me.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/SKBG1sqdyIU?si=56aWA3Ep8YUAhXQT" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>I use Language Models (LMs) everyday in my work and personal projects, and they are impressive. Up until Sonnet 3.5, they felt great for NLP tasks and System 1 (associative) thinking. I tried them a few times for planning or big refactors and was not impressed. You can learn more about System 1 and System 2 thinking <a href="https://www.youtube.com/watch?v=CjVQJdIrDJ0&amp;pp=ygUfa2FobmVtYW4gdGhpbmtpbmcgZmFzdCBhbmQgc2xvdw%3D%3D">here</a>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/quick_thoughts_on_openai_o3/s1_s2.webp" class="img-fluid figure-img"></p>
+<figcaption>https://thedecisionlab.com/reference-guide/philosophy/system-1-and-system-2-thinking</figcaption>
+</figure>
+</div>
+<p>This opinion was reinforced by the performance on two benchmarks: <a href="https://arcprize.org/arc">ARC-AGI</a> for solving unknown tasks and <a href="https://epoch.ai/frontiermath">FrontierMath</a> for exceedingly challenging math problems. Current LMs performance, even Sonnet 3.5 and O1, was lacking. O3 beat average human performance on ARC-AGI and made significant strides into FrontierMath.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/quick_thoughts_on_openai_o3/frontier_benchmark.jpg" class="img-fluid figure-img"></p>
+<figcaption>FrontierMath</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/quick_thoughts_on_openai_o3/arc_benchmark.jpg" class="img-fluid figure-img"></p>
+<figcaption>ARC-AGI</figcaption>
+</figure>
+</div>
+<p>What is the secret ingredient? Some people say it’s just scaling O1 test time inference. Does it include MCTS, is it still mostly autoregression? I don’t know, but there is some gossip. <strong>If the results hold and generalize to other tasks, we may have reached human-level System 2 (logical) thinking</strong>. This unlocks a lot of knowledge work we humans usually do, moving AI beyond automating low complexity repetitive tasks. Who knows the exact impact on the economy, but a lot of everyday work would change, though it could take a while to get there.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/quick_thoughts_on_openai_o3/o3_arch.png" class="img-fluid figure-img"></p>
+<figcaption>https://x.com/paul_cal/status/1870523995063554195</figcaption>
+</figure>
+</div>
+<p>This doesn’t mean that AI will do everything humans do the way we do it. Do we spend the equivalent of thousands of dollars in compute solving ARC-AGI tasks? Maybe, but human thinking tends to be energy efficient, we don’t have time or resources to lose when a threat is nearby. Reducing compute costs will be key to making S2 thinking work for more people, and maybe we will take inspiration from human processes. If compute is the main bottleneck, I’m hopeful that improvements on hardware and architecture will make S2 thinking more accessible. <a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/MODEL_CARD.md">We already can run GPT4 level inference in a home server</a>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/quick_thoughts_on_openai_o3/o3_arc_cost.jpg" class="img-fluid figure-img"></p>
+<figcaption>o3_arc_cost</figcaption>
+</figure>
+</div>
+<p>Long term memory, human level motor skills adaptation, and others have yet to be solved, but I wouldn’t bet on slowing decision making improvements in the long term. Even if AI eventually beats humans on most S2 tasks, there’s still value in human thinking. We may be greatly suited for subsets of problems where new LMs are not as good or efficient, and we may want to predict or understand human behavior for specific use cases.</p>
+<p>Lastly, I’m still impressed by Sonnet 3.5 and it’s my daily driver. The responses sometimes feel qualitatively different than other LMs, specially around meta level behavior. Two of my favourite examples are <a href="https://x.com/alexalbert__/status/1764722513014329620">identifying that is being tested</a> and <a href="https://x.com/voooooogel/status/1855074381921501404">refusing to answer to repeated unreasonable messages</a>. Anthropic work on <a href="https://arxiv.org/abs/2212.08073">Constitutional AI</a> and <a href="https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html">Interpretability</a> is great, and they have had the best publicly available model for a while. I wonder what they have in store.</p>
+<p>As a fun bonus, here’s an example of current LMs answering “Who is more powerful than sun wu Kong in journey to the west?”, where to my passing knowledge GTP4o clearly fails, Sonnet 3.5 is close, and O3 is correct due to the reasoning chain.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/quick_thoughts_on_openai_o3/journey_to_the_west_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>journey_to_the_west_comparison</figcaption>
+</figure>
+</div>
+
+
+
+ ]]></description>
+  <category>ai</category>
+  <category>lm</category>
+  <category>openai</category>
+  <category>o3</category>
+  <category>dual_process_theory</category>
+  <category>decision_making</category>
+  <guid>https://santiagomvc.github.io/posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html</guid>
+  <pubDate>Sat, 21 Dec 2024 05:00:00 GMT</pubDate>
+  <media:content url="https://santiagomvc.github.io/posts/quick_thoughts_on_openai_o3/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
+</item>
 <item>
   <title>Notes on Anthropic &amp; Menlo Builder Day</title>
   <dc:creator>Santiago Velez</dc:creator>

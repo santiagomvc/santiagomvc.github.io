@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html",
       "/posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html",
       "/posts/ml_practice_building_features/ml_practice_building_features.html",
       "/posts/entity_matching_intro/entity_matching_intro.html",
