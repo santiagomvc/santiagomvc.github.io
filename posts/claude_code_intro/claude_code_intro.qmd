@@ -1,0 +1,17 @@
+---
+title: "Claude Code Intro"
+description: "Why it matters, and how to get started"
+image: "thumbnail.png"
+categories: [ai, lm, anthropic, claude, code, sonnet, opus]
+author: "Santiago Velez"
+date: "07/23/2025"
+date-modified: "07/23/2025"
+draft: false
+---
+
+I've been recommending Claude Code to friends so much that it was time to write something up. If you are curious about coding agents, here are my two cents on why you should care and how to start with Claude Code.
+---
+
+```{=html}
+<iframe src="intro_to_claude_code.pdf" width="100%" height="600px"></iframe>
+```
