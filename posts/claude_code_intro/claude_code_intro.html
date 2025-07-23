@@ -6,8 +6,11 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Santiago Velez">
+<meta name="dcterms.date" content="2025-07-23">
+<meta name="description" content="Why it matters, and how to get started">
 
-<title>SMVC Notes</title>
+<title>Claude Code Intro – SMVC Notes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,24 +26,22 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-2486e1f0a3ee9ee1fc393803a1361cdb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-5462d0dc975739fea4b7814f85fabdb2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2486e1f0a3ee9ee1fc393803a1361cdb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-5462d0dc975739fea4b7814f85fabdb2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -68,68 +69,10 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
 
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="stylesheet" href="styles.css">
-<link rel="alternate" type="application/rss+xml" title="SMVC Notes" href="index.xml" data-external="1"></head>
+<link rel="stylesheet" href="../../styles.css">
+</head>
 
 <body class="nav-fixed">
 
@@ -138,7 +81,7 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">SMVC Notes</span>
     </a>
   </div>
@@ -149,7 +92,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -172,26 +115,58 @@ window.Quarto = {
 <!-- content -->
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">SMVC Notes</h1>
-                      </div>
+    <div class="quarto-title column-body">
+      <h1 class="title">Claude Code Intro</h1>
+                  <div>
+        <div class="description">
+          Why it matters, and how to get started
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">ai</div>
+                <div class="quarto-category">lm</div>
+                <div class="quarto-category">anthropic</div>
+                <div class="quarto-category">claude</div>
+                <div class="quarto-category">code</div>
+                <div class="quarto-category">sonnet</div>
+                <div class="quarto-category">opus</div>
+              </div>
+                  </div>
   </div>
     
   
-  <div class="quarto-title-meta column-page-left">
+  <div class="quarto-title-meta">
 
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Santiago Velez </p>
+            </div>
+    </div>
       
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">July 23, 2025</p>
+      </div>
+    </div>
     
+      <div>
+      <div class="quarto-title-meta-heading">Modified</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date-modified">July 23, 2025</p>
+      </div>
+    </div>
       
     </div>
     
   
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(9)</span></div><div class="category" data-category="YWk=">ai <span class="quarto-category-count">(6)</span></div><div class="category" data-category="YW50aHJvcGlj">anthropic <span class="quarto-category-count">(2)</span></div><div class="category" data-category="Ym0yNQ==">bm25 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="YnVzaW5lc3M=">business <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Y2xhdWRl">claude <span class="quarto-category-count">(2)</span></div><div class="category" data-category="Y29kZQ==">code <span class="quarto-category-count">(4)</span></div><div class="category" data-category="Y29sYmVydA==">colbert <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZGVjaXNpb25fbWFraW5n">decision_making <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZHVhbF9wcm9jZXNzX3RoZW9yeQ==">dual_process_theory <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZW50aXR5LW1hdGNoaW5n">entity-matching <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZXZlbnRz">events <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZmVhdHVyZXM=">features <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Z2VucmU=">genre <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Z3B0NA==">gpt4 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="aGFja2F0aG9u">hackathon <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bG0=">lm <span class="quarto-category-count">(6)</span></div><div class="category" data-category="bWVubG8=">menlo <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bWw=">ml <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bWxfcHJhY3RpY2U=">ml_practice <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bmxw">nlp <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bzM=">o3 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="b3BlbmFp">openai <span class="quarto-category-count">(1)</span></div><div class="category" data-category="b3B1cw==">opus <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cG9ldHJ5">poetry <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cHVibGljIHBvbGljeQ==">public policy <span class="quarto-category-count">(2)</span></div><div class="category" data-category="cHl0aG9u">python <span class="quarto-category-count">(3)</span></div><div class="category" data-category="cmVyYW5raW5n">reranking <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cmY=">rf <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c2VhcmNo">search <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c2VudGVuY2UtdHJhbnNmb3JtZXJz">sentence-transformers <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c29ubmV0">sonnet <span class="quarto-category-count">(1)</span></div><div class="category" data-category="dG9yY2g=">torch <span class="quarto-category-count">(1)</span></div></div><div class="quarto-margin-footer"><div class="margin-footer-item">
+    <div class="quarto-margin-footer"><div class="margin-footer-item">
 <style type="text/css">@import url("https://assets.mlcdn.com/fonts.css?version=1721302");</style>
     <style type="text/css">
     /* LOADER */
@@ -1074,443 +1049,19 @@ window.Quarto = {
         </script>
 </div></div></div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
 
 
+<p>I’ve been recommending Claude Code to friends so much that it was time to write something up. If you are curious about coding agents, here are my two cents on why you should care and how to start with Claude Code.</p>
+<hr>
+<iframe src="intro_to_claude_code.pdf" width="100%" height="600px"></iframe>
 
 
 
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="YWksbG0sYW50aHJvcGljLGNsYXVkZSxjb2RlLHNvbm5ldCxvcHVz" data-listing-date-sort="1753246800000" data-listing-file-modified-sort="1753297896624" data-listing-date-modified-sort="1753246800000" data-listing-reading-time-sort="1" data-listing-word-count-sort="4">
-<div class="thumbnail">
-<p><a href="./posts/claude_code_intro/claude_code_intro.html" class="no-external"></a></p><a href="./posts/claude_code_intro/claude_code_intro.html" class="no-external">
-<p><img loading="lazy" src="./posts/claude_code_intro/thumbnail.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/claude_code_intro/claude_code_intro.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/claude_code_intro/claude_code_intro.html" class="no-external">Claude Code Intro</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/claude_code_intro/claude_code_intro.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('YWk='); return false;">
-ai
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bG0='); return false;">
-lm
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('YW50aHJvcGlj'); return false;">
-anthropic
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Y2xhdWRl'); return false;">
-claude
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Y29kZQ=='); return false;">
-code
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('c29ubmV0'); return false;">
-sonnet
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('b3B1cw=='); return false;">
-opus
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/claude_code_intro/claude_code_intro.html" class="no-external">Why it matters, and how to get started</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/claude_code_intro/claude_code_intro.html" class="no-external">
-<div class="listing-date">
-Jul 23, 2025
-</div>
-<div class="listing-author">
-Santiago Velez
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="YWksbG0sb3BlbmFpLG8zLGR1YWxfcHJvY2Vzc190aGVvcnksZGVjaXNpb25fbWFraW5n" data-listing-date-sort="1734757200000" data-listing-file-modified-sort="1734820138450" data-listing-date-modified-sort="1734757200000" data-listing-reading-time-sort="3" data-listing-word-count-sort="529">
-<div class="thumbnail">
-<p><a href="./posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html" class="no-external"></a></p><a href="./posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html" class="no-external">
-<p><img loading="lazy" src="./posts/quick_thoughts_on_openai_o3/thumbnail.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html" class="no-external">Quick thoughts on OpenAI O3 launch</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('YWk='); return false;">
-ai
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bG0='); return false;">
-lm
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('b3BlbmFp'); return false;">
-openai
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bzM='); return false;">
-o3
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('ZHVhbF9wcm9jZXNzX3RoZW9yeQ=='); return false;">
-dual_process_theory
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('ZGVjaXNpb25fbWFraW5n'); return false;">
-decision_making
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html" class="no-external">Feels like a big deal</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html" class="no-external">
-<div class="listing-date">
-Dec 21, 2024
-</div>
-<div class="listing-author">
-Santiago Velez
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-categories="YWksbG0sYW50aHJvcGljLGNsYXVkZSxtZW5sbyxldmVudHMsaGFja2F0aG9u" data-listing-date-sort="1730610000000" data-listing-file-modified-sort="1730746663890" data-listing-date-modified-sort="1730696400000" data-listing-reading-time-sort="6" data-listing-word-count-sort="1043">
-<div class="thumbnail">
-<p><a href="./posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html" class="no-external"></a></p><a href="./posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html" class="no-external">
-<p><img loading="lazy" src="./posts/anthropic_builder_day_02112024/thumbnail.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html" class="no-external">Notes on Anthropic &amp; Menlo Builder Day</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('YWk='); return false;">
-ai
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bG0='); return false;">
-lm
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('YW50aHJvcGlj'); return false;">
-anthropic
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Y2xhdWRl'); return false;">
-claude
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bWVubG8='); return false;">
-menlo
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('ZXZlbnRz'); return false;">
-events
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('aGFja2F0aG9u'); return false;">
-hackathon
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html" class="no-external">Claude keeps getting better</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/anthropic_builder_day_02112024/anthropic_builder_day_02112024.html" class="no-external">
-<div class="listing-date">
-Nov 3, 2024
-</div>
-<div class="listing-author">
-Santiago Velez
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-categories="bWxfcHJhY3RpY2UsbWwsYWksZmVhdHVyZXMsYnVzaW5lc3M=" data-listing-date-sort="1727499600000" data-listing-file-modified-sort="1730647995030" data-listing-date-modified-sort="1727499600000" data-listing-reading-time-sort="5" data-listing-word-count-sort="805">
-<div class="thumbnail">
-<p><a href="./posts/ml_practice_building_features/ml_practice_building_features.html" class="no-external"></a></p><a href="./posts/ml_practice_building_features/ml_practice_building_features.html" class="no-external">
-<p><img loading="lazy" src="./posts/ml_practice_building_features/thumbnail.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/ml_practice_building_features/ml_practice_building_features.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/ml_practice_building_features/ml_practice_building_features.html" class="no-external">ML Practice: Building Features</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/ml_practice_building_features/ml_practice_building_features.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('bWxfcHJhY3RpY2U='); return false;">
-ml_practice
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bWw='); return false;">
-ml
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('YWk='); return false;">
-ai
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('ZmVhdHVyZXM='); return false;">
-features
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('YnVzaW5lc3M='); return false;">
-business
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/ml_practice_building_features/ml_practice_building_features.html" class="no-external">Hear what business wants and build what users need.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/ml_practice_building_features/ml_practice_building_features.html" class="no-external">
-<div class="listing-date">
-Sep 28, 2024
-</div>
-<div class="listing-author">
-Santiago Velez
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="4" data-categories="ZW50aXR5LW1hdGNoaW5nLG5scCxjb2RlLHB5dGhvbixsbSxncHQ0LGdlbnJlLHJm" data-listing-date-sort="1721538000000" data-listing-file-modified-sort="1730647995026" data-listing-date-modified-sort="1721538000000" data-listing-reading-time-sort="6" data-listing-word-count-sort="1081">
-<div class="thumbnail">
-<p><a href="./posts/entity_matching_intro/entity_matching_intro.html" class="no-external"></a></p><a href="./posts/entity_matching_intro/entity_matching_intro.html" class="no-external">
-<p><img loading="lazy" src="./posts/entity_matching_intro/thumbnail.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/entity_matching_intro/entity_matching_intro.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/entity_matching_intro/entity_matching_intro.html" class="no-external">Intro to Entity Matching</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/entity_matching_intro/entity_matching_intro.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('ZW50aXR5LW1hdGNoaW5n'); return false;">
-entity-matching
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bmxw'); return false;">
-nlp
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Y29kZQ=='); return false;">
-code
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('cHl0aG9u'); return false;">
-python
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bG0='); return false;">
-lm
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Z3B0NA=='); return false;">
-gpt4
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Z2VucmU='); return false;">
-genre
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('cmY='); return false;">
-rf
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/entity_matching_intro/entity_matching_intro.html" class="no-external">Matching entities in a sea of data</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/entity_matching_intro/entity_matching_intro.html" class="no-external">
-<div class="listing-date">
-Jul 21, 2024
-</div>
-<div class="listing-author">
-Santiago Velez
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="5" data-categories="c2VhcmNoLHJlcmFua2luZyxjb2RlLHB5dGhvbixibTI1LGNvbGJlcnQsc2VudGVuY2UtdHJhbnNmb3JtZXJz" data-listing-date-sort="1720933200000" data-listing-file-modified-sort="1730647995029" data-listing-date-modified-sort="1721538000000" data-listing-reading-time-sort="3" data-listing-word-count-sort="578">
-<div class="thumbnail">
-<p><a href="./posts/intro_to_search_algorithms/intro_to_search_algorithms.html" class="no-external"></a></p><a href="./posts/intro_to_search_algorithms/intro_to_search_algorithms.html" class="no-external">
-<p><img loading="lazy" src="./posts/intro_to_search_algorithms/thumbnail.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/intro_to_search_algorithms/intro_to_search_algorithms.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/intro_to_search_algorithms/intro_to_search_algorithms.html" class="no-external">Applied Intro to Search Algorithms</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/intro_to_search_algorithms/intro_to_search_algorithms.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('c2VhcmNo'); return false;">
-search
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('cmVyYW5raW5n'); return false;">
-reranking
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Y29kZQ=='); return false;">
-code
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('cHl0aG9u'); return false;">
-python
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Ym0yNQ=='); return false;">
-bm25
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Y29sYmVydA=='); return false;">
-colbert
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('c2VudGVuY2UtdHJhbnNmb3JtZXJz'); return false;">
-sentence-transformers
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/intro_to_search_algorithms/intro_to_search_algorithms.html" class="no-external">Retrieval and Reranking in Python</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/intro_to_search_algorithms/intro_to_search_algorithms.html" class="no-external">
-<div class="listing-date">
-Jul 14, 2024
-</div>
-<div class="listing-author">
-Santiago Velez
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="6" data-categories="Y29kZSxweXRob24sdG9yY2gscG9ldHJ5" data-listing-date-sort="1694408400000" data-listing-file-modified-sort="1730647995027" data-listing-date-modified-sort="1720933200000" data-listing-reading-time-sort="2" data-listing-word-count-sort="362">
-<div class="thumbnail">
-<p><a href="./posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html" class="no-external"></a></p><a href="./posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html" class="no-external">
-<p><img loading="lazy" src="./posts/installing_torch_cpu_with_poetry/thumbnail.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html" class="no-external">Installing Torch CPU with Poetry</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('Y29kZQ=='); return false;">
-code
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('cHl0aG9u'); return false;">
-python
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('dG9yY2g='); return false;">
-torch
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('cG9ldHJ5'); return false;">
-poetry
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html" class="no-external">It sucks, at least for now</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/installing_torch_cpu_with_poetry/installing_torch_cpu_with_poetry.html" class="no-external">
-<div class="listing-date">
-Sep 11, 2023
-</div>
-<div class="listing-author">
-Santiago Velez
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="7" data-categories="YWksbG0scHVibGljIHBvbGljeQ==" data-listing-date-sort="1684731600000" data-listing-file-modified-sort="1730647995024" data-listing-date-modified-sort="1721538000000" data-listing-reading-time-sort="9" data-listing-word-count-sort="1697">
-<div class="thumbnail">
-<p><a href="./posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html" class="no-external"></a></p><a href="./posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html" class="no-external">
-<p><img loading="lazy" src="./posts/ai_risks_for_public_policy/thumbnail.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html" class="no-external">Is Artificial Intelligence a Risk for Public Policy?</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('YWk='); return false;">
-ai
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bG0='); return false;">
-lm
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('cHVibGljIHBvbGljeQ=='); return false;">
-public policy
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html" class="no-external">Someone needs to talk about it</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/ai_risks_for_public_policy/ai_risks_for_public_policy.html" class="no-external">
-<div class="listing-date">
-May 22, 2023
-</div>
-<div class="listing-author">
-Santiago Velez
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="8" data-categories="YWksbG0scHVibGljIHBvbGljeQ==" data-listing-date-sort="1681966800000" data-listing-file-modified-sort="1730647995031" data-listing-date-modified-sort="1721538000000" data-listing-reading-time-sort="49" data-listing-word-count-sort="9739">
-<div class="thumbnail">
-<p><a href="./posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html" class="no-external"></a></p><a href="./posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html" class="no-external">
-<p><img loading="lazy" src="./posts/summarizing_bills_with_genai/thumbnail.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html" class="no-external">Summarizing Bills With Generative AI</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('YWk='); return false;">
-ai
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bG0='); return false;">
-lm
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('cHVibGljIHBvbGljeQ=='); return false;">
-public policy
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html" class="no-external">Using Language Models to summarize changes to existing legislation</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/summarizing_bills_with_genai/summarizing_bills_with_genai.html" class="no-external">
-<div class="listing-date">
-Apr 20, 2023
-</div>
-<div class="listing-author">
-Santiago Velez
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

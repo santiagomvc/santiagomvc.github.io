@@ -10,7 +10,35 @@
 <atom:link href="https://santiagomvc.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Notes from building Machine Learning solutions in the wild</description>
 <generator>quarto-1.6.32</generator>
-<lastBuildDate>Sat, 21 Dec 2024 05:00:00 GMT</lastBuildDate>
+<lastBuildDate>Wed, 23 Jul 2025 05:00:00 GMT</lastBuildDate>
+<item>
+  <title>Claude Code Intro</title>
+  <dc:creator>Santiago Velez</dc:creator>
+  <link>https://santiagomvc.github.io/posts/claude_code_intro/claude_code_intro.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>I’ve been recommending Claude Code to friends so much that it was time to write something up. If you are curious about coding agents, here are my two cents on why you should care and how to start with Claude Code.</p>
+<hr>
+<iframe src="intro_to_claude_code.pdf" width="100%" height="600px"></iframe>
+
+
+
+ ]]></description>
+  <category>ai</category>
+  <category>lm</category>
+  <category>anthropic</category>
+  <category>claude</category>
+  <category>code</category>
+  <category>sonnet</category>
+  <category>opus</category>
+  <guid>https://santiagomvc.github.io/posts/claude_code_intro/claude_code_intro.html</guid>
+  <pubDate>Wed, 23 Jul 2025 05:00:00 GMT</pubDate>
+  <media:content url="https://santiagomvc.github.io/posts/claude_code_intro/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
+</item>
 <item>
   <title>Quick thoughts on OpenAI O3 launch</title>
   <dc:creator>Santiago Velez</dc:creator>
