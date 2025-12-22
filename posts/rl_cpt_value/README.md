@@ -1,6 +1,6 @@
 # Are AI agents aligned with human behavior - Part 1
 
-I'm writing a blogpost about how the behavior of AI agents compares to human behavior. For that I'm going to run a experiment on three different RL environments using three different types of agents. This blogpost will focus on the value side of CPT, the next one will focus on the probability side, and finally we will combine both.
+I'm writing a blogpost about how the behavior of AI agents compares to human behavior. For that I'm going to run a experiment on three different RL environments using three different types of agents. This blogpost will focus on the value side of CPT, the next one will focus on the probability side, and finally we will combine both. We use UV pip for package management.
 
 ## Agents
 
