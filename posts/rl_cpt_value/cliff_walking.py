@@ -1,40 +1,44 @@
 """CliffWalking environment runner."""
 
 import gymnasium as gym
-from agents import random_agent
-from utils import save_gif, GOAL
+from agents import RandomAgent, PPOAgent
+from utils import save_gif
 
 
-def run_episode(env, agent_fn, max_steps=500):
-    """Run one episode, return states and rewards."""
+def run_episode(env, agent, max_steps=500):
+    """Run one episode. Works for any agent with act(state)."""
     state, _ = env.reset()
-    states, rewards = [state], []
+    states, rewards, frames = [state], [], [env.render()]
 
     for _ in range(max_steps):
-        action = agent_fn(env)
+        action = agent.act(state)
         state, reward, terminated, truncated, _ = env.step(action)
         states.append(state)
         rewards.append(reward)
+        frames.append(env.render())
         if terminated or truncated:
             break
 
-    return states, rewards
+    return states, rewards, frames
 
 
 if __name__ == "__main__":
-    env = gym.make("CliffWalking-v1")
+    env = gym.make("CliffWalking-v0", render_mode="rgb_array")
 
-    print("Running 5 episodes with random agent...")
-    print("-" * 40)
+    # Random agent (no training)
+    print("Random Agent:")
+    agent = RandomAgent(n_actions=env.action_space.n)
+    states, rewards, frames = run_episode(env, agent)
+    save_gif(frames, "outputs/random_agent.gif")
+    print(f"  Reward: {sum(rewards)}")
 
-    for ep in range(5):
-        states, rewards = run_episode(env, random_agent)
-        total = sum(rewards)
-        status = "GOAL" if states[-1] == GOAL else "CLIFF/TIMEOUT"
-        print(f"Episode {ep+1}: {status} | Steps: {len(rewards)} | Reward: {total:.0f}")
-
-        if ep == 0:
-            save_gif(states, rewards, "outputs/random_agent.gif")
-            print("  -> Saved GIF")
+    # PPO agent (train then evaluate)
+    print("\nPPO Agent:")
+    agent = PPOAgent()
+    agent.learn(iterations=50)
+    states, rewards, frames = run_episode(env, agent)
+    save_gif(frames, "outputs/ppo_agent.gif")
+    print(f"  Reward: {sum(rewards)}")
+    agent.close()
 
     env.close()
