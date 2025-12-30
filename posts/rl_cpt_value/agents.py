@@ -1,11 +1,28 @@
-"""Agent classes."""
+"""Agent classes with Stable Baselines 3."""
 
+from abc import ABC, abstractmethod
 import numpy as np
-import ray
-from ray.rllib.algorithms.ppo import PPOConfig
+from stable_baselines3 import PPO
 
 
-class RandomAgent:
+class BaseAgent(ABC):
+    """Base class for all agents."""
+
+    @abstractmethod
+    def act(self, state):
+        """Select action given state."""
+        pass
+
+    def learn(self, env, timesteps):
+        """Train the agent. Override if trainable."""
+        pass
+
+    def close(self):
+        """Cleanup resources. Override if needed."""
+        pass
+
+
+class RandomAgent(BaseAgent):
     """Random action agent."""
 
     def __init__(self, n_actions=4):
@@ -15,23 +32,34 @@ class RandomAgent:
         return np.random.randint(self.n_actions)
 
 
-class PPOAgent:
-    """PPO agent using RLlib."""
+class PPOAgent(BaseAgent):
+    """PPO agent using Stable Baselines 3."""
 
-    def __init__(self, env_name="CliffWalking-v0"):
-        ray.init(ignore_reinit_error=True)
-        config = PPOConfig().environment(env_name).env_runners(num_env_runners=0)
-        self.algo = config.build()
+    def __init__(self, env):
+        """Initialize with environment instance."""
+        self.model = PPO("MlpPolicy", env, verbose=1)
 
     def act(self, state):
-        return self.algo.compute_single_action(state)
+        action, _ = self.model.predict(state, deterministic=True)
+        return int(action)
 
-    def learn(self, iterations=50):
-        for i in range(iterations):
-            result = self.algo.train()
-            reward = result.get("env_runners", {}).get("episode_reward_mean", "N/A")
-            print(f"Iter {i+1}: reward={reward}")
+    def learn(self, env, timesteps=50000):
+        """Train for given timesteps."""
+        self.model.learn(total_timesteps=timesteps)
 
-    def close(self):
-        self.algo.stop()
-        ray.shutdown()
+
+# Agent registry for extensibility
+AGENTS = {
+    "random": RandomAgent,
+    "ppo": PPOAgent,
+}
+
+
+def get_agent(name, env):
+    """Factory function to create agent by name."""
+    if name not in AGENTS:
+        raise ValueError(f"Unknown agent: {name}. Available: {list(AGENTS.keys())}")
+
+    if name == "random":
+        return AGENTS[name](n_actions=env.action_space.n)
+    return AGENTS[name](env)
