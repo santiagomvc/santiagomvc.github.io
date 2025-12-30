@@ -1,9 +1,14 @@
 """CliffWalking environment runner with CLI."""
 
 import argparse
+from pathlib import Path
+
 import gymnasium as gym
-from agents import get_agent, AGENTS
+from dotenv import load_dotenv
+
+from agents import AGENTS, get_agent
 from utils import save_gif
+
 
 ENV_NAME = "CliffWalking-v0"
 TIMESTEPS = 5000
@@ -45,6 +50,9 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
+
+    # Load environment variables
+    load_dotenv(Path(__file__).parent / ".env")
 
     env = gym.make(ENV_NAME, render_mode="rgb_array")
     agent = get_agent(args.agent, env)
