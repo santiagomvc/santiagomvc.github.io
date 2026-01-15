@@ -42,7 +42,7 @@ class PPOAgent(BaseAgent):
 
     def __init__(self, env):
         """Initialize with environment instance."""
-        self.model = PPO("MlpPolicy", env, verbose=1)
+        self.model = PPO("MlpPolicy", env, ent_coef=0.1, verbose=1)
 
     def act(self, state):
         action, _ = self.model.predict(state, deterministic=True)
@@ -92,7 +92,7 @@ class CPTPPOAgent(BaseAgent):
         self.wrapped_env = CPTRewardWrapper(
             env, alpha, beta, lambda_, reference_point
         )
-        self.model = PPO("MlpPolicy", self.wrapped_env, verbose=1)
+        self.model = PPO("MlpPolicy", self.wrapped_env, ent_coef=0.1, verbose=1)
 
     def act(self, state):
         action, _ = self.model.predict(state, deterministic=True)
@@ -114,12 +114,12 @@ class LLMAgent(BaseAgent):
     No training required - uses prompt engineering for decision making.
     """
 
-    def __init__(self, env, model: str = "gpt-5", verbose: bool = False):
+    def __init__(self, env, model: str = "gpt-4o-mini", verbose: bool = False):
         """Initialize LLM agent.
 
         Args:
             env: Gymnasium environment
-            model: OpenAI model name (default: gpt-5)
+            model: OpenAI model name (default: gpt-4o-mini)
             verbose: Print reasoning to stdout (default: False)
         """
         self.client = OpenAI()  # Uses OPENAI_API_KEY env var
