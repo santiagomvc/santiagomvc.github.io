@@ -1,4 +1,4 @@
-"""CliffWalking environment runner with CLI."""
+"""FrozenLake environment runner with CLI."""
 
 import argparse
 import json
@@ -12,13 +12,18 @@ from agents import AGENTS, get_agent
 from utils import compute_action_entropy, save_gif
 
 
-ENV_NAME = "CliffWalking-v0"
+ENV_NAME = "FrozenLake-v1"
+GRID_SIZE = 4
+HOLES = {5, 7, 11, 12}
+GOAL = 15
+# Tiles adjacent to holes (risky to visit)
+RISKY_TILES = {1, 3, 4, 6, 8, 9, 10, 13, 15}
 TIMESTEPS = 150000
 N_EVAL_EPISODES = 20
-OPTIMAL_STEPS = 13  # Minimum steps from start to goal
+OPTIMAL_STEPS = 6  # Minimum steps from start to goal
 
 
-def run_episode(env, agent, max_steps=500):
+def run_episode(env, agent, max_steps=200):
     """Run one episode. Works for any agent with act(state).
 
     Returns: states, rewards, frames, stats dict
@@ -26,7 +31,6 @@ def run_episode(env, agent, max_steps=500):
     state, _ = env.reset()
     states, rewards, frames = [state], [], [env.render()]
     actions = []
-    cliff_falls = 0
     safe_visits = 0
 
     for _ in range(max_steps):
@@ -37,11 +41,8 @@ def run_episode(env, agent, max_steps=500):
         rewards.append(reward)
         frames.append(env.render())
 
-        # Track stats
-        if reward == -100:
-            cliff_falls += 1
-        row = state // 12
-        if row < 3:
+        # Track safe zone visits (not adjacent to holes)
+        if state not in RISKY_TILES and state not in HOLES:
             safe_visits += 1
 
         if terminated or truncated:
@@ -50,16 +51,18 @@ def run_episode(env, agent, max_steps=500):
     # Compute behavioral metrics
     action_counts = np.bincount(actions, minlength=4) if actions else np.zeros(4)
     action_dist = (action_counts / len(actions) * 100).tolist() if actions else [0, 0, 0, 0]
+    unique_states = len(set(states))
 
     stats = {
         "reward": sum(rewards),
         "steps": len(rewards),
-        "cliff_falls": cliff_falls,
-        "safe_row_pct": round(safe_visits / len(rewards) * 100, 1) if rewards else 0,
-        "reached_goal": state == 47,
+        "fell_in_hole": state in HOLES,
+        "safe_zone_pct": round(safe_visits / len(rewards) * 100, 1) if rewards else 0,
+        "reached_goal": state == GOAL,
         "action_entropy": compute_action_entropy(actions),
-        "path_directness": round(OPTIMAL_STEPS / len(rewards), 3) if rewards else 0,
-        "action_dist": [round(p, 1) for p in action_dist],  # [up, right, down, left]
+        "path_efficiency": round(OPTIMAL_STEPS / len(rewards), 3) if rewards else 0,
+        "unique_states": unique_states,
+        "action_dist": [round(p, 1) for p in action_dist],  # [left, down, right, up]
     }
     return states, rewards, frames, stats
 
@@ -83,7 +86,7 @@ def evaluate(env, agent, agent_name):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="CliffWalking RL runner")
+    parser = argparse.ArgumentParser(description="FrozenLake RL runner")
     parser.add_argument("-t", "--type", choices=["train", "eval"], required=True)
     parser.add_argument("-a", "--agent", choices=list(AGENTS.keys()), required=True)
     return parser.parse_args()
@@ -96,7 +99,7 @@ if __name__ == "__main__":
     load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
     env = gym.make(ENV_NAME, render_mode="rgb_array", is_slippery=True)
-    agent = get_agent(args.agent, env)
+    agent = get_agent(args.agent, env, env_name=ENV_NAME)
 
     if args.type == "train":
         print(f"Training {args.agent} for {TIMESTEPS} timesteps...")

@@ -1,0 +1,6 @@
+gymnasium
+numpy
+Pillow
+openai
+stable-baselines3
+python-dotenv

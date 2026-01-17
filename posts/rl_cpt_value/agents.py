@@ -7,7 +7,15 @@ import numpy as np
 from openai import OpenAI
 from stable_baselines3 import PPO
 
-from utils import ACTION_TOOL, CLIFFWALKING_PROMPT, CPTRewardWrapper
+from utils import (
+    CLIFFWALKING_ACTION_TOOL,
+    CLIFFWALKING_PROMPT,
+    FROZENLAKE_ACTION_TOOL,
+    FROZENLAKE_PROMPT,
+    CPTRewardWrapper,
+    format_cliffwalking_state,
+    format_frozenlake_state,
+)
 
 
 class BaseAgent(ABC):
@@ -108,53 +116,48 @@ class CPTPPOAgent(BaseAgent):
 
 
 class LLMAgent(BaseAgent):
-    """LLM-based agent using OpenAI gpt-4o for action selection.
+    """LLM-based agent using OpenAI for action selection.
 
     Uses function calling with ReAct-style reasoning to navigate the environment.
     No training required - uses prompt engineering for decision making.
     """
 
-    def __init__(self, env, model: str = "gpt-4o-mini", verbose: bool = False):
+    def __init__(self, env, model: str = "gpt-5-mini", verbose: bool = False, env_name: str = "CliffWalking-v0"):
         """Initialize LLM agent.
 
         Args:
             env: Gymnasium environment
-            model: OpenAI model name (default: gpt-4o-mini)
+            model: OpenAI model name (default: gpt-5-mini)
             verbose: Print reasoning to stdout (default: False)
+            env_name: Environment name for prompt/state/tool selection
         """
         self.client = OpenAI()  # Uses OPENAI_API_KEY env var
         self.model = model
         self.verbose = verbose
+        self.env_name = env_name
+
+    def _get_action_tool(self) -> dict:
+        """Get the action tool with correct mapping for current environment."""
+        if "FrozenLake" in self.env_name:
+            return FROZENLAKE_ACTION_TOOL
+        return CLIFFWALKING_ACTION_TOOL
 
     def _format_state(self, state: int) -> str:
         """Convert state integer to human-readable description."""
-        row = state // 12
-        col = state % 12
+        if "FrozenLake" in self.env_name:
+            return format_frozenlake_state(state)
+        return format_cliffwalking_state(state)
 
-        desc = f"Position: Row {row}, Column {col}"
-
-        # Add context
-        if state == 36:
-            desc += " (START)"
-        elif state == 47:
-            desc += " (GOAL)"
-        elif 37 <= state <= 46:
-            desc += " (ON CLIFF!)"
-        elif row == 3:
-            desc += " (bottom row, adjacent to cliff)"
-        elif row == 0:
-            desc += " (top row, safe)"
-
-        # Distance to goal
-        goal_row, goal_col = 3, 11
-        desc += f"\nDistance to goal: {abs(row - goal_row) + abs(col - goal_col)} steps"
-
-        return desc
+    def _get_prompt(self) -> str:
+        """Get system prompt for current environment."""
+        if "FrozenLake" in self.env_name:
+            return FROZENLAKE_PROMPT
+        return CLIFFWALKING_PROMPT
 
     def act(self, state) -> int:
         """Select action using LLM with function calling."""
         messages = [
-            {"role": "system", "content": CLIFFWALKING_PROMPT},
+            {"role": "system", "content": self._get_prompt()},
             {
                 "role": "user",
                 "content": f"Current state:\n{self._format_state(state)}\n\nSelect your action.",
@@ -164,7 +167,7 @@ class LLMAgent(BaseAgent):
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
-            tools=[ACTION_TOOL],
+            tools=[self._get_action_tool()],
             tool_choice={"type": "function", "function": {"name": "select_action"}},
         )
 
@@ -196,7 +199,7 @@ def get_agent(name, env, **kwargs):
         env: Gymnasium environment
         **kwargs: Additional arguments passed to agent constructor
             For cpt-ppo: alpha, beta, lambda_, reference_point
-            For llm: model, verbose
+            For llm: model, verbose, env_name
 
     Returns:
         Initialized agent instance
@@ -206,6 +209,10 @@ def get_agent(name, env, **kwargs):
 
     if name == "random":
         return AGENTS[name](n_actions=env.action_space.n)
-    elif name in ("cpt-ppo", "llm"):
+    elif name == "llm":
         return AGENTS[name](env, **kwargs)
+    elif name == "cpt-ppo":
+        # Filter out env_name which is only for LLM agent
+        cpt_kwargs = {k: v for k, v in kwargs.items() if k != "env_name"}
+        return AGENTS[name](env, **cpt_kwargs)
     return AGENTS[name](env)
