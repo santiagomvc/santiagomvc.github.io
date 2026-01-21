@@ -79,13 +79,21 @@ class CPTRewardWrapper(gym.RewardWrapper):
 # LLM Agent prompt and tooling
 # =============================================================================
 
-CLIFFWALKING_PROMPT = """You are an RL agent navigating a 4x12 grid world (CliffWalking-v0).
+def get_cliffwalking_prompt(shape: tuple[int, int], reward_cliff: float, reward_step: float) -> str:
+    """Generate CliffWalking prompt for configurable grid size and rewards."""
+    nrows, ncols = shape
+    start_pos = (nrows - 1) * ncols
+    goal_pos = nrows * ncols - 1
+    cliff_start = start_pos + 1
+    cliff_end = goal_pos - 1
+
+    return f"""You are an RL agent navigating a {nrows}x{ncols} grid world (CliffWalking).
 
 LAYOUT:
-- Grid: 4 rows (0-3) x 12 columns (0-11)
-- START: Position 36 (row 3, col 0) - bottom-left
-- GOAL: Position 47 (row 3, col 11) - bottom-right
-- CLIFF: Positions 37-46 (row 3, cols 1-10) - bottom row between start/goal
+- Grid: {nrows} rows (0-{nrows-1}) x {ncols} columns (0-{ncols-1})
+- START: Position {start_pos} (row {nrows-1}, col 0) - bottom-left
+- GOAL: Position {goal_pos} (row {nrows-1}, col {ncols-1}) - bottom-right
+- CLIFF: Positions {cliff_start}-{cliff_end} (row {nrows-1}, cols 1-{ncols-2}) - bottom row between start/goal
 
 ACTIONS:
 - 0: UP (row decreases)
@@ -94,8 +102,8 @@ ACTIONS:
 - 3: LEFT (column decreases)
 
 REWARDS:
-- Each step: -1
-- Falling off cliff: -100, return to start
+- Each step: {reward_step}
+- Falling off cliff: {reward_cliff}, return to start
 - Reaching goal: episode ends
 
 OBJECTIVE: Reach the goal with minimum total penalty. The safe path goes UP from start, RIGHT across top rows, then DOWN to goal.
@@ -129,25 +137,31 @@ CLIFFWALKING_ACTION_TOOL = {
 }
 
 
-def format_cliffwalking_state(state: int) -> str:
+def format_cliffwalking_state(state: int, shape: tuple[int, int] = (4, 12)) -> str:
     """Format CliffWalking state to human-readable description."""
-    row = state // 12
-    col = state % 12
+    nrows, ncols = shape
+    row = state // ncols
+    col = state % ncols
 
     desc = f"Position: Row {row}, Column {col}"
 
-    if state == 36:
+    start_state = (nrows - 1) * ncols  # Bottom-left
+    goal_state = nrows * ncols - 1  # Bottom-right
+    cliff_start = start_state + 1
+    cliff_end = goal_state - 1
+
+    if state == start_state:
         desc += " (START)"
-    elif state == 47:
+    elif state == goal_state:
         desc += " (GOAL)"
-    elif 37 <= state <= 46:
+    elif cliff_start <= state <= cliff_end and row == nrows - 1:
         desc += " (ON CLIFF!)"
-    elif row == 3:
+    elif row == nrows - 1:
         desc += " (bottom row, adjacent to cliff)"
     elif row == 0:
         desc += " (top row, safe)"
 
-    goal_row, goal_col = 3, 11
+    goal_row, goal_col = nrows - 1, ncols - 1
     desc += f"\nDistance to goal: {abs(row - goal_row) + abs(col - goal_col)} steps"
 
     return desc

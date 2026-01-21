@@ -3,19 +3,15 @@
 import argparse
 from pathlib import Path
 
-import gymnasium as gym
 from dotenv import load_dotenv
 
+import config
 from agents import AGENTS, get_agent
+from custom_cliff_walking import make_env
 from utils import save_gif
 
 
-TIMESTEPS = 300000
-N_EVAL_EPISODES = 5
-ENV_NAME = "CliffWalking-v0"
-
-# Slippery mode: adds stochastic transitions like FrozenLake's is_slippery
-USE_SLIPPERY = True
+ENV_NAME = "CliffWalking-v1"
 
 
 def run_episode(env, agent, max_steps=500):
@@ -26,13 +22,15 @@ def run_episode(env, agent, max_steps=500):
     step_count = 0
     cliff_falls = 0
 
+    fell_off_cliff = False
     for _ in range(max_steps):
         action = agent.act(state)
         state, reward, terminated, truncated, _ = env.step(action)
         frames.append(env.render())
         total_reward += reward
         step_count += 1
-        if reward == -100:
+        fell_off_cliff = reward == config.REWARD_CLIFF
+        if fell_off_cliff:
             cliff_falls += 1
 
         if terminated or truncated:
@@ -41,7 +39,7 @@ def run_episode(env, agent, max_steps=500):
     metrics = {
         "total_reward": total_reward,
         "episode_length": step_count,
-        "success": terminated,  # episode only terminates when reaching goal
+        "success": terminated and not fell_off_cliff,
         "cliff_falls": cliff_falls,
     }
     return frames, metrics
@@ -51,7 +49,7 @@ def evaluate(env, agent, agent_name):
     """Run N episodes, save GIFs, and print metrics summary."""
     all_metrics = []
 
-    for i in range(N_EVAL_EPISODES):
+    for i in range(config.N_EVAL_EPISODES):
         frames, metrics = run_episode(env, agent)
         all_metrics.append(metrics)
         output = f"outputs/{agent_name}_{ENV_NAME}_ep{i+1}.gif"
@@ -59,9 +57,9 @@ def evaluate(env, agent, agent_name):
         print(f"Episode {i+1}: saved {output}")
 
     # Print summary
-    avg_reward = sum(m["total_reward"] for m in all_metrics) / N_EVAL_EPISODES
-    avg_length = sum(m["episode_length"] for m in all_metrics) / N_EVAL_EPISODES
-    success_rate = sum(m["success"] for m in all_metrics) / N_EVAL_EPISODES
+    avg_reward = sum(m["total_reward"] for m in all_metrics) / config.N_EVAL_EPISODES
+    avg_length = sum(m["episode_length"] for m in all_metrics) / config.N_EVAL_EPISODES
+    success_rate = sum(m["success"] for m in all_metrics) / config.N_EVAL_EPISODES
     total_cliff_falls = sum(m["cliff_falls"] for m in all_metrics)
     print(f"\nAgent: {agent_name}")
     print(f"  Avg Reward: {avg_reward:.2f}")
@@ -82,14 +80,14 @@ if __name__ == "__main__":
 
     load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-    env = gym.make(ENV_NAME, render_mode="rgb_array", is_slippery=USE_SLIPPERY)
-    print(f"Using {ENV_NAME} (slippery={USE_SLIPPERY})")
+    env = make_env(config)
+    print(f"Using CliffWalking (shape={config.SHAPE}, stochasticity={config.STOCHASTICITY})")
 
     agent = get_agent(args.agent, env)
 
     if args.type == "train":
-        print(f"Training {args.agent} for {TIMESTEPS} timesteps...")
-        agent.learn(env, TIMESTEPS)
+        print(f"Training {args.agent} for {config.TIMESTEPS} timesteps...")
+        agent.learn(env, config.TIMESTEPS)
         print("Training complete. Running evaluation...")
         evaluate(env, agent, args.agent)
     else:
