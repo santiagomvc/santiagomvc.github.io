@@ -19,6 +19,8 @@ from utils import (
 class BaseAgent(ABC):
     """Base class for all agents."""
 
+    trainable = False
+
     @abstractmethod
     def act(self, state):
         """Select action given state."""
@@ -46,6 +48,8 @@ class RandomAgent(BaseAgent):
 class PPOAgent(BaseAgent):
     """PPO agent using Stable Baselines 3."""
 
+    trainable = True
+
     def __init__(self, env):
         """Initialize with environment instance."""
         self.model = PPO("MlpPolicy", env, ent_coef=0.1, verbose=1)
@@ -71,6 +75,8 @@ class CPTPPOAgent(BaseAgent):
 
     Reference: Tversky & Kahneman (1992) "Advances in Prospect Theory"
     """
+
+    trainable = True
 
     def __init__(
         self,

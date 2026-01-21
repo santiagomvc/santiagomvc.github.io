@@ -75,7 +75,6 @@ def evaluate(env, agent, agent_name):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="CliffWalking RL runner")
-    parser.add_argument("-t", "--type", choices=["train", "eval"], required=True)
     parser.add_argument("-a", "--agent", choices=list(AGENTS.keys()), required=True)
     return parser.parse_args()
 
@@ -91,13 +90,12 @@ if __name__ == "__main__":
 
     agent = get_agent(args.agent, env)
 
-    if args.type == "train":
+    if agent.trainable:
         print(f"Training {args.agent} for {cfg['timesteps']} timesteps...")
         agent.learn(env, cfg["timesteps"])
         print("Training complete. Running evaluation...")
-        evaluate(env, agent, args.agent)
-    else:
-        evaluate(env, agent, args.agent)
+
+    evaluate(env, agent, args.agent)
 
     agent.close()
     env.close()
