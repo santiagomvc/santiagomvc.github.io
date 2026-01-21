@@ -22,25 +22,52 @@ def run_episode(env, agent, max_steps=500):
     """Run one episode and collect frames for GIF."""
     state, _ = env.reset()
     frames = [env.render()]
+    total_reward = 0
+    step_count = 0
+    cliff_falls = 0
 
     for _ in range(max_steps):
         action = agent.act(state)
         state, reward, terminated, truncated, _ = env.step(action)
         frames.append(env.render())
+        total_reward += reward
+        step_count += 1
+        if reward == -100:
+            cliff_falls += 1
 
         if terminated or truncated:
             break
 
-    return frames
+    metrics = {
+        "total_reward": total_reward,
+        "episode_length": step_count,
+        "success": terminated,  # episode only terminates when reaching goal
+        "cliff_falls": cliff_falls,
+    }
+    return frames, metrics
 
 
 def evaluate(env, agent, agent_name):
-    """Run N episodes and save GIFs."""
+    """Run N episodes, save GIFs, and print metrics summary."""
+    all_metrics = []
+
     for i in range(N_EVAL_EPISODES):
-        frames = run_episode(env, agent)
+        frames, metrics = run_episode(env, agent)
+        all_metrics.append(metrics)
         output = f"outputs/{agent_name}_{ENV_NAME}_ep{i+1}.gif"
         save_gif(frames, output)
         print(f"Episode {i+1}: saved {output}")
+
+    # Print summary
+    avg_reward = sum(m["total_reward"] for m in all_metrics) / N_EVAL_EPISODES
+    avg_length = sum(m["episode_length"] for m in all_metrics) / N_EVAL_EPISODES
+    success_rate = sum(m["success"] for m in all_metrics) / N_EVAL_EPISODES
+    total_cliff_falls = sum(m["cliff_falls"] for m in all_metrics)
+    print(f"\nAgent: {agent_name}")
+    print(f"  Avg Reward: {avg_reward:.2f}")
+    print(f"  Avg Length: {avg_length:.2f}")
+    print(f"  Success Rate: {success_rate:.0%}")
+    print(f"  Total Cliff Falls: {total_cliff_falls}")
 
 
 def parse_args():
@@ -55,8 +82,8 @@ if __name__ == "__main__":
 
     load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-    env = gym.make("CliffWalking-v0", render_mode="rgb_array", is_slippery=USE_SLIPPERY)
-    print(f"Using CliffWalking-v0 (slippery={USE_SLIPPERY})")
+    env = gym.make(ENV_NAME, render_mode="rgb_array", is_slippery=USE_SLIPPERY)
+    print(f"Using {ENV_NAME} (slippery={USE_SLIPPERY})")
 
     agent = get_agent(args.agent, env)
 

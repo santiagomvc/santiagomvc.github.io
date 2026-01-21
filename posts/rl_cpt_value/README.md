@@ -1,18 +1,16 @@
 # Are AI agents aligned with human behavior - Part 1
 
-I'm writing a blogpost about how the behavior of AI agents compares to human behavior. For that I'm going to run a experiment on three different RL environments using three different types of agents. This blogpost will focus on the value side of CPT, the next one will focus on the probability side, and finally we will combine both. We use UV pip for package management.
+I'm writing a blogpost about how the behavior of AI agents compares to human behavior. For that I'm going to run a experiment the Cliff Walking RL environment using three different types of agents. This blogpost will focus on the value side of CPT, the next one will focus on the probability side, and finally we will combine both. We use UV pip for package management.
 
 ## Agents
 
 * RL Agent (PPO): A simple RL agent using the PPO algorithm to learn a policy for the environment.
-* Human Aligned Rl Agent (PPO): A RL agent which value functions are close to cumulative prospect theory.
-* Large Language Model Agent (Opus-4.5): State-of-the-art Language Model with tool calling capabilities.
+* Human Aligned Rl Agent (CPT-PPO): A RL agent which value functions are close to cumulative prospect theory.
+* Large Language Model Agent (GPT5-Mini): State-of-the-art Language Model with tool calling capabilities.
 
 ## Environments
 
-* Cliff Walking: A simple environment where the agent has to navigate a grid of cliffs and rewards.
-* Frozen Lake: A simple environment where the agent has to navigate a grid of lakes and rewards.
-* Blackjack: A simple environment where the agent has to learn to play blackjack.
+* Cliff Walking: A simple environment where the agent has to navigate a grid of cliffs and rewards. We will use the stochastic version where the movement may randomly change by setting "is_slippery=True". We will need to modify the cliff walking environment, specially the rewards, in specific ways to display how the behavior changes between normative and descriptive models.
 
 ## Experiment
 
@@ -28,17 +26,19 @@ I'm writing a blogpost about how the behavior of AI agents compares to human beh
 
 6. Train (if needed) the agents and run an evaluation with multiple episodes saving the results for cliff walking. Log training and evaluation results to Weights and Biases.
 
-7. Build the frozen lake env.
+7. Implement the environment changes for each effect
 
-8. Train (if needed) the agents and run an evaluation with multiple episodes saving the results for frozen lake. Log training and evaluation results to Weights and Biases.
+* Change sensitivity for small amounts (for gains and losses)
+* Change sensitivity for large amounts (for gains and losses)
+* Risk aversion for gains
+* Risk seeking for losses
+* Loss aversion
+* Status quo bias
+* Endowment effect (reference points)
 
-9. Build the blackjack env.
+8. Build a table with the results for all the agents and environments.
 
-10. Train (if needed) the agents and run an evaluation with multiple episodes saving the results for blackjack. Log training and evaluation results to Weights and Biases.
-
-11. Build a table with the results for all the agents and environments.
-
-12. Write a blogpost about the results.
+9. Write a blogpost about the results.
 
 ## Future ideas
 
@@ -49,3 +49,4 @@ I'm writing a blogpost about how the behavior of AI agents compares to human beh
 * RL CPT Probability distortion experiment
 * Agent combining RL CPT probability and value changes.
 * The "Trap" Corridor (Reference Points) env experiment.
+* Copy experiment on other environments (FrozenLake, BlackJack, etc.) 

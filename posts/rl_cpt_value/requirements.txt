@@ -1,4 +1,5 @@
 gymnasium
+pygame
 numpy
 Pillow
 openai
