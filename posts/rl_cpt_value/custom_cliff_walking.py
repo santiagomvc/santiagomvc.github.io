@@ -5,6 +5,8 @@ import gymnasium as gym
 from gymnasium import spaces
 from gymnasium.envs.toy_text.cliffwalking import CliffWalkingEnv, UP, RIGHT, DOWN, LEFT
 
+from utils import load_config
+
 
 class ResizableCliffWalkingEnv(CliffWalkingEnv):
     """CliffWalking with configurable grid dimensions."""
@@ -83,18 +85,21 @@ class CliffWalkingWrapper(gym.Wrapper):
         return obs, reward, terminated, truncated, info
 
 
-def make_env(config):
+def make_env():
     """Factory function to create CliffWalking environment from config."""
+    cfg = load_config()
+    shape = tuple(cfg["shape"])
+    stochasticity = cfg["stochasticity"]
     env = ResizableCliffWalkingEnv(
         render_mode="rgb_array",
-        is_slippery=(config.STOCHASTICITY == "slippery"),
-        shape=config.SHAPE,
+        is_slippery=(stochasticity == "slippery"),
+        shape=shape,
     )
     env = CliffWalkingWrapper(
         env,
-        reward_cliff=config.REWARD_CLIFF,
-        reward_step=config.REWARD_STEP,
+        reward_cliff=cfg["reward_cliff"],
+        reward_step=cfg["reward_step"],
         terminate_on_cliff=True,
-        wind_prob=config.WIND_PROB if config.STOCHASTICITY == "windy" else 0.0,
+        wind_prob=cfg["wind_prob"] if stochasticity == "windy" else 0.0,
     )
     return env

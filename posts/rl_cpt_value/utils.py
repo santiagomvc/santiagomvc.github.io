@@ -5,7 +5,15 @@ from typing import SupportsFloat
 
 import gymnasium as gym
 import numpy as np
+import yaml
 from PIL import Image
+
+
+def load_config():
+    """Load configuration from YAML file."""
+    config_path = Path(__file__).parent / "config.yaml"
+    with open(config_path) as f:
+        return yaml.safe_load(f)
 
 
 def save_gif(frames, path, fps=4):

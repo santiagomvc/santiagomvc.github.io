@@ -7,8 +7,8 @@ import numpy as np
 from openai import OpenAI
 from stable_baselines3 import PPO
 
-import config
 from utils import (
+    load_config,
     CLIFFWALKING_ACTION_TOOL,
     get_cliffwalking_prompt,
     CPTRewardWrapper,
@@ -136,12 +136,14 @@ class LLMAgent(BaseAgent):
 
     def act(self, state) -> int:
         """Select action using LLM with function calling."""
-        prompt = get_cliffwalking_prompt(config.SHAPE, config.REWARD_CLIFF, config.REWARD_STEP)
+        cfg = load_config()
+        shape = tuple(cfg["shape"])
+        prompt = get_cliffwalking_prompt(shape, cfg["reward_cliff"], cfg["reward_step"])
         messages = [
             {"role": "system", "content": prompt},
             {
                 "role": "user",
-                "content": f"Current state:\n{format_cliffwalking_state(state, config.SHAPE)}\n\nSelect your action.",
+                "content": f"Current state:\n{format_cliffwalking_state(state, shape)}\n\nSelect your action.",
             },
         ]
 

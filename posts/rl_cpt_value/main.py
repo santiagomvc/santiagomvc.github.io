@@ -5,10 +5,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-import config
 from agents import AGENTS, get_agent
 from custom_cliff_walking import make_env
-from utils import save_gif
+from utils import load_config, save_gif
 
 
 ENV_NAME = "CliffWalking-v1"
@@ -22,6 +21,7 @@ def run_episode(env, agent, max_steps=500):
     step_count = 0
     cliff_falls = 0
 
+    cfg = load_config()
     fell_off_cliff = False
     for _ in range(max_steps):
         action = agent.act(state)
@@ -29,7 +29,7 @@ def run_episode(env, agent, max_steps=500):
         frames.append(env.render())
         total_reward += reward
         step_count += 1
-        fell_off_cliff = reward == config.REWARD_CLIFF
+        fell_off_cliff = reward == cfg["reward_cliff"]
         if fell_off_cliff:
             cliff_falls += 1
 
@@ -47,9 +47,11 @@ def run_episode(env, agent, max_steps=500):
 
 def evaluate(env, agent, agent_name):
     """Run N episodes, save GIFs, and print metrics summary."""
+    cfg = load_config()
+    n_episodes = cfg["n_eval_episodes"]
     all_metrics = []
 
-    for i in range(config.N_EVAL_EPISODES):
+    for i in range(n_episodes):
         frames, metrics = run_episode(env, agent)
         all_metrics.append(metrics)
         output = f"outputs/{agent_name}_{ENV_NAME}_ep{i+1}.gif"
@@ -57,9 +59,9 @@ def evaluate(env, agent, agent_name):
         print(f"Episode {i+1}: saved {output}")
 
     # Print summary
-    avg_reward = sum(m["total_reward"] for m in all_metrics) / config.N_EVAL_EPISODES
-    avg_length = sum(m["episode_length"] for m in all_metrics) / config.N_EVAL_EPISODES
-    success_rate = sum(m["success"] for m in all_metrics) / config.N_EVAL_EPISODES
+    avg_reward = sum(m["total_reward"] for m in all_metrics) / n_episodes
+    avg_length = sum(m["episode_length"] for m in all_metrics) / n_episodes
+    success_rate = sum(m["success"] for m in all_metrics) / n_episodes
     total_cliff_falls = sum(m["cliff_falls"] for m in all_metrics)
     print(f"\nAgent: {agent_name}")
     print(f"  Avg Reward: {avg_reward:.2f}")
@@ -80,14 +82,15 @@ if __name__ == "__main__":
 
     load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-    env = make_env(config)
-    print(f"Using CliffWalking (shape={config.SHAPE}, stochasticity={config.STOCHASTICITY})")
+    cfg = load_config()
+    env = make_env()
+    print(f"Using CliffWalking (shape={tuple(cfg['shape'])}, stochasticity={cfg['stochasticity']})")
 
     agent = get_agent(args.agent, env)
 
     if args.type == "train":
-        print(f"Training {args.agent} for {config.TIMESTEPS} timesteps...")
-        agent.learn(env, config.TIMESTEPS)
+        print(f"Training {args.agent} for {cfg['timesteps']} timesteps...")
+        agent.learn(env, cfg["timesteps"])
         print("Training complete. Running evaluation...")
         evaluate(env, agent, args.agent)
     else:
