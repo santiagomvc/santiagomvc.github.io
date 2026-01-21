@@ -1,85 +1,46 @@
 """CliffWalking environment runner with CLI."""
 
 import argparse
-import json
 from pathlib import Path
 
 import gymnasium as gym
-import numpy as np
 from dotenv import load_dotenv
 
 from agents import AGENTS, get_agent
-from utils import compute_action_entropy, save_gif
+from utils import save_gif
 
 
+TIMESTEPS = 300000
+N_EVAL_EPISODES = 5
 ENV_NAME = "CliffWalking-v0"
-TIMESTEPS = 150000
-N_EVAL_EPISODES = 20
-OPTIMAL_STEPS = 13  # Minimum steps from start to goal
+
+# Slippery mode: adds stochastic transitions like FrozenLake's is_slippery
+USE_SLIPPERY = True
 
 
 def run_episode(env, agent, max_steps=500):
-    """Run one episode. Works for any agent with act(state).
-
-    Returns: states, rewards, frames, stats dict
-    """
+    """Run one episode and collect frames for GIF."""
     state, _ = env.reset()
-    states, rewards, frames = [state], [], [env.render()]
-    actions = []
-    cliff_falls = 0
-    safe_visits = 0
+    frames = [env.render()]
 
     for _ in range(max_steps):
         action = agent.act(state)
-        actions.append(action)
         state, reward, terminated, truncated, _ = env.step(action)
-        states.append(state)
-        rewards.append(reward)
         frames.append(env.render())
-
-        # Track stats
-        if reward == -100:
-            cliff_falls += 1
-        row = state // 12
-        if row < 3:
-            safe_visits += 1
 
         if terminated or truncated:
             break
 
-    # Compute behavioral metrics
-    action_counts = np.bincount(actions, minlength=4) if actions else np.zeros(4)
-    action_dist = (action_counts / len(actions) * 100).tolist() if actions else [0, 0, 0, 0]
-
-    stats = {
-        "reward": sum(rewards),
-        "steps": len(rewards),
-        "cliff_falls": cliff_falls,
-        "safe_row_pct": round(safe_visits / len(rewards) * 100, 1) if rewards else 0,
-        "reached_goal": state == 47,
-        "action_entropy": compute_action_entropy(actions),
-        "path_directness": round(OPTIMAL_STEPS / len(rewards), 3) if rewards else 0,
-        "action_dist": [round(p, 1) for p in action_dist],  # [up, right, down, left]
-    }
-    return states, rewards, frames, stats
+    return frames
 
 
 def evaluate(env, agent, agent_name):
-    """Run N episodes, save GIFs and stats JSON."""
-    all_stats = []
+    """Run N episodes and save GIFs."""
     for i in range(N_EVAL_EPISODES):
-        states, rewards, frames, stats = run_episode(env, agent)
-        all_stats.append(stats)
+        frames = run_episode(env, agent)
         output = f"outputs/{agent_name}_{ENV_NAME}_ep{i+1}.gif"
         save_gif(frames, output)
-        print(f"Episode {i+1}: reward={stats['reward']}, saved={output}")
-
-    # Save stats JSON
-    stats_path = Path(f"outputs/{agent_name}_{ENV_NAME}_stats.json")
-    stats_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(stats_path, "w") as f:
-        json.dump({"agent": agent_name, "env": ENV_NAME, "episodes": all_stats}, f, indent=2)
-    print(f"Stats saved to {stats_path}")
+        print(f"Episode {i+1}: saved {output}")
 
 
 def parse_args():
@@ -92,10 +53,11 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
 
-    # Load environment variables
     load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-    env = gym.make(ENV_NAME, render_mode="rgb_array", is_slippery=True)
+    env = gym.make("CliffWalking-v0", render_mode="rgb_array", is_slippery=USE_SLIPPERY)
+    print(f"Using CliffWalking-v0 (slippery={USE_SLIPPERY})")
+
     agent = get_agent(args.agent, env)
 
     if args.type == "train":
