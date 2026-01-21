@@ -157,8 +157,8 @@ def compare_value_frameworks(
     ev_arr = np.array(list(ev_values.values()))
     cpt_arr = np.array(list(cpt_values.values()))
 
-    ev_probs = np.exp(ev_arr) / np.exp(ev_arr).sum()
-    cpt_probs = np.exp(cpt_arr) / np.exp(cpt_arr).sum()
+    ev_probs = np.exp(ev_arr - ev_arr.max()) / np.exp(ev_arr - ev_arr.max()).sum()
+    cpt_probs = np.exp(cpt_arr - cpt_arr.max()) / np.exp(cpt_arr - cpt_arr.max()).sum()
 
     rows = list(ev_values.keys())
     ev_probabilities = dict(zip(rows, ev_probs))
