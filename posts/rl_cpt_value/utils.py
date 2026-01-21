@@ -16,16 +16,45 @@ def load_config():
         return yaml.safe_load(f)
 
 
-def save_gif(frames, path, fps=4):
-    """Save frames (numpy arrays) as animated GIF."""
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
+def save_episodes_gif(episodes_frames, output_path, cols=2, fps=4):
+    """Save multiple episodes as a combined grid GIF.
 
-    images = [Image.fromarray(frame) for frame in frames]
-    images[0].save(
-        path, save_all=True, append_images=images[1:], duration=int(1000 / fps), loop=0
+    Args:
+        episodes_frames: List of episodes, each episode is a list of frames (numpy arrays).
+        output_path: Path for the output GIF.
+        cols: Number of columns in the grid.
+        fps: Frames per second.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Convert numpy frames to PIL images
+    all_frames = [[Image.fromarray(f) for f in ep] for ep in episodes_frames]
+
+    # Pad shorter episodes by repeating last frame
+    max_frames = max(len(ep) for ep in all_frames)
+    for ep in all_frames:
+        while len(ep) < max_frames:
+            ep.append(ep[-1].copy())
+
+    # Calculate grid dimensions
+    n_eps = len(all_frames)
+    rows = (n_eps + cols - 1) // cols
+    w, h = all_frames[0][0].size
+
+    # Create combined frames
+    combined = []
+    for i in range(max_frames):
+        grid = Image.new("RGB", (cols * w, rows * h))
+        for j, ep in enumerate(all_frames):
+            grid.paste(ep[i].convert("RGB"), ((j % cols) * w, (j // cols) * h))
+        combined.append(grid)
+
+    combined[0].save(
+        output_path, save_all=True, append_images=combined[1:],
+        duration=int(1000 / fps), loop=0
     )
-    return path
+    return output_path
 
 
 # =============================================================================

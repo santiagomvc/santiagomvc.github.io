@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from agents import AGENTS, get_agent
 from custom_cliff_walking import make_env
-from utils import load_config, save_gif
+from utils import load_config, save_episodes_gif
 
 
 ENV_NAME = "CliffWalking-v1"
@@ -50,13 +50,16 @@ def evaluate(env, agent, agent_name):
     cfg = load_config()
     n_episodes = cfg["n_eval_episodes"]
     all_metrics = []
+    all_frames = []
 
-    for i in range(n_episodes):
+    for _ in range(n_episodes):
         frames, metrics = run_episode(env, agent)
+        all_frames.append(frames)
         all_metrics.append(metrics)
-        output = f"outputs/{agent_name}_{ENV_NAME}_ep{i+1}.gif"
-        save_gif(frames, output)
-        print(f"Episode {i+1}: saved {output}")
+
+    output_path = f"outputs/{agent_name}_{ENV_NAME}.gif"
+    save_episodes_gif(all_frames, output_path)
+    print(f"Saved {output_path}")
 
     # Print summary
     avg_reward = sum(m["total_reward"] for m in all_metrics) / n_episodes
