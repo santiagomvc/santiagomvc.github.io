@@ -1,7 +1,7 @@
 shape: [5, 5]
 stochasticity: windy
-reward_cliff: -50
-reward_step: -1
-wind_prob: 0.2
+reward_cliff: -100
+reward_step: -12
+wind_prob: 0.08
 timesteps: 300000
 n_eval_episodes: 4
