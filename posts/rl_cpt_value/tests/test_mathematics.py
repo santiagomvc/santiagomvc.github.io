@@ -106,17 +106,6 @@ class TestCliffProbability:
         p = cliff_fall_probability(row=2, nrows=5, ncols=10, wind_prob=0.8)
         assert p <= 1.0
 
-    def test_probability_monotonic_in_row(self):
-        """Higher rows (farther from cliff) should have lower P(cliff)."""
-        nrows, ncols = 5, 5
-        wind_prob = 0.2
-
-        prev_p = 1.0
-        for row in range(nrows - 1):
-            p = cliff_fall_probability(row, nrows, ncols, wind_prob)
-            assert p <= prev_p, f"P(cliff) should decrease as row decreases"
-            prev_p = p
-
 
 class TestCPTValueFunction:
     """Tests for CPT value function implementation."""

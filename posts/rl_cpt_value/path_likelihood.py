@@ -17,6 +17,16 @@ class PathOutcome:
     description: str = ""
 
 
+@dataclass
+class SubPathOutcome:
+    """Outcome of traversing from a position to terminal state."""
+    start_position: tuple[int, int]
+    cumulative_reward: float
+    probability: float
+    terminal_type: str  # "success" or "cliff"
+    steps: int
+
+
 def cliff_fall_probability(row: int, nrows: int, ncols: int, wind_prob: float) -> float:
     """Calculate probability of falling into cliff when traversing at given row.
 
@@ -117,6 +127,177 @@ def build_path_outcome_distributions(
         distributions[row] = outcomes
 
     return distributions
+
+
+def get_return_distribution_from_position(
+    row: int,
+    col: int,
+    env_config: dict = None,
+    gamma: float = 1.0,
+) -> List[SubPathOutcome]:
+    """Compute return distribution from position (row, col) to terminal.
+
+    Follows canonical policy: UP to row 0, RIGHT to last column, DOWN to goal.
+    Wind can push agent down during RIGHT phase, potentially into cliff.
+
+    Args:
+        row: Starting row (0 = top)
+        col: Starting column (0 = left)
+        env_config: Config with 'shape', 'wind_prob', 'reward_step', 'reward_cliff'
+        gamma: Discount factor for cumulative rewards
+
+    Returns:
+        List of SubPathOutcome with cumulative rewards and probabilities
+    """
+    if env_config is None:
+        env_config = load_config()
+
+    nrows, ncols = env_config['shape']
+    wind_prob = env_config.get('wind_prob', 0.0)
+    reward_step = env_config['reward_step']
+    reward_cliff = env_config['reward_cliff']
+
+    # Terminal states
+    goal_row, goal_col = nrows - 1, ncols - 1
+    cliff_row = nrows - 1
+
+    # Already at goal
+    if row == goal_row and col == goal_col:
+        return [SubPathOutcome(
+            start_position=(row, col),
+            cumulative_reward=0.0,
+            probability=1.0,
+            terminal_type="success",
+            steps=0,
+        )]
+
+    # On cliff (positions between start and goal on bottom row)
+    if row == cliff_row and 0 < col < ncols - 1:
+        return [SubPathOutcome(
+            start_position=(row, col),
+            cumulative_reward=reward_cliff,
+            probability=1.0,
+            terminal_type="cliff",
+            steps=0,
+        )]
+
+    # Calculate phases of the canonical path
+    # Phase 1: UP from current row to row 0
+    up_steps = row  # Move from current row to row 0
+
+    # Phase 2: RIGHT from current col to last col (wind affects here)
+    right_steps = ncols - 1 - col
+
+    # Phase 3: DOWN from row 0 to goal row (nrows - 1)
+    down_steps = nrows - 1
+
+    # Compute discounted cumulative reward helper
+    def discounted_reward(steps: int, final_reward: float = 0.0) -> float:
+        """Compute sum of gamma^k * reward_step for k=0..steps-1, plus gamma^steps * final."""
+        if gamma == 1.0:
+            return steps * reward_step + final_reward
+        # Geometric sum: reward_step * (1 - gamma^steps) / (1 - gamma)
+        if steps == 0:
+            return final_reward
+        geom_sum = reward_step * (1 - gamma**steps) / (1 - gamma)
+        return geom_sum + (gamma**steps) * final_reward
+
+    # If no wind or already past the risky phase
+    if wind_prob == 0 or right_steps == 0:
+        total_steps = up_steps + right_steps + down_steps
+        return [SubPathOutcome(
+            start_position=(row, col),
+            cumulative_reward=discounted_reward(total_steps),
+            probability=1.0,
+            terminal_type="success",
+            steps=total_steps,
+        )]
+
+    # With wind: compute cliff fall probability during RIGHT phase
+    # After UP phase, agent is at row 0. During RIGHT phase, wind can push down.
+    # Distance from row 0 to cliff is (nrows - 1)
+    distance_to_cliff = nrows - 1
+
+    if distance_to_cliff >= right_steps:
+        # Can't reach cliff even with wind on every step
+        p_cliff = 0.0
+    elif distance_to_cliff == 1:
+        # Any single wind push = cliff
+        p_cliff = 1 - (1 - wind_prob) ** right_steps
+    else:
+        # Need consecutive winds to reach cliff
+        d = distance_to_cliff
+        h = right_steps
+        p_cliff = min(1.0, (h - d + 1) * (wind_prob ** d))
+
+    p_success = 1 - p_cliff
+    outcomes = []
+
+    if p_success > 0:
+        total_steps = up_steps + right_steps + down_steps
+        outcomes.append(SubPathOutcome(
+            start_position=(row, col),
+            cumulative_reward=discounted_reward(total_steps),
+            probability=p_success,
+            terminal_type="success",
+            steps=total_steps,
+        ))
+
+    if p_cliff > 0:
+        # Approximate steps before cliff fall: UP + half of RIGHT
+        steps_before_fall = up_steps + right_steps // 2
+        outcomes.append(SubPathOutcome(
+            start_position=(row, col),
+            cumulative_reward=discounted_reward(steps_before_fall, reward_cliff),
+            probability=p_cliff,
+            terminal_type="cliff",
+            steps=steps_before_fall,
+        ))
+
+    return outcomes
+
+
+def build_position_return_distributions(
+    env_config: dict = None,
+    gamma: float = 1.0,
+) -> dict[tuple[int, int], List[SubPathOutcome]]:
+    """Build return distributions for all grid positions.
+
+    Args:
+        env_config: Config with 'shape', 'wind_prob', 'reward_step', 'reward_cliff'
+        gamma: Discount factor for cumulative rewards
+
+    Returns:
+        Dict mapping (row, col) to list of SubPathOutcome
+    """
+    if env_config is None:
+        env_config = load_config()
+
+    nrows, ncols = env_config['shape']
+    distributions = {}
+
+    for row in range(nrows):
+        for col in range(ncols):
+            distributions[(row, col)] = get_return_distribution_from_position(
+                row, col, env_config, gamma
+            )
+
+    return distributions
+
+
+def calculate_subpath_expected_value(outcomes: List[SubPathOutcome]) -> float:
+    """Standard expected value for sub-path outcomes: E[G] = sum p_i * G_i"""
+    return sum(o.cumulative_reward * o.probability for o in outcomes)
+
+
+def calculate_subpath_cpt_value(
+    outcomes: List[SubPathOutcome],
+    value_func: CPTValueFunction = None,
+) -> float:
+    """CPT value for sub-path outcomes: V = sum p_i * v(G_i)"""
+    if value_func is None:
+        value_func = CPTValueFunction()
+    return sum(o.probability * value_func(o.cumulative_reward) for o in outcomes)
 
 
 def compare_value_frameworks(

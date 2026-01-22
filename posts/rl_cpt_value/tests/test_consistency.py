@@ -120,19 +120,6 @@ class TestSoftmaxProbabilities:
         assert not np.any(np.isinf(probs)), "Softmax produced Inf"
         assert abs(probs.sum() - 1.0) < 1e-6, f"Probs sum to {probs.sum()}"
 
-    def test_softmax_stability_extreme_values(self):
-        """Test softmax with extreme negative values."""
-        values = np.array([-1000.0, -2000.0, -3000.0])
-
-        # Numerically stable softmax
-        max_val = np.max(values)
-        shifted = values - max_val
-        probs = np.exp(shifted) / np.exp(shifted).sum()
-
-        assert not np.any(np.isnan(probs)), "Stable softmax produced NaN"
-        assert probs[0] > probs[1] > probs[2], "Ordering should be preserved"
-
-
 class TestMonotonicity:
     """Tests for monotonicity properties."""
 

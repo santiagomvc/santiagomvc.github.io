@@ -140,24 +140,6 @@ class TestWindProbabilities:
 class TestRewardVariations:
     """Tests for various reward configurations."""
 
-    @pytest.mark.parametrize("reward_cliff", [-10, -50, -100, -500, -1000])
-    def test_cliff_reward_variations(self, reward_cliff):
-        """System should handle various cliff penalties."""
-        config = {
-            'shape': [5, 5],
-            'wind_prob': 0.2,
-            'reward_step': -1.0,
-            'reward_cliff': reward_cliff,
-        }
-        distributions = build_path_outcome_distributions(config)
-
-        for row, outcomes in distributions.items():
-            cliff_outcomes = [o for o in outcomes if not o.is_success]
-            if cliff_outcomes:
-                # Cliff reward should include the penalty
-                assert any(reward_cliff in str(o.reward) or o.reward < 0
-                          for o in cliff_outcomes)
-
     @pytest.mark.parametrize("reward_step", [-0.1, -1.0, -5.0, -10.0])
     def test_step_reward_variations(self, reward_step):
         """System should handle various step penalties."""

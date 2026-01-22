@@ -3,5 +3,5 @@ stochasticity: none
 reward_cliff: -100
 reward_step: -1
 wind_prob: 0.0
-timesteps: 150000
+timesteps: 300000
 n_eval_episodes: 4

@@ -253,4 +253,3 @@ def get_agent(name, env, **kwargs):
         return AGENTS[name](n_actions=env.action_space.n)
     elif name in ("llm", "reinforce", "cpt-reinforce"):
         return AGENTS[name](env, **kwargs)
-    return AGENTS[name](env)

@@ -1,7 +1,6 @@
 """Utilities for CliffWalking RL experiments."""
 
 from pathlib import Path
-from typing import SupportsFloat
 
 import gymnasium as gym
 import numpy as np
@@ -92,24 +91,6 @@ class CPTValueFunction:
             return np.power(x, self.alpha) if x > 0 else 0.0
         else:
             return -self.lambda_ * np.power(-x, self.beta)
-
-
-class CPTRewardWrapper(gym.RewardWrapper):
-    """Gymnasium wrapper that transforms rewards using CPT value function."""
-
-    def __init__(
-        self,
-        env: gym.Env,
-        alpha: float = 0.88,
-        beta: float = 0.88,
-        lambda_: float = 2.25,
-        reference_point: float = 0.0,
-    ):
-        super().__init__(env)
-        self.cpt_value = CPTValueFunction(alpha, beta, lambda_, reference_point)
-
-    def reward(self, reward: SupportsFloat) -> float:
-        return self.cpt_value(float(reward))
 
 
 # =============================================================================

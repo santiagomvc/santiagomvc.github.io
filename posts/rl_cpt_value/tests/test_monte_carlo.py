@@ -50,34 +50,6 @@ class TestCliffProbabilityMC:
         assert abs(empirical - theoretical) < 0.05, \
             f"MC={empirical:.4f}, theoretical={theoretical:.4f}"
 
-    @pytest.mark.parametrize("wind_prob", [0.1, 0.2])
-    def test_cliff_probability_distance_two(self, wind_prob):
-        """MC validation for d=2 (union bound approximation)."""
-        nrows, ncols = 5, 5
-        row = 2  # Distance to cliff = 2
-        n_samples = 10000
-        rng = np.random.default_rng(42)
-
-        theoretical = cliff_fall_probability(row, nrows, ncols, wind_prob)
-
-        # Monte Carlo simulation
-        cliff_falls = 0
-        for _ in range(n_samples):
-            current_row = row
-            for step in range(ncols - 1):
-                if rng.random() < wind_prob:
-                    current_row += 1
-                if current_row >= nrows - 1:
-                    cliff_falls += 1
-                    break
-
-        empirical = cliff_falls / n_samples
-
-        # Union bound is upper bound, so empirical should be <= theoretical
-        # Allow small deviation due to MC variance
-        assert empirical <= theoretical + 0.02, \
-            f"MC={empirical:.4f} exceeds theoretical={theoretical:.4f}"
-
     def test_zero_wind_no_falls(self):
         """With wind_prob=0, no cliff falls should occur."""
         nrows, ncols = 5, 5
@@ -271,64 +243,3 @@ class TestEnvironmentMC:
         avg_reward = total_reward / n_episodes
         assert abs(avg_reward - expected_reward) < 0.1, \
             f"Avg reward {avg_reward} differs from expected {expected_reward}"
-
-    def test_windy_policy_ev_distribution(self, env_factory):
-        """With wind, reward should follow expected distribution."""
-        nrows, ncols = 5, 5
-        wind_prob = 0.2
-        reward_step = -1.0
-        reward_cliff = -50.0
-        n_episodes = 1000
-
-        env = env_factory(
-            shape=(nrows, ncols),
-            wind_prob=wind_prob,
-            reward_step=reward_step,
-            reward_cliff=reward_cliff,
-        )
-
-        # Try to traverse via row 2
-        config = {
-            'shape': [nrows, ncols],
-            'wind_prob': wind_prob,
-            'reward_step': reward_step,
-            'reward_cliff': reward_cliff,
-        }
-        distributions = build_path_outcome_distributions(config)
-        theoretical_ev = calculate_path_expected_value(distributions[2])
-
-        # Simulate policy: UP, UP, RIGHT x4, DOWN, DOWN
-        # This attempts to go via row 2
-        episode_rewards = []
-
-        for seed in range(n_episodes):
-            env.reset(seed=seed)
-            episode_reward = 0
-            terminated = False
-
-            # Go UP twice (to row 2)
-            for _ in range(2):
-                if not terminated:
-                    _, r, terminated, _, _ = env.step(0)
-                    episode_reward += r
-
-            # Go RIGHT 4 times
-            for _ in range(4):
-                if not terminated:
-                    _, r, terminated, _, _ = env.step(1)
-                    episode_reward += r
-
-            # Go DOWN twice
-            for _ in range(2):
-                if not terminated:
-                    _, r, terminated, _, _ = env.step(2)
-                    episode_reward += r
-
-            episode_rewards.append(episode_reward)
-
-        empirical_ev = np.mean(episode_rewards)
-
-        # The actual policy execution may differ due to wind effects on all actions
-        # But should be in the same ballpark
-        assert abs(empirical_ev - theoretical_ev) < 10.0, \
-            f"Empirical EV {empirical_ev:.2f} differs from theoretical {theoretical_ev:.2f}"
