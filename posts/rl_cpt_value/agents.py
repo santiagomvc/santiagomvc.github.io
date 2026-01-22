@@ -1,17 +1,20 @@
-"""Agent classes with Stable Baselines 3."""
+"""Agent classes for CliffWalking RL experiments."""
 
 import json
 from abc import ABC, abstractmethod
 
 import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
 from openai import OpenAI
-from stable_baselines3 import PPO
+from torch.distributions import Categorical
 
 from utils import (
     load_config,
     CLIFFWALKING_ACTION_TOOL,
     get_cliffwalking_prompt,
-    CPTRewardWrapper,
+    CPTValueFunction,
     format_cliffwalking_state,
 )
 
@@ -45,38 +48,112 @@ class RandomAgent(BaseAgent):
         return np.random.randint(self.n_actions)
 
 
-class PPOAgent(BaseAgent):
-    """PPO agent using Stable Baselines 3."""
+class PolicyNetwork(nn.Module):
+    """Simple MLP policy network for discrete action spaces."""
+
+    def __init__(self, n_states: int = 25, n_actions: int = 4, hidden: int = 64):
+        super().__init__()
+        self.n_states = n_states
+        self.net = nn.Sequential(
+            nn.Linear(n_states, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, n_actions),
+        )
+
+    def forward(self, state: int) -> torch.Tensor:
+        """Convert state int to one-hot and return action probabilities."""
+        x = torch.zeros(self.n_states)
+        x[state] = 1.0
+        return torch.softmax(self.net(x), dim=-1)
+
+
+class REINFORCEAgent(BaseAgent):
+    """Vanilla REINFORCE agent with Monte Carlo returns (no baseline)."""
 
     trainable = True
 
-    def __init__(self, env):
-        """Initialize with environment instance."""
-        self.model = PPO("MlpPolicy", env, ent_coef=0.1, verbose=1)
+    def __init__(self, env, lr: float = 1e-3, gamma: float = 0.99):
+        """Initialize REINFORCE agent.
 
-    def act(self, state):
-        action, _ = self.model.predict(state, deterministic=True)
-        return int(action)
+        Args:
+            env: Gymnasium environment with discrete observation/action spaces
+            lr: Learning rate for Adam optimizer
+            gamma: Discount factor
+        """
+        self.n_states = env.observation_space.n
+        self.n_actions = env.action_space.n
+        self.gamma = gamma
+        self.policy = PolicyNetwork(self.n_states, self.n_actions)
+        self.optimizer = optim.Adam(self.policy.parameters(), lr=lr)
+        # Episode storage
+        self.log_probs = []
+        self.rewards = []
 
-    def learn(self, env, timesteps=50000):
-        """Train for given timesteps."""
-        self.model.learn(total_timesteps=timesteps)
+    def act(self, state) -> int:
+        """Sample action from policy and store log probability."""
+        probs = self.policy(state)
+        dist = Categorical(probs)
+        action = dist.sample()
+        self.log_probs.append(dist.log_prob(action))
+        return action.item()
+
+    def _transform_returns(self, returns: list[float]) -> torch.Tensor:
+        """Transform returns before policy gradient. Override for custom transforms."""
+        return torch.tensor(returns)
+
+    def learn(self, env, timesteps: int = 300000):
+        """Train using REINFORCE with full Monte Carlo returns.
+
+        Args:
+            env: Gymnasium environment to train on
+            timesteps: Total environment steps to train for
+        """
+        total_steps = 0
+        episode = 0
+        recent_rewards = []
+
+        while total_steps < timesteps:
+            state, _ = env.reset()
+            self.log_probs = []
+            self.rewards = []
+            done = False
+
+            # Collect full episode (Monte Carlo)
+            while not done:
+                action = self.act(state)
+                state, reward, terminated, truncated, _ = env.step(action)
+                self.rewards.append(reward)
+                done = terminated or truncated
+                total_steps += 1
+
+            # Compute Monte Carlo returns (no baseline)
+            returns = []
+            G = 0
+            for r in reversed(self.rewards):
+                G = r + self.gamma * G
+                returns.insert(0, G)
+            returns = self._transform_returns(returns)
+
+            # Policy gradient: L = -sum(log_prob * G)
+            loss = torch.tensor(0.0)
+            for log_prob, G in zip(self.log_probs, returns):
+                loss = loss - log_prob * G
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            # Logging
+            ep_reward = sum(self.rewards)
+            recent_rewards.append(ep_reward)
+            episode += 1
+            if episode % 100 == 0:
+                avg = sum(recent_rewards[-100:]) / min(100, len(recent_rewards))
+                print(f"Ep {episode} | Steps {total_steps} | Reward {ep_reward:.1f} | Avg100 {avg:.1f}")
 
 
-class CPTPPOAgent(BaseAgent):
-    """PPO agent with CPT value function reward shaping.
-
-    Uses Cumulative Prospect Theory's S-shaped value function to transform rewards:
-    - Loss aversion (λ=2.25): losses hurt more than equivalent gains
-    - Diminishing sensitivity (α=β=0.88): extreme values are compressed
-
-    This is Part 1 of CPT implementation (value side only).
-    Part 2 will add cumulative probability weighting.
-
-    Reference: Tversky & Kahneman (1992) "Advances in Prospect Theory"
-    """
-
-    trainable = True
+class CPTREINFORCEAgent(REINFORCEAgent):
+    """REINFORCE agent with CPT applied to episode returns."""
 
     def __init__(
         self,
@@ -85,40 +162,15 @@ class CPTPPOAgent(BaseAgent):
         beta: float = 0.88,
         lambda_: float = 2.25,
         reference_point: float = 0.0,
+        lr: float = 1e-3,
+        gamma: float = 0.99,
     ):
-        """Initialize CPT-PPO agent.
+        super().__init__(env, lr=lr, gamma=gamma)
+        self.cpt_value = CPTValueFunction(alpha, beta, lambda_, reference_point)
 
-        Args:
-            env: Gymnasium environment
-            alpha: Diminishing sensitivity for gains (default: 0.88)
-            beta: Diminishing sensitivity for losses (default: 0.88)
-            lambda_: Loss aversion coefficient (default: 2.25)
-            reference_point: Baseline for gains/losses (default: 0.0)
-        """
-        print(f"[CPT-PPO] Initializing with CPT params: α={alpha}, β={beta}, λ={lambda_}, ref={reference_point}")
-        self.cpt_params = {
-            "alpha": alpha,
-            "beta": beta,
-            "lambda": lambda_,
-            "reference_point": reference_point,
-        }
-        self.wrapped_env = CPTRewardWrapper(
-            env, alpha, beta, lambda_, reference_point
-        )
-        print("[CPT-PPO] Environment wrapped with CPT reward transformation")
-        self.model = PPO("MlpPolicy", self.wrapped_env, ent_coef=0.1, verbose=1)
-
-    def act(self, state):
-        action, _ = self.model.predict(state, deterministic=True)
-        return int(action)
-
-    def learn(self, env, timesteps=50000):
-        """Train for given timesteps using CPT-transformed rewards."""
-        self.model.learn(total_timesteps=timesteps)
-
-    def close(self):
-        """Cleanup wrapped environment."""
-        self.wrapped_env.close()
+    def _transform_returns(self, returns: list[float]) -> torch.Tensor:
+        """Apply CPT value function to each return."""
+        return torch.tensor([self.cpt_value(G) for G in returns])
 
 
 class LLMAgent(BaseAgent):
@@ -174,8 +226,8 @@ class LLMAgent(BaseAgent):
 # Agent registry for extensibility
 AGENTS = {
     "random": RandomAgent,
-    "ppo": PPOAgent,
-    "cpt-ppo": CPTPPOAgent,
+    "reinforce": REINFORCEAgent,
+    "cpt-reinforce": CPTREINFORCEAgent,
     "llm": LLMAgent,
 }
 
@@ -184,10 +236,11 @@ def get_agent(name, env, **kwargs):
     """Factory function to create agent by name.
 
     Args:
-        name: Agent type ("random", "ppo", "cpt-ppo", "llm")
+        name: Agent type ("random", "reinforce", "cpt-reinforce", "llm")
         env: Gymnasium environment
         **kwargs: Additional arguments passed to agent constructor
-            For cpt-ppo: alpha, beta, lambda_, reference_point
+            For reinforce: lr, gamma
+            For cpt-reinforce: alpha, beta, lambda_, reference_point, lr, gamma
             For llm: model, verbose
 
     Returns:
@@ -198,8 +251,6 @@ def get_agent(name, env, **kwargs):
 
     if name == "random":
         return AGENTS[name](n_actions=env.action_space.n)
-    elif name == "llm":
-        return AGENTS[name](env, **kwargs)
-    elif name == "cpt-ppo":
+    elif name in ("llm", "reinforce", "cpt-reinforce"):
         return AGENTS[name](env, **kwargs)
     return AGENTS[name](env)
