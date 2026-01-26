@@ -13,7 +13,7 @@ from utils import load_config, save_episodes_gif
 ENV_NAME = "CliffWalking-v1"
 
 
-def run_episode(env, agent, max_steps=500):
+def run_episode(env, agent, max_steps=500, config_name="base"):
     """Run one episode and collect frames for GIF."""
     state, _ = env.reset()
     frames = [env.render()]
@@ -21,7 +21,7 @@ def run_episode(env, agent, max_steps=500):
     step_count = 0
     cliff_falls = 0
 
-    cfg = load_config()
+    cfg = load_config(config_name)
     fell_off_cliff = False
     for _ in range(max_steps):
         action = agent.act(state)
@@ -45,15 +45,15 @@ def run_episode(env, agent, max_steps=500):
     return frames, metrics
 
 
-def evaluate(env, agent, agent_name):
+def evaluate(env, agent, agent_name, config_name="base"):
     """Run N episodes, save GIFs, and print metrics summary."""
-    cfg = load_config()
+    cfg = load_config(config_name)
     n_episodes = cfg["n_eval_episodes"]
     all_metrics = []
     all_frames = []
 
     for _ in range(n_episodes):
-        frames, metrics = run_episode(env, agent)
+        frames, metrics = run_episode(env, agent, config_name=config_name)
         all_frames.append(frames)
         all_metrics.append(metrics)
 
@@ -76,6 +76,7 @@ def evaluate(env, agent, agent_name):
 def parse_args():
     parser = argparse.ArgumentParser(description="CliffWalking RL runner")
     parser.add_argument("-a", "--agent", choices=list(AGENTS.keys()), required=True)
+    parser.add_argument("-c", "--config", default="base", help="Config name from configs/ folder")
     return parser.parse_args()
 
 
@@ -84,8 +85,8 @@ if __name__ == "__main__":
 
     load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-    cfg = load_config()
-    env = make_env()
+    cfg = load_config(args.config)
+    env = make_env(args.config)
     print(f"Using CliffWalking (shape={tuple(cfg['shape'])}, stochasticity={cfg['stochasticity']})")
 
     agent = get_agent(args.agent, env)
@@ -95,7 +96,7 @@ if __name__ == "__main__":
         agent.learn(env, cfg["timesteps"])
         print("Training complete. Running evaluation...")
 
-    evaluate(env, agent, args.agent)
+    evaluate(env, agent, args.agent, config_name=args.config)
 
     agent.close()
     env.close()

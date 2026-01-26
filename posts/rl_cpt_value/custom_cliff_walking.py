@@ -85,9 +85,9 @@ class CliffWalkingWrapper(gym.Wrapper):
         return obs, reward, terminated, truncated, info
 
 
-def make_env():
+def make_env(config_name: str = "base"):
     """Factory function to create CliffWalking environment from config."""
-    cfg = load_config()
+    cfg = load_config(config_name)
     shape = tuple(cfg["shape"])
     stochasticity = cfg["stochasticity"]
     env = ResizableCliffWalkingEnv(

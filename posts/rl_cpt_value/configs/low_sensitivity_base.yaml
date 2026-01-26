@@ -1,0 +1,8 @@
+shape: [4, 8]
+stochasticity: windy
+reward_cliff: -150
+reward_step: -3.5
+wind_prob: 0.08
+timesteps: 300000
+n_eval_episodes: 4
+lr: 1e-4
