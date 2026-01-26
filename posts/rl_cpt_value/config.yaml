@@ -1,7 +1,8 @@
-shape: [4, 12]
-stochasticity: none
-reward_cliff: -100
-reward_step: -1
-wind_prob: 0.0
+shape: [4, 6]
+stochasticity: windy
+reward_cliff: -55
+reward_step: -5.0
+wind_prob: 0.06
 timesteps: 300000
 n_eval_episodes: 4
+lr: 1e-4  # reduced from 1e-3 for stability

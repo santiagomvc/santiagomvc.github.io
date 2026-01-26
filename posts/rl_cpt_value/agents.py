@@ -68,92 +68,141 @@ class PolicyNetwork(nn.Module):
 
 
 class REINFORCEAgent(BaseAgent):
-    """Vanilla REINFORCE agent with Monte Carlo returns (no baseline)."""
+    """REINFORCE agent with Monte Carlo returns and EMA baseline."""
 
     trainable = True
 
-    def __init__(self, env, lr: float = 1e-3, gamma: float = 0.99):
+    def __init__(self, env, lr: float = 1e-3, gamma: float = 0.99, baseline_decay: float = 0.99):
         """Initialize REINFORCE agent.
 
         Args:
             env: Gymnasium environment with discrete observation/action spaces
             lr: Learning rate for Adam optimizer
             gamma: Discount factor
+            baseline_decay: EMA decay for baseline (variance reduction)
         """
         self.n_states = env.observation_space.n
         self.n_actions = env.action_space.n
         self.gamma = gamma
         self.policy = PolicyNetwork(self.n_states, self.n_actions)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=lr)
+        # Baseline for variance reduction
+        self.baseline = 0.0
+        self.baseline_decay = baseline_decay
         # Episode storage
         self.log_probs = []
+        self.entropies = []
         self.rewards = []
 
     def act(self, state) -> int:
-        """Sample action from policy and store log probability."""
+        """Sample action from policy and store log probability and entropy."""
         probs = self.policy(state)
         dist = Categorical(probs)
         action = dist.sample()
         self.log_probs.append(dist.log_prob(action))
+        self.entropies.append(dist.entropy())
         return action.item()
 
     def _transform_returns(self, returns: list[float]) -> torch.Tensor:
         """Transform returns before policy gradient. Override for custom transforms."""
         return torch.tensor(returns)
 
-    def learn(self, env, timesteps: int = 300000):
+    def _compute_returns(self, rewards: list[float]) -> list[float]:
+        """Compute discounted Monte Carlo returns from rewards."""
+        returns = []
+        G = 0
+        for r in reversed(rewards):
+            G = r + self.gamma * G
+            returns.insert(0, G)
+        return returns
+
+    def learn(self, env, timesteps: int = 300000, batch_size: int = 8, entropy_coef: float = 0.5, entropy_coef_final: float = 0.01, max_grad_norm: float = 1.0):
         """Train using REINFORCE with full Monte Carlo returns.
 
         Args:
             env: Gymnasium environment to train on
             timesteps: Total environment steps to train for
+            batch_size: Number of episodes to average gradients over
+            entropy_coef: Initial entropy coefficient (exploration)
+            entropy_coef_final: Final entropy coefficient after annealing
+            max_grad_norm: Maximum gradient norm for clipping (None to disable)
         """
         total_steps = 0
         episode = 0
         recent_rewards = []
 
         while total_steps < timesteps:
-            state, _ = env.reset()
-            self.log_probs = []
-            self.rewards = []
-            done = False
+            batch_losses = []
 
-            # Collect full episode (Monte Carlo)
-            while not done:
-                action = self.act(state)
-                state, reward, terminated, truncated, _ = env.step(action)
-                self.rewards.append(reward)
-                done = terminated or truncated
-                total_steps += 1
+            for _ in range(batch_size):
+                state, _ = env.reset()
+                self.log_probs = []
+                self.entropies = []
+                self.rewards = []
+                done = False
 
-            # Compute Monte Carlo returns (no baseline)
-            returns = []
-            G = 0
-            for r in reversed(self.rewards):
-                G = r + self.gamma * G
-                returns.insert(0, G)
-            returns = self._transform_returns(returns)
+                # Collect full episode (Monte Carlo)
+                while not done:
+                    action = self.act(state)
+                    state, reward, terminated, truncated, _ = env.step(action)
+                    self.rewards.append(reward)
+                    done = terminated or truncated
+                    total_steps += 1
 
-            # Policy gradient: L = -sum(log_prob * G)
-            loss = torch.tensor(0.0)
-            for log_prob, G in zip(self.log_probs, returns):
-                loss = loss - log_prob * G
+                # Compute Monte Carlo returns
+                returns = self._compute_returns(self.rewards)
+                returns = self._transform_returns(returns)
 
+                # Update baseline with EMA of episode return and subtract for variance reduction
+                episode_return = returns[0].item()
+                self.baseline = self.baseline_decay * self.baseline + (1 - self.baseline_decay) * episode_return
+                returns = returns - self.baseline
+
+                # Policy gradient: L = -sum(log_prob * G) - entropy_coef * sum(entropy)
+                policy_loss = torch.tensor(0.0)
+                entropy_loss = torch.tensor(0.0)
+                for log_prob, entropy, G in zip(self.log_probs, self.entropies, returns):
+                    policy_loss = policy_loss - log_prob * G
+                    entropy_loss = entropy_loss + entropy
+
+                # Compute annealed entropy coefficient
+                progress = total_steps / timesteps
+                current_entropy_coef = entropy_coef + (entropy_coef_final - entropy_coef) * progress
+
+                loss = policy_loss - current_entropy_coef * entropy_loss
+                batch_losses.append(loss)
+
+                # Logging
+                ep_reward = sum(self.rewards)
+                recent_rewards.append(ep_reward)
+                episode += 1
+                if episode % 100 == 0:
+                    avg = sum(recent_rewards[-100:]) / min(100, len(recent_rewards))
+                    print(f"Ep {episode} | Steps {total_steps} | Reward {ep_reward:.1f} | Avg100 {avg:.1f}")
+
+            # Average batch losses and update with optional gradient clipping
+            avg_loss = sum(batch_losses) / batch_size
             self.optimizer.zero_grad()
-            loss.backward()
+            avg_loss.backward()
+            if max_grad_norm is not None:
+                torch.nn.utils.clip_grad_norm_(self.policy.parameters(), max_norm=max_grad_norm)
             self.optimizer.step()
-
-            # Logging
-            ep_reward = sum(self.rewards)
-            recent_rewards.append(ep_reward)
-            episode += 1
-            if episode % 100 == 0:
-                avg = sum(recent_rewards[-100:]) / min(100, len(recent_rewards))
-                print(f"Ep {episode} | Steps {total_steps} | Reward {ep_reward:.1f} | Avg100 {avg:.1f}")
 
 
 class CPTREINFORCEAgent(REINFORCEAgent):
-    """REINFORCE agent with CPT applied to episode returns."""
+    """REINFORCE agent with CPT applied to the total episode return.
+
+    Applies Cumulative Prospect Theory (Kahneman & Tversky, 1992) transformation
+    to the episode return, treating each episode as a single prospect. The
+    transformed value is broadcast to all timesteps, avoiding gradient
+    accumulation bias from episode length variation.
+
+    CPT Parameters:
+        alpha: Diminishing sensitivity for gains (default: 0.88)
+        beta: Diminishing sensitivity for losses (default: 0.88)
+        lambda_: Loss aversion coefficient (default: 2.25)
+        reference_point: Gain/loss boundary (default: 0.0)
+    """
 
     def __init__(
         self,
@@ -169,8 +218,11 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         self.cpt_value = CPTValueFunction(alpha, beta, lambda_, reference_point)
 
     def _transform_returns(self, returns: list[float]) -> torch.Tensor:
-        """Apply CPT value function to each return."""
-        return torch.tensor([self.cpt_value(G) for G in returns])
+        """Apply CPT to total episode return, broadcast to all timesteps."""
+        episode_return = returns[0]  # G_0 is the full episode return
+        cpt_episode = self.cpt_value(episode_return)
+        # Use same CPT value for all timesteps (like advantage = 0 baseline)
+        return torch.full((len(returns),), cpt_episode)
 
 
 class LLMAgent(BaseAgent):

@@ -240,13 +240,15 @@ class TestCPTREINFORCEAgent:
         assert agent.cpt_value.lambda_ == 3.0
         assert agent.cpt_value.reference_point == -5.0
 
-    def test_cpt_applied_to_episode_returns_not_step_rewards(self, small_env, torch_seed):
-        """CPT transforms cumulative returns, not individual step rewards.
+    def test_cpt_applied_to_episode_return_broadcast(self, small_env, torch_seed):
+        """CPT is applied to G_0 (episode return) and broadcast to all timesteps.
 
         This is the critical test verifying that:
         1. Monte Carlo returns are computed first: G_t = r_t + gamma*G_{t+1}
-        2. CPT is applied to those returns: v(G_t)
-        NOT to step rewards: v(r_t)
+        2. CPT is applied only to G_0 (episode return): v(G_0)
+        3. This single value is broadcast to all timesteps
+
+        This avoids gradient accumulation bias from episode length variation.
         """
         agent = CPTREINFORCEAgent(small_env, alpha=0.88, beta=0.88, lambda_=2.25)
         gamma = agent.gamma
@@ -261,46 +263,44 @@ class TestCPTREINFORCEAgent:
             G = r + gamma * G
             returns.insert(0, G)
 
-        # Step 2: Agent applies CPT to RETURNS (not step rewards)
+        # Step 2: Agent applies CPT to episode return and broadcasts
         transformed = agent._transform_returns(returns)
 
-        # Verify: CPT is applied to G_t, not r_t
+        # Expected: CPT(G_0) broadcast to all timesteps
         cpt_v = agent.cpt_value
-        for i, (trans, ret, step_rew) in enumerate(zip(transformed.tolist(), returns, step_rewards)):
-            expected_cpt_of_return = cpt_v(ret)
-            wrong_cpt_of_step_reward = cpt_v(step_rew)
+        expected_cpt_episode = cpt_v(returns[0])  # CPT of episode return G_0
 
-            # The transformed value should equal CPT(G_t)
-            assert abs(trans - expected_cpt_of_return) < 1e-10, \
-                f"Step {i}: transformed={trans} should equal CPT(G_t)={expected_cpt_of_return}"
-
-            # It should NOT equal CPT(r_t) (unless by coincidence)
-            if ret != step_rew:  # Only check when they differ
-                assert abs(trans - wrong_cpt_of_step_reward) > 1e-10, \
-                    f"Step {i}: CPT should be applied to returns, not step rewards"
+        # All transformed values should equal CPT(G_0)
+        for i, trans in enumerate(transformed.tolist()):
+            assert abs(trans - expected_cpt_episode) < 1e-5, \
+                f"Step {i}: transformed={trans} should equal CPT(G_0)={expected_cpt_episode}"
 
     def test_transform_returns_applies_cpt(self, cpt_reinforce_agent):
-        """_transform_returns should apply CPT value function."""
+        """_transform_returns should apply CPT to G_0 and broadcast."""
         returns = [-10.0, -5.0, 0.0, 5.0, 10.0]
         cpt_v = cpt_reinforce_agent.cpt_value
 
         transformed = cpt_reinforce_agent._transform_returns(returns)
 
-        for trans, ret in zip(transformed.tolist(), returns):
-            expected = cpt_v(ret)
-            assert abs(trans - expected) < 1e-10
+        # CPT is applied to G_0 only and broadcast to all timesteps
+        expected_cpt_episode = cpt_v(returns[0])
+        for trans in transformed.tolist():
+            assert abs(trans - expected_cpt_episode) < 1e-6
 
     def test_negative_returns_become_more_negative_with_loss_aversion(self, small_env, torch_seed):
-        """With lambda > 1, negative returns should become more negative."""
+        """With lambda > 1, negative episode return should become more negative."""
         agent = CPTREINFORCEAgent(small_env, alpha=0.88, beta=0.88, lambda_=2.25)
-        returns = [-10.0, -20.0, -50.0]
+        episode_return = -50.0
+        returns = [episode_return, -30.0, -10.0]  # G_0 is episode return
 
         transformed = agent._transform_returns(returns)
 
-        # CPT with loss aversion should amplify losses
-        for trans, ret in zip(transformed.tolist(), returns):
-            # |v(x)| > |x| for losses when lambda > 1 and beta < 1
-            assert trans < ret, f"v({ret})={trans} should be more negative"
+        # CPT with loss aversion should amplify losses (applied to G_0, broadcast)
+        # |v(x)| > |x| for losses when lambda > 1 and beta < 1
+        cpt_episode = transformed[0].item()
+        assert cpt_episode < episode_return, f"v({episode_return})={cpt_episode} should be more negative"
+        # All values should be the same (broadcast)
+        assert all(t == cpt_episode for t in transformed.tolist())
 
 
 class TestREINFORCELearning:
@@ -324,6 +324,7 @@ class TestREINFORCELearning:
                 done = terminated or truncated
             initial_rewards.append(episode_reward)
             agent.log_probs = []
+            agent.entropies = []
             agent.rewards = []
 
         # Train
@@ -342,6 +343,7 @@ class TestREINFORCELearning:
                 done = terminated or truncated
             final_rewards.append(episode_reward)
             agent.log_probs = []
+            agent.entropies = []
             agent.rewards = []
 
         # Performance should improve (less negative reward)
@@ -360,7 +362,8 @@ class TestREINFORCELearning:
         # (Start at bottom-left, goal at bottom-right, cliff in middle)
         optimal_reward = -3.0
 
-        agent.learn(env, timesteps=10000)
+        # Use batch_size=1, no entropy, no gradient clipping for this simple test
+        agent.learn(env, timesteps=10000, batch_size=1, entropy_coef=0.0, max_grad_norm=None)
 
         # Evaluate learned policy
         rewards = []
@@ -375,6 +378,7 @@ class TestREINFORCELearning:
                 done = terminated or truncated
             rewards.append(episode_reward)
             agent.log_probs = []
+            agent.entropies = []
             agent.rewards = []
 
         avg_reward = np.mean(rewards)
@@ -405,6 +409,7 @@ class TestCPTREINFORCELearning:
                 done = terminated or truncated
             initial_rewards.append(episode_reward)
             agent.log_probs = []
+            agent.entropies = []
             agent.rewards = []
 
         # Train
@@ -423,6 +428,7 @@ class TestCPTREINFORCELearning:
                 done = terminated or truncated
             final_rewards.append(episode_reward)
             agent.log_probs = []
+            agent.entropies = []
             agent.rewards = []
 
         initial_avg = np.mean(initial_rewards)
@@ -464,7 +470,7 @@ class TestCPTREINFORCELearning:
             f"Policies should differ: max diff {max_diff:.4f}, standard={standard_probs}, cpt={cpt_probs}"
 
     def test_higher_loss_aversion_transforms_differently(self, env_factory, torch_seed):
-        """Higher lambda should transform returns more aggressively.
+        """Higher lambda should transform episode return more aggressively.
 
         This tests the mechanism rather than stochastic learning outcomes.
         """
@@ -473,20 +479,28 @@ class TestCPTREINFORCELearning:
         low_lambda_agent = CPTREINFORCEAgent(env, lr=1e-2, gamma=0.99, lambda_=1.0)
         high_lambda_agent = CPTREINFORCEAgent(env, lr=1e-2, gamma=0.99, lambda_=5.0)
 
-        # Test on negative returns (losses)
-        negative_returns = [-10.0, -20.0, -50.0, -100.0]
+        # Test on negative episode return (loss) - G_0 is the episode return
+        episode_return = -100.0
+        returns = [episode_return, -50.0, -20.0, -10.0]  # G_0 is episode return
 
-        low_transformed = low_lambda_agent._transform_returns(negative_returns)
-        high_transformed = high_lambda_agent._transform_returns(negative_returns)
+        low_transformed = low_lambda_agent._transform_returns(returns)
+        high_transformed = high_lambda_agent._transform_returns(returns)
 
-        # Higher lambda should produce more negative values (more loss averse)
-        for low, high, ret in zip(low_transformed.tolist(), high_transformed.tolist(), negative_returns):
-            # Both should be negative
-            assert low < 0
-            assert high < 0
-            # Higher lambda should produce more negative value
-            assert high < low, \
-                f"High lambda v({ret})={high} should be < low lambda v({ret})={low}"
+        # Both should broadcast CPT(G_0) to all timesteps
+        low_cpt = low_transformed[0].item()
+        high_cpt = high_transformed[0].item()
+
+        # Both should be negative
+        assert low_cpt < 0
+        assert high_cpt < 0
+
+        # Higher lambda should produce more negative value (more loss averse)
+        assert high_cpt < low_cpt, \
+            f"High lambda v({episode_return})={high_cpt} should be < low lambda v({episode_return})={low_cpt}"
+
+        # All values in each tensor should be the same (broadcast)
+        assert all(t == low_cpt for t in low_transformed.tolist())
+        assert all(t == high_cpt for t in high_transformed.tolist())
 
 
 class TestAgentRegistry:
@@ -498,9 +512,9 @@ class TestAgentRegistry:
         for agent_name in expected_agents:
             assert agent_name in AGENTS, f"'{agent_name}' should be in AGENTS"
 
-    def test_cpt_stepwise_reinforce_not_in_registry(self):
-        """cpt-stepwise-reinforce should NOT be in AGENTS (removed)."""
-        assert "cpt-stepwise-reinforce" not in AGENTS
+    def test_cpt_episode_reinforce_not_in_registry(self):
+        """cpt-episode-reinforce should NOT be in AGENTS (consolidated into cpt-reinforce)."""
+        assert "cpt-episode-reinforce" not in AGENTS
 
     def test_get_agent_creates_reinforce(self, small_env):
         """get_agent should create REINFORCEAgent."""
