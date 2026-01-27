@@ -218,11 +218,16 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         self.cpt_value = CPTValueFunction(alpha, beta, lambda_, reference_point)
 
     def _transform_returns(self, returns: list[float]) -> torch.Tensor:
-        """Apply CPT to total episode return, broadcast to all timesteps."""
-        episode_return = returns[0]  # G_0 is the full episode return
-        cpt_episode = self.cpt_value(episode_return)
-        # Use same CPT value for all timesteps (like advantage = 0 baseline)
-        return torch.full((len(returns),), cpt_episode)
+        """Apply CPT value function to each per-step return.
+
+        This preserves temporal credit assignment while applying risk-sensitive
+        transformation to return-to-go values. Earlier timesteps have larger G_t
+        (more future reward to come), so they receive proportionally more credit.
+
+        Matches cognitive science findings that humans evaluate "prospects from
+        current state" rather than waiting for total episode outcomes.
+        """
+        return torch.tensor([self.cpt_value(G) for G in returns])
 
 
 class LLMAgent(BaseAgent):

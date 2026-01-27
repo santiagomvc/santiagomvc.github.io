@@ -1,8 +1,8 @@
-shape: [4, 8]
+shape: [4, 5]
 stochasticity: windy
-reward_cliff: -150
-reward_step: -3.5
-wind_prob: 0.08
+reward_cliff: -80
+reward_step: -8.0
+wind_prob: 0.05
 timesteps: 300000
-n_eval_episodes: 4
+n_eval_episodes: 8
 lr: 1e-4

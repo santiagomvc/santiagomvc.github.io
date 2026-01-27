@@ -50,3 +50,18 @@ I'm writing a blogpost about how the behavior of AI agents compares to human beh
 * Agent combining RL CPT probability and value changes.
 * The "Trap" Corridor (Reference Points) env experiment.
 * Copy experiment on other environments (FrozenLake, BlackJack, etc.) 
+
+## Notes
+
+* cpt value is non additive
+    * no bellman equation, no critic, etc.
+* Usual RL doesn't explicitly maps the distribution, needs distribution aware RL
+    * Leaving prob distortion for part two
+* cpt meets rl says to copy the final return value with cpt value transform as the return for all steps in monte carlo?
+    * That will probably hurt credit assignment?
+    * Since they use SPSA they don't have the credit assignment by step problem, but that algorithm is not standard in deep learning
+    * pers step return cpt is not exaclty the same, but credit assigns well, and could be seen as a way to split a complex prospect
+* No great way to integrate CPT value with RL, prob distortions are probably worse
+
+Mind:
+* Learn whatever normally, transform prospect based
