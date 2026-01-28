@@ -72,12 +72,14 @@ class CliffWalkingWrapper(gym.Wrapper):
 
         obs, reward, terminated, truncated, info = self.env.step(action)
 
-        # Terminate on cliff (check before reward transform)
-        if self.terminate_on_cliff and reward == -100:
+        # Detect cliff fall with <= -99 (avoids exact -100 match bug)
+        is_cliff_fall = reward <= -99
+
+        if self.terminate_on_cliff and is_cliff_fall:
             terminated = True
 
         # Transform rewards
-        if reward == -100:
+        if is_cliff_fall:
             reward = self.reward_cliff
         elif reward == -1:
             reward = self.reward_step

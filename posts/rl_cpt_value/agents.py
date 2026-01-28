@@ -126,10 +126,17 @@ class REINFORCEAgent(BaseAgent):
             entropy_coef: Initial entropy coefficient (exploration)
             entropy_coef_final: Final entropy coefficient after annealing
             max_grad_norm: Maximum gradient norm for clipping (None to disable)
+
+        Returns:
+            dict with 'episode_rewards' and 'batch_losses' history
         """
         total_steps = 0
         episode = 0
         recent_rewards = []
+
+        # History tracking
+        episode_rewards_history = []
+        batch_losses_history = []
 
         while total_steps < timesteps:
             batch_losses = []
@@ -175,6 +182,7 @@ class REINFORCEAgent(BaseAgent):
                 # Logging
                 ep_reward = sum(self.rewards)
                 recent_rewards.append(ep_reward)
+                episode_rewards_history.append(ep_reward)
                 episode += 1
                 if episode % 100 == 0:
                     avg = sum(recent_rewards[-100:]) / min(100, len(recent_rewards))
@@ -182,11 +190,17 @@ class REINFORCEAgent(BaseAgent):
 
             # Average batch losses and update with optional gradient clipping
             avg_loss = sum(batch_losses) / batch_size
+            batch_losses_history.append(avg_loss.item())
             self.optimizer.zero_grad()
             avg_loss.backward()
             if max_grad_norm is not None:
                 torch.nn.utils.clip_grad_norm_(self.policy.parameters(), max_norm=max_grad_norm)
             self.optimizer.step()
+
+        return {
+            'episode_rewards': episode_rewards_history,
+            'batch_losses': batch_losses_history,
+        }
 
 
 class CPTREINFORCEAgent(REINFORCEAgent):

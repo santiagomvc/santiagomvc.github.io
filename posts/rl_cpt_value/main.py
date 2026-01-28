@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from agents import AGENTS, get_agent
 from custom_cliff_walking import make_env
-from utils import load_config, save_episodes_gif
+from utils import load_config, save_episodes_gif, save_training_curves
 
 
 ENV_NAME = "CliffWalking-v1"
@@ -93,7 +93,8 @@ if __name__ == "__main__":
 
     if agent.trainable:
         print(f"Training {args.agent} for {cfg['timesteps']} timesteps...")
-        agent.learn(env, cfg["timesteps"])
+        history = agent.learn(env, cfg["timesteps"])
+        save_training_curves(history, "outputs", args.agent)
         print("Training complete. Running evaluation...")
 
     evaluate(env, agent, args.agent, config_name=args.config)

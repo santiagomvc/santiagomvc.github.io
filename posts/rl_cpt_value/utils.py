@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import gymnasium as gym
+import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from PIL import Image
@@ -183,3 +184,51 @@ def format_cliffwalking_state(state: int, shape: tuple[int, int] = (4, 12)) -> s
     desc += f"\nDistance to goal: {abs(row - goal_row) + abs(col - goal_col)} steps"
 
     return desc
+
+
+def save_training_curves(history: dict, output_dir: str, agent_name: str, window: int = 100):
+    """Save reward and loss curves as PNG files.
+
+    Args:
+        history: Dict with 'episode_rewards' and 'batch_losses' lists
+        output_dir: Directory to save plots
+        agent_name: Agent name for filenames
+        window: Window size for smoothing (default: 100)
+    """
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # Reward plot
+    rewards = history['episode_rewards']
+    if len(rewards) > 0:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(rewards, alpha=0.3, color='blue', label='Raw')
+        if len(rewards) >= window:
+            smoothed = np.convolve(rewards, np.ones(window)/window, mode='valid')
+            ax.plot(range(window-1, len(rewards)), smoothed, color='blue', label=f'Smoothed (window={window})')
+        ax.set_xlabel('Episode')
+        ax.set_ylabel('Episode Reward')
+        ax.set_title(f'{agent_name} - Episode Rewards')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        fig.savefig(output_path / f'{agent_name}_rewards.png', dpi=150, bbox_inches='tight')
+        plt.close(fig)
+        print(f"Saved {output_path / f'{agent_name}_rewards.png'}")
+
+    # Loss plot
+    losses = history['batch_losses']
+    if len(losses) > 0:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(losses, alpha=0.3, color='red', label='Raw')
+        loss_window = min(window, len(losses))
+        if len(losses) >= loss_window:
+            smoothed = np.convolve(losses, np.ones(loss_window)/loss_window, mode='valid')
+            ax.plot(range(loss_window-1, len(losses)), smoothed, color='red', label=f'Smoothed (window={loss_window})')
+        ax.set_xlabel('Batch')
+        ax.set_ylabel('Loss')
+        ax.set_title(f'{agent_name} - Batch Losses')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        fig.savefig(output_path / f'{agent_name}_losses.png', dpi=150, bbox_inches='tight')
+        plt.close(fig)
+        print(f"Saved {output_path / f'{agent_name}_losses.png'}")
