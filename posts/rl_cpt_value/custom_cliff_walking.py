@@ -87,7 +87,7 @@ class CliffWalkingWrapper(gym.Wrapper):
         return obs, reward, terminated, truncated, info
 
 
-def make_env(config_name: str = "base"):
+def make_env(config_name: str = "base", seed: int = None):
     """Factory function to create CliffWalking environment from config."""
     cfg = load_config(config_name)
     shape = tuple(cfg["shape"])
@@ -104,4 +104,6 @@ def make_env(config_name: str = "base"):
         terminate_on_cliff=True,
         wind_prob=cfg["wind_prob"] if stochasticity == "windy" else 0.0,
     )
+    if seed is not None:
+        env.reset(seed=seed)
     return env

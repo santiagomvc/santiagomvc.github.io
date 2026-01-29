@@ -1,6 +1,6 @@
 shape: [4, 5]
 stochasticity: windy
-reward_cliff: -165
+reward_cliff: -250
 reward_step: -8.0
 wind_prob: 0.05
 timesteps: 300000
