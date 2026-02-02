@@ -89,7 +89,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description="CliffWalking RL runner")
     parser.add_argument("-a", "--agent", nargs="+", choices=list(AGENTS.keys()), required=True)
     parser.add_argument("-c", "--config", nargs="+", default=["base"], help="Config name(s) from configs/ folder")
-    parser.add_argument("--confirm", action="store_true", help="Run each combo with seeds 1-4 for confirmed results")
     return parser.parse_args()
 
 
@@ -100,24 +99,31 @@ if __name__ == "__main__":
 
     for agent_name in args.agent:
         for config_name in args.config:
-            seeds = list(range(1, 13)) if args.confirm else [None]
+            cfg = load_config(config_name)
+            n_seeds = cfg.get("n_seeds", 1)
+            seeds = list(range(1, n_seeds + 1))
+
             for seed in seeds:
-                suffix = f"_seed{seed}" if seed is not None else ""
+                suffix = f"_seed{seed}" if n_seeds > 1 else ""
                 output_dir = Path(f"outputs/{agent_name}_{config_name}{suffix}")
                 output_dir.mkdir(parents=True, exist_ok=True)
 
-                if seed is not None:
-                    set_seed(seed)
+                set_seed(seed)
 
-                cfg = load_config(config_name)
                 env = make_env(config_name, seed=seed)
                 print(f"Using CliffWalking (shape={tuple(cfg['shape'])}, stochasticity={cfg['stochasticity']})")
 
-                agent = get_agent(agent_name, env)
+                agent = get_agent(agent_name, env, lr=cfg["lr"], gamma=cfg["gamma"])
 
                 if agent.trainable:
                     print(f"Training {agent_name} for {cfg['timesteps']} timesteps...")
-                    history = agent.learn(env, cfg["timesteps"])
+                    history = agent.learn(
+                        env,
+                        cfg["timesteps"],
+                        batch_size=cfg["batch_size"],
+                        entropy_coef=cfg["entropy_coef"],
+                        entropy_coef_final=cfg["entropy_coef_final"],
+                    )
                     save_training_curves(history, str(output_dir), agent_name)
                     print("Training complete. Running evaluation...")
 

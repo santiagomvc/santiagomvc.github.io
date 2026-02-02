@@ -5,4 +5,9 @@ reward_step: -8.0
 wind_prob: 0.05
 timesteps: 400000
 n_eval_episodes: 4
-lr: 1e-4
+lr: 0.0001
+gamma: 0.99
+batch_size: 8
+entropy_coef: 0.5
+entropy_coef_final: 0.01
+n_seeds: 12

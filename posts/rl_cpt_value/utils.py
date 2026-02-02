@@ -10,10 +10,14 @@ from PIL import Image
 
 
 def load_config(config_name: str = "base"):
-    """Load configuration from YAML file."""
-    config_path = Path(__file__).parent / "configs" / f"{config_name}.yaml"
-    with open(config_path) as f:
-        return yaml.safe_load(f)
+    """Load configuration from YAML file, inheriting defaults from base.yaml."""
+    config_dir = Path(__file__).parent / "configs"
+    with open(config_dir / "base.yaml") as f:
+        cfg = yaml.safe_load(f)
+    if config_name != "base":
+        with open(config_dir / f"{config_name}.yaml") as f:
+            cfg.update(yaml.safe_load(f))
+    return cfg
 
 
 def save_episodes_gif(episodes_frames, output_path, cols=2, fps=4):

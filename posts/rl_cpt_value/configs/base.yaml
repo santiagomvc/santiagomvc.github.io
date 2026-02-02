@@ -6,3 +6,8 @@ wind_prob: 0.0
 timesteps: 300000
 n_eval_episodes: 4
 lr: 1e-4
+gamma: 0.99
+batch_size: 8
+entropy_coef: 0.5
+entropy_coef_final: 0.01
+n_seeds: 1
