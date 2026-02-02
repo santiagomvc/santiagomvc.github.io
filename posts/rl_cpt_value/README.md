@@ -61,6 +61,5 @@ I'm writing a blogpost about how the behavior of AI agents compares to human beh
     * Since they use SPSA they don't have the credit assignment by step problem, but that algorithm is not standard in deep learning
     * pers step return cpt is not exaclty the same, but credit assigns well, and could be seen as a way to split a complex prospect
 * No great way to integrate CPT value with RL, prob distortions are probably worse
-
-Mind:
-* Learn whatever normally, transform prospect based
+* EMA is an approximation of the baseline learned by humans, useful for variance reduction but it's no longer unbiased.
+* Per step cpt on returns balances complete prospect eval (because it's on return) with analyzing step decision and having credit assigntment (per step)

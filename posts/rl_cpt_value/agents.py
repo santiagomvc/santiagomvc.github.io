@@ -105,7 +105,7 @@ class REINFORCEAgent(BaseAgent):
 
     def _transform_returns(self, returns: list[float]) -> torch.Tensor:
         """Transform returns before policy gradient. Override for custom transforms."""
-        return torch.tensor(returns)
+        return torch.tensor([G - self.baseline for G in returns])
 
     def _compute_returns(self, rewards: list[float]) -> list[float]:
         """Compute discounted Monte Carlo returns from rewards."""
@@ -158,12 +158,13 @@ class REINFORCEAgent(BaseAgent):
 
                 # Compute Monte Carlo returns
                 returns = self._compute_returns(self.rewards)
-                returns = self._transform_returns(returns)
 
-                # Update baseline with EMA of episode return and subtract for variance reduction
-                episode_return = returns[0].item()
+                # Update baseline with EMA of raw episode return
+                episode_return = returns[0]
                 self.baseline = self.baseline_decay * self.baseline + (1 - self.baseline_decay) * episode_return
-                returns = returns - self.baseline
+
+                # Transform returns (baseline subtraction handled inside _transform_returns)
+                returns = self._transform_returns(returns)
 
                 # Policy gradient: L = -sum(log_prob * G) - entropy_coef * sum(entropy)
                 policy_loss = torch.tensor(0.0)
@@ -241,7 +242,7 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         Matches cognitive science findings that humans evaluate "prospects from
         current state" rather than waiting for total episode outcomes.
         """
-        return torch.tensor([self.cpt_value(G) for G in returns])
+        return torch.tensor([self.cpt_value(G - self.baseline) for G in returns])
 
 
 class LLMAgent(BaseAgent):
