@@ -192,7 +192,7 @@ def save_training_curves(history: dict, output_dir: str, agent_name: str, window
     Args:
         history: Dict with 'episode_rewards' and 'batch_losses' lists
         output_dir: Directory to save plots
-        agent_name: Agent name for filenames
+        agent_name: Agent name for plot titles
         window: Window size for smoothing (default: 100)
     """
     output_path = Path(output_dir)
@@ -211,9 +211,9 @@ def save_training_curves(history: dict, output_dir: str, agent_name: str, window
         ax.set_title(f'{agent_name} - Episode Rewards')
         ax.legend()
         ax.grid(True, alpha=0.3)
-        fig.savefig(output_path / f'{agent_name}_rewards.png', dpi=150, bbox_inches='tight')
+        fig.savefig(output_path / 'rewards.png', dpi=150, bbox_inches='tight')
         plt.close(fig)
-        print(f"Saved {output_path / f'{agent_name}_rewards.png'}")
+        print(f"Saved {output_path / 'rewards.png'}")
 
     # Loss plot
     losses = history['batch_losses']
@@ -229,6 +229,6 @@ def save_training_curves(history: dict, output_dir: str, agent_name: str, window
         ax.set_title(f'{agent_name} - Batch Losses')
         ax.legend()
         ax.grid(True, alpha=0.3)
-        fig.savefig(output_path / f'{agent_name}_losses.png', dpi=150, bbox_inches='tight')
+        fig.savefig(output_path / 'losses.png', dpi=150, bbox_inches='tight')
         plt.close(fig)
-        print(f"Saved {output_path / f'{agent_name}_losses.png'}")
+        print(f"Saved {output_path / 'losses.png'}")

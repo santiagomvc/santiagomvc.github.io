@@ -47,7 +47,7 @@ def run_episode(env, agent, max_steps=500, config_name="base"):
     return frames, metrics
 
 
-def evaluate(env, agent, agent_name, config_name="base", seed=None):
+def evaluate(env, agent, output_dir, config_name="base"):
     """Run N episodes, save GIFs, and print metrics summary."""
     cfg = load_config(config_name)
     n_episodes = cfg["n_eval_episodes"]
@@ -59,9 +59,8 @@ def evaluate(env, agent, agent_name, config_name="base", seed=None):
         all_frames.append(frames)
         all_metrics.append(metrics)
 
-    seed_suffix = f"_seed{seed}" if seed is not None else ""
-    output_path = f"outputs/{agent_name}_{config_name}{seed_suffix}.gif"
-    save_episodes_gif(all_frames, output_path)
+    output_path = output_dir / "eval.gif"
+    save_episodes_gif(all_frames, str(output_path))
     print(f"Saved {output_path}")
 
     # Print summary
@@ -69,7 +68,7 @@ def evaluate(env, agent, agent_name, config_name="base", seed=None):
     avg_length = sum(m["episode_length"] for m in all_metrics) / n_episodes
     success_rate = sum(m["success"] for m in all_metrics) / n_episodes
     total_cliff_falls = sum(m["cliff_falls"] for m in all_metrics)
-    print(f"\nAgent: {agent_name}")
+    print(f"\nAgent: {output_dir.name}")
     print(f"  Avg Reward: {avg_reward:.2f}")
     print(f"  Avg Length: {avg_length:.2f}")
     print(f"  Success Rate: {success_rate:.0%}")
@@ -88,9 +87,9 @@ def set_seed(seed):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="CliffWalking RL runner")
-    parser.add_argument("-a", "--agent", choices=list(AGENTS.keys()), required=True)
-    parser.add_argument("-c", "--config", default="base", help="Config name from configs/ folder")
-    parser.add_argument("-s", "--seed", type=int, default=None, help="Random seed for reproducibility")
+    parser.add_argument("-a", "--agent", nargs="+", choices=list(AGENTS.keys()), required=True)
+    parser.add_argument("-c", "--config", nargs="+", default=["base"], help="Config name(s) from configs/ folder")
+    parser.add_argument("--confirm", action="store_true", help="Run each combo with seeds 1-4 for confirmed results")
     return parser.parse_args()
 
 
@@ -99,23 +98,30 @@ if __name__ == "__main__":
 
     load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-    if args.seed is not None:
-        set_seed(args.seed)
+    for agent_name in args.agent:
+        for config_name in args.config:
+            seeds = list(range(1, 13)) if args.confirm else [None]
+            for seed in seeds:
+                suffix = f"_seed{seed}" if seed is not None else ""
+                output_dir = Path(f"outputs/{agent_name}_{config_name}{suffix}")
+                output_dir.mkdir(parents=True, exist_ok=True)
 
-    cfg = load_config(args.config)
-    env = make_env(args.config, seed=args.seed)
-    print(f"Using CliffWalking (shape={tuple(cfg['shape'])}, stochasticity={cfg['stochasticity']})")
+                if seed is not None:
+                    set_seed(seed)
 
-    agent = get_agent(args.agent, env)
+                cfg = load_config(config_name)
+                env = make_env(config_name, seed=seed)
+                print(f"Using CliffWalking (shape={tuple(cfg['shape'])}, stochasticity={cfg['stochasticity']})")
 
-    if agent.trainable:
-        print(f"Training {args.agent} for {cfg['timesteps']} timesteps...")
-        history = agent.learn(env, cfg["timesteps"])
-        seed_suffix = f"_seed{args.seed}" if args.seed is not None else ""
-        save_training_curves(history, "outputs", f"{args.agent}_{args.config}{seed_suffix}")
-        print("Training complete. Running evaluation...")
+                agent = get_agent(agent_name, env)
 
-    evaluate(env, agent, args.agent, config_name=args.config, seed=args.seed)
+                if agent.trainable:
+                    print(f"Training {agent_name} for {cfg['timesteps']} timesteps...")
+                    history = agent.learn(env, cfg["timesteps"])
+                    save_training_curves(history, str(output_dir), agent_name)
+                    print("Training complete. Running evaluation...")
 
-    agent.close()
-    env.close()
+                evaluate(env, agent, output_dir, config_name=config_name)
+
+                agent.close()
+                env.close()

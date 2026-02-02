@@ -28,8 +28,7 @@ I'm writing a blogpost about how the behavior of AI agents compares to human beh
 
 7. Implement the environment changes for each effect
 
-* Change sensitivity for small amounts (for gains and losses)
-* Change sensitivity for large amounts (for gains and losses)
+* Change sensitivity for small amounts (for gains and losses) X
 * Risk aversion for gains
 * Risk seeking for losses
 * Loss aversion

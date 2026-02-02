@@ -3,6 +3,6 @@ stochasticity: windy
 reward_cliff: -165
 reward_step: -8.0
 wind_prob: 0.05
-timesteps: 300000
-n_eval_episodes: 8
+timesteps: 400000
+n_eval_episodes: 4
 lr: 1e-4
