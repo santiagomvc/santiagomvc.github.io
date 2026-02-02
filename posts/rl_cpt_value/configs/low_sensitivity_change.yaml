@@ -3,4 +3,3 @@ stochasticity: windy
 reward_cliff: -250
 reward_step: -8.0
 wind_prob: 0.05
-timesteps: 400000
