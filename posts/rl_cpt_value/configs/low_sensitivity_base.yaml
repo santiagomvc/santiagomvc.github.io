@@ -3,3 +3,4 @@ stochasticity: windy
 reward_cliff: -165
 reward_step: -8.0
 wind_prob: 0.05
+n_seeds: 4
