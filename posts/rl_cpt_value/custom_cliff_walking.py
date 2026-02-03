@@ -56,12 +56,14 @@ class CliffWalkingWrapper(gym.Wrapper):
         env,
         reward_cliff=-100.0,
         reward_step=-1.0,
+        reward_goal=-1.0,
         terminate_on_cliff=True,
         wind_prob=0.0,
     ):
         super().__init__(env)
         self.reward_cliff = reward_cliff
         self.reward_step = reward_step
+        self.reward_goal = reward_goal
         self.terminate_on_cliff = terminate_on_cliff
         self.wind_prob = wind_prob
 
@@ -81,7 +83,9 @@ class CliffWalkingWrapper(gym.Wrapper):
         # Transform rewards
         if is_cliff_fall:
             reward = self.reward_cliff
-        elif reward == -1:
+        elif terminated:
+            reward = self.reward_goal
+        else:
             reward = self.reward_step
 
         return obs, reward, terminated, truncated, info
@@ -101,6 +105,7 @@ def make_env(config_name: str = "base", seed: int = None):
         env,
         reward_cliff=cfg["reward_cliff"],
         reward_step=cfg["reward_step"],
+        reward_goal=cfg["reward_goal"],
         terminate_on_cliff=True,
         wind_prob=cfg["wind_prob"] if stochasticity == "windy" else 0.0,
     )
