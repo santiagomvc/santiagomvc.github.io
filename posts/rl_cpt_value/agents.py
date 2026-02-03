@@ -72,7 +72,7 @@ class REINFORCEAgent(BaseAgent):
 
     trainable = True
 
-    def __init__(self, env, lr: float = 1e-3, gamma: float = 0.99, baseline_decay: float = 0.99):
+    def __init__(self, env, lr: float = 1e-3, gamma: float = 0.99, baseline_decay: float = 0.99, baseline_type: str = "ema"):
         """Initialize REINFORCE agent.
 
         Args:
@@ -80,6 +80,7 @@ class REINFORCEAgent(BaseAgent):
             lr: Learning rate for Adam optimizer
             gamma: Discount factor
             baseline_decay: EMA decay for baseline (variance reduction)
+            baseline_type: Baseline type ("ema", "min", "max", "zero")
         """
         self.n_states = env.observation_space.n
         self.n_actions = env.action_space.n
@@ -89,6 +90,9 @@ class REINFORCEAgent(BaseAgent):
         # Baseline for variance reduction
         self.baseline = 0.0
         self.baseline_decay = baseline_decay
+        self.baseline_type = baseline_type
+        self.best_return = -float("inf")
+        self.worst_return = float("inf")
         # Episode storage
         self.log_probs = []
         self.entropies = []
@@ -159,9 +163,18 @@ class REINFORCEAgent(BaseAgent):
                 # Compute Monte Carlo returns
                 returns = self._compute_returns(self.rewards)
 
-                # Update baseline with EMA of raw episode return
+                # Update baseline
                 episode_return = returns[0]
-                self.baseline = self.baseline_decay * self.baseline + (1 - self.baseline_decay) * episode_return
+                if self.baseline_type == "ema":
+                    self.baseline = self.baseline_decay * self.baseline + (1 - self.baseline_decay) * episode_return
+                elif self.baseline_type == "min":
+                    self.worst_return = min(self.worst_return, episode_return)
+                    self.baseline = self.worst_return
+                elif self.baseline_type == "max":
+                    self.best_return = max(self.best_return, episode_return)
+                    self.baseline = self.best_return
+                elif self.baseline_type == "zero":
+                    pass
 
                 # Transform returns (baseline subtraction handled inside _transform_returns)
                 returns = self._transform_returns(returns)
@@ -228,8 +241,9 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         reference_point: float = 0.0,
         lr: float = 1e-3,
         gamma: float = 0.99,
+        baseline_type: str = "ema",
     ):
-        super().__init__(env, lr=lr, gamma=gamma)
+        super().__init__(env, lr=lr, gamma=gamma, baseline_type=baseline_type)
         self.cpt_value = CPTValueFunction(alpha, beta, lambda_, reference_point)
 
     def _transform_returns(self, returns: list[float]) -> torch.Tensor:
