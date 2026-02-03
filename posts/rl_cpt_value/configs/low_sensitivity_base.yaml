@@ -1,0 +1,16 @@
+shape: [4, 5]
+stochasticity: windy
+reward_cliff: 1
+reward_step: 0
+reward_goal: 100
+wind_prob: 0.15
+gamma: 0.92
+baseline_type: ema
+baseline_type_cpt: min
+timesteps: 350000
+n_eval_episodes: 4
+lr: 0.001
+batch_size: 16
+entropy_coef: 1.0
+entropy_coef_final: 0.01
+n_seeds: 4

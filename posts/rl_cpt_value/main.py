@@ -113,7 +113,11 @@ if __name__ == "__main__":
                 env = make_env(config_name, seed=seed)
                 print(f"Using CliffWalking (shape={tuple(cfg['shape'])}, stochasticity={cfg['stochasticity']})")
 
-                agent = get_agent(agent_name, env, lr=cfg["lr"], gamma=cfg["gamma"], baseline_type=cfg["baseline_type"])
+                if agent_name == "cpt-reinforce":
+                    baseline = cfg.get("baseline_type_cpt", cfg["baseline_type"])
+                else:
+                    baseline = cfg["baseline_type"]
+                agent = get_agent(agent_name, env, lr=cfg["lr"], gamma=cfg["gamma"], baseline_type=baseline)
 
                 if agent.trainable:
                     print(f"Training {agent_name} for {cfg['timesteps']} timesteps...")
