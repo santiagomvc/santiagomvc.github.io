@@ -1,8 +1,0 @@
-shape: [4, 5]
-stochasticity: windy
-reward_cliff: 100
-reward_step: 0
-reward_goal: -1
-wind_prob: 0.05
-n_seeds: 4
-gamma: 0.9
