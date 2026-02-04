@@ -98,6 +98,148 @@ class CPTValueFunction:
             return -self.lambda_ * np.power(-x, self.beta)
 
 
+class CPTWeightingFunction:
+    """CPT probability weighting functions w+(p) and w-(p).
+
+    Tversky & Kahneman 1992, equation 6.
+    Inverse S-shape: overweights small p, underweights large p.
+
+    w+(p) = p^γ / (p^γ + (1-p)^γ)^(1/γ)     γ = 0.61 (median)
+    w-(p) = p^δ / (p^δ + (1-p)^δ)^(1/δ)     δ = 0.69 (median)
+    """
+
+    def __init__(self, gamma_plus: float = 0.61, gamma_minus: float = 0.69):
+        self.gamma_plus = gamma_plus
+        self.gamma_minus = gamma_minus
+
+    def w_plus(self, p: float) -> float:
+        """Weighting function for gains."""
+        if p <= 0:
+            return 0.0
+        if p >= 1:
+            return 1.0
+        g = self.gamma_plus
+        return p**g / (p**g + (1 - p)**g) ** (1 / g)
+
+    def w_minus(self, p: float) -> float:
+        """Weighting function for losses."""
+        if p <= 0:
+            return 0.0
+        if p >= 1:
+            return 1.0
+        d = self.gamma_minus
+        return p**d / (p**d + (1 - p)**d) ** (1 / d)
+
+
+class SlidingWindowCPT:
+    """Sliding window for estimating return distribution and computing CPT decision weights.
+
+    Maintains a buffer of recent batch returns with exponential decay to estimate
+    the empirical CDF, then computes cumulative CPT decision weights for each
+    episode in the current batch.
+    """
+
+    def __init__(
+        self,
+        weighting_func: CPTWeightingFunction,
+        max_batches: int = 5,
+        decay: float = 0.8,
+        reference_point: float = 0.0,
+    ):
+        self.weighting_func = weighting_func
+        self.max_batches = max_batches
+        self.decay = decay
+        self.reference_point = reference_point
+        self.buffer = []  # list of (returns_array, weight) tuples
+
+    def add_batch(self, episode_returns: list[float]):
+        """Add a batch of episode returns and decay old batches."""
+        # Decay existing weights
+        self.buffer = [(r, w * self.decay) for r, w in self.buffer]
+        # Add new batch with weight 1.0
+        self.buffer.append((np.array(episode_returns), 1.0))
+        # Trim to max_batches
+        if len(self.buffer) > self.max_batches:
+            self.buffer = self.buffer[-self.max_batches:]
+
+    def _get_weighted_samples(self) -> tuple[np.ndarray, np.ndarray]:
+        """Get all samples and their weights from the sliding window."""
+        all_returns = []
+        all_weights = []
+        for returns, batch_weight in self.buffer:
+            all_returns.extend(returns)
+            all_weights.extend([batch_weight] * len(returns))
+        return np.array(all_returns), np.array(all_weights)
+
+    def compute_decision_weights(self, episode_returns: list[float]) -> np.ndarray:
+        """Compute CPT decision weights for current batch episodes.
+
+        Uses the sliding window to estimate the empirical CDF, then applies
+        cumulative probability weighting separately for gains and losses.
+
+        For gains (sorted increasing, decumulative):
+            π_i = w+(P(R >= r_i)) - w+(P(R > r_i))
+        For losses (sorted increasing, cumulative):
+            π_i = w-(P(R <= r_i)) - w-(P(R < r_i))
+
+        Returns weights in the original episode order.
+        """
+        returns = np.array(episode_returns)
+        n = len(returns)
+
+        if n == 0:
+            return np.array([])
+
+        # Get all historical samples for CDF estimation
+        all_returns, all_weights = self._get_weighted_samples()
+        total_weight = all_weights.sum()
+
+        if total_weight == 0:
+            return np.ones(n) / n
+
+        # Sort current batch returns and track original indices
+        sorted_indices = np.argsort(returns)
+        sorted_returns = returns[sorted_indices]
+
+        # Compute decision weights, handling ties by sharing weight equally
+        decision_weights = np.zeros(n)
+
+        # Group by unique values to handle ties
+        unique_returns = np.unique(sorted_returns)
+
+        for r_i in unique_returns:
+            x_i = r_i - self.reference_point
+            tie_mask = sorted_returns == r_i
+            n_ties = tie_mask.sum()
+
+            if x_i >= 0:
+                # Gains: decumulative weighting
+                p_geq = np.sum(all_weights[all_returns >= r_i]) / total_weight
+                p_gt = np.sum(all_weights[all_returns > r_i]) / total_weight
+                w_geq = self.weighting_func.w_plus(p_geq)
+                w_gt = self.weighting_func.w_plus(p_gt)
+                rank_weight = (w_geq - w_gt) / n_ties
+            else:
+                # Losses: cumulative weighting
+                p_leq = np.sum(all_weights[all_returns <= r_i]) / total_weight
+                p_lt = np.sum(all_weights[all_returns < r_i]) / total_weight
+                w_leq = self.weighting_func.w_minus(p_leq)
+                w_lt = self.weighting_func.w_minus(p_lt)
+                rank_weight = (w_leq - w_lt) / n_ties
+
+            decision_weights[tie_mask] = rank_weight
+
+        # Normalize to sum to n (so average weight is 1.0, preserving gradient scale)
+        weight_sum = decision_weights.sum()
+        if weight_sum > 0:
+            decision_weights = decision_weights * (n / weight_sum)
+
+        # Map back to original episode order
+        result = np.zeros(n)
+        result[sorted_indices] = decision_weights
+        return result
+
+
 # =============================================================================
 # LLM Agent prompt and tooling
 # =============================================================================

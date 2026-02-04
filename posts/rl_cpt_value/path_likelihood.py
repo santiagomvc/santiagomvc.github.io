@@ -5,7 +5,7 @@ from typing import List
 
 import numpy as np
 
-from utils import load_config, CPTValueFunction
+from utils import load_config, CPTValueFunction, CPTWeightingFunction
 
 
 @dataclass
@@ -68,14 +68,74 @@ def calculate_path_expected_value(outcomes: List[PathOutcome]) -> float:
     return sum(o.reward * o.probability for o in outcomes)
 
 
+def _compute_cpt_decision_weights(
+    sorted_outcomes: list,
+    rewards_attr: str,
+    weighting_func: CPTWeightingFunction,
+) -> list[float]:
+    """Compute CPT decision weights for sorted outcomes.
+
+    For gains (decumulative): π_i = w+(P(R >= r_i)) - w+(P(R > r_i))
+    For losses (cumulative): π_i = w-(P(R <= r_i)) - w-(P(R < r_i))
+
+    Args:
+        sorted_outcomes: Outcomes sorted by reward (increasing order)
+        rewards_attr: Attribute name for reward ('reward' or 'cumulative_reward')
+        weighting_func: CPT weighting function
+
+    Returns:
+        List of decision weights corresponding to sorted_outcomes
+    """
+    n = len(sorted_outcomes)
+    weights = [0.0] * n
+
+    for i in range(n):
+        reward = getattr(sorted_outcomes[i], rewards_attr)
+
+        if reward >= 0:
+            # Gains: decumulative
+            # P(R >= r_i) = sum of probabilities of outcomes with reward >= r_i
+            p_geq = sum(o.probability for o in sorted_outcomes if getattr(o, rewards_attr) >= reward)
+            # P(R > r_i) = sum of probabilities of outcomes with reward > r_i
+            p_gt = sum(o.probability for o in sorted_outcomes if getattr(o, rewards_attr) > reward)
+            weights[i] = weighting_func.w_plus(p_geq) - weighting_func.w_plus(p_gt)
+        else:
+            # Losses: cumulative
+            # P(R <= r_i)
+            p_leq = sum(o.probability for o in sorted_outcomes if getattr(o, rewards_attr) <= reward)
+            # P(R < r_i)
+            p_lt = sum(o.probability for o in sorted_outcomes if getattr(o, rewards_attr) < reward)
+            weights[i] = weighting_func.w_minus(p_leq) - weighting_func.w_minus(p_lt)
+
+    return weights
+
+
 def calculate_path_cpt_value(
     outcomes: List[PathOutcome],
     value_func: CPTValueFunction = None,
+    weighting_func: CPTWeightingFunction = None,
 ) -> float:
-    """CPT value: V = Σ p_i * v(r_i)"""
+    """CPT value with cumulative probability weighting.
+
+    When weighting_func is provided, uses proper cumulative decision weights:
+        V = Σ π_i * v(r_i)
+    Otherwise falls back to simple probability weighting:
+        V = Σ p_i * v(r_i)
+    """
     if value_func is None:
         value_func = CPTValueFunction()
-    return sum(o.probability * value_func(o.reward) for o in outcomes)
+
+    if weighting_func is None:
+        return sum(o.probability * value_func(o.reward) for o in outcomes)
+
+    sorted_outcomes = sorted(outcomes, key=lambda o: o.reward)
+    decision_weights = _compute_cpt_decision_weights(
+        sorted_outcomes, 'reward', weighting_func
+    )
+    return sum(
+        w * value_func(o.reward)
+        for w, o in zip(decision_weights, sorted_outcomes)
+    )
 
 
 def build_path_outcome_distributions(
@@ -295,11 +355,29 @@ def calculate_subpath_expected_value(outcomes: List[SubPathOutcome]) -> float:
 def calculate_subpath_cpt_value(
     outcomes: List[SubPathOutcome],
     value_func: CPTValueFunction = None,
+    weighting_func: CPTWeightingFunction = None,
 ) -> float:
-    """CPT value for sub-path outcomes: V = sum p_i * v(G_i)"""
+    """CPT value for sub-path outcomes with cumulative probability weighting.
+
+    When weighting_func is provided, uses proper cumulative decision weights:
+        V = Σ π_i * v(G_i)
+    Otherwise falls back to simple probability weighting:
+        V = Σ p_i * v(G_i)
+    """
     if value_func is None:
         value_func = CPTValueFunction()
-    return sum(o.probability * value_func(o.cumulative_reward) for o in outcomes)
+
+    if weighting_func is None:
+        return sum(o.probability * value_func(o.cumulative_reward) for o in outcomes)
+
+    sorted_outcomes = sorted(outcomes, key=lambda o: o.cumulative_reward)
+    decision_weights = _compute_cpt_decision_weights(
+        sorted_outcomes, 'cumulative_reward', weighting_func
+    )
+    return sum(
+        w * value_func(o.cumulative_reward)
+        for w, o in zip(decision_weights, sorted_outcomes)
+    )
 
 
 def compare_value_frameworks(
@@ -327,6 +405,13 @@ def compare_value_frameworks(
         lambda_=params.get("lambda_", 2.25),
     )
 
+    weighting_func = None
+    if params.get("use_probability_weighting", False):
+        weighting_func = CPTWeightingFunction(
+            gamma_plus=params.get("w_plus_gamma", 0.61),
+            gamma_minus=params.get("w_minus_gamma", 0.69),
+        )
+
     distributions = build_path_outcome_distributions(env_config)
 
     ev_values = {}
@@ -334,7 +419,7 @@ def compare_value_frameworks(
 
     for row, outcomes in distributions.items():
         ev_values[row] = calculate_path_expected_value(outcomes)
-        cpt_values[row] = calculate_path_cpt_value(outcomes, value_func)
+        cpt_values[row] = calculate_path_cpt_value(outcomes, value_func, weighting_func)
 
     # Softmax to get choice probabilities
     ev_arr = np.array(list(ev_values.values()))

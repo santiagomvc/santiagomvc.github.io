@@ -15,6 +15,8 @@ from utils import (
     CLIFFWALKING_ACTION_TOOL,
     get_cliffwalking_prompt,
     CPTValueFunction,
+    CPTWeightingFunction,
+    SlidingWindowCPT,
     format_cliffwalking_state,
 )
 
@@ -218,18 +220,25 @@ class REINFORCEAgent(BaseAgent):
 
 
 class CPTREINFORCEAgent(REINFORCEAgent):
-    """REINFORCE agent with CPT applied to the total episode return.
+    """REINFORCE agent with CPT value function and probability weighting.
 
-    Applies Cumulative Prospect Theory (Kahneman & Tversky, 1992) transformation
-    to the episode return, treating each episode as a single prospect. The
-    transformed value is broadcast to all timesteps, avoiding gradient
-    accumulation bias from episode length variation.
+    Applies Cumulative Prospect Theory (Kahneman & Tversky, 1992) at two levels:
+    1. Per-step: CPT value function v(G_t) for within-episode credit assignment
+    2. Per-episode: CPT decision weights π_i for across-episode probability distortion
+
+    The decision weights are computed from the empirical return distribution
+    using a sliding window, and applied as stop-gradient scalars.
 
     CPT Parameters:
         alpha: Diminishing sensitivity for gains (default: 0.88)
         beta: Diminishing sensitivity for losses (default: 0.88)
         lambda_: Loss aversion coefficient (default: 2.25)
         reference_point: Gain/loss boundary (default: 0.0)
+        use_probability_weighting: Enable CPT probability weighting (default: True)
+        w_plus_gamma: Weighting function parameter for gains (default: 0.61)
+        w_minus_gamma: Weighting function parameter for losses (default: 0.69)
+        sliding_window_size: Number of batches in sliding window (default: 5)
+        sliding_window_decay: Exponential decay for old batches (default: 0.8)
     """
 
     def __init__(
@@ -239,6 +248,11 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         beta: float = 0.88,
         lambda_: float = 2.25,
         reference_point: float = 0.0,
+        use_probability_weighting: bool = True,
+        w_plus_gamma: float = 0.61,
+        w_minus_gamma: float = 0.69,
+        sliding_window_size: int = 5,
+        sliding_window_decay: float = 0.8,
         lr: float = 1e-3,
         gamma: float = 0.99,
         baseline_type: str = "ema",
@@ -246,6 +260,15 @@ class CPTREINFORCEAgent(REINFORCEAgent):
     ):
         super().__init__(env, lr=lr, gamma=gamma, baseline_type=baseline_type)
         self.cpt_value = CPTValueFunction(alpha, beta, lambda_, reference_point)
+        self.use_probability_weighting = use_probability_weighting
+        if use_probability_weighting:
+            weighting_func = CPTWeightingFunction(w_plus_gamma, w_minus_gamma)
+            self.sliding_window = SlidingWindowCPT(
+                weighting_func,
+                max_batches=sliding_window_size,
+                decay=sliding_window_decay,
+                reference_point=reference_point,
+            )
 
     def _transform_returns(self, returns: list[float]) -> torch.Tensor:
         """Apply CPT value function to each per-step return.
@@ -253,11 +276,103 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         This preserves temporal credit assignment while applying risk-sensitive
         transformation to return-to-go values. Earlier timesteps have larger G_t
         (more future reward to come), so they receive proportionally more credit.
-
-        Matches cognitive science findings that humans evaluate "prospects from
-        current state" rather than waiting for total episode outcomes.
         """
         return torch.tensor([self.cpt_value(G - self.baseline) for G in returns])
+
+    def learn(self, env, timesteps: int = 300000, batch_size: int = 8, entropy_coef: float = 0.5, entropy_coef_final: float = 0.01, max_grad_norm: float = 1.0):
+        """Train using REINFORCE with CPT value function and probability weighting.
+
+        Extends base REINFORCE with episode-level CPT decision weights that
+        scale each episode's contribution to the policy gradient based on
+        where its return falls in the empirical distribution.
+        """
+        total_steps = 0
+        episode = 0
+        recent_rewards = []
+
+        episode_rewards_history = []
+        batch_losses_history = []
+
+        while total_steps < timesteps:
+            # Collect batch of episodes
+            batch_data = []  # (log_probs, entropies, returns, episode_return)
+
+            for _ in range(batch_size):
+                state, _ = env.reset()
+                self.log_probs = []
+                self.entropies = []
+                self.rewards = []
+                done = False
+
+                while not done:
+                    action = self.act(state)
+                    state, reward, terminated, truncated, _ = env.step(action)
+                    self.rewards.append(reward)
+                    done = terminated or truncated
+                    total_steps += 1
+
+                returns = self._compute_returns(self.rewards)
+                episode_return = returns[0]
+
+                # Update baseline
+                if self.baseline_type == "ema":
+                    self.baseline = self.baseline_decay * self.baseline + (1 - self.baseline_decay) * episode_return
+                elif self.baseline_type == "min":
+                    self.worst_return = min(self.worst_return, episode_return)
+                    self.baseline = self.worst_return
+                elif self.baseline_type == "max":
+                    self.best_return = max(self.best_return, episode_return)
+                    self.baseline = self.best_return
+                elif self.baseline_type == "zero":
+                    pass
+
+                transformed = self._transform_returns(returns)
+                batch_data.append((list(self.log_probs), list(self.entropies), transformed, episode_return))
+
+                ep_reward = sum(self.rewards)
+                recent_rewards.append(ep_reward)
+                episode_rewards_history.append(ep_reward)
+                episode += 1
+                if episode % 100 == 0:
+                    avg = sum(recent_rewards[-100:]) / min(100, len(recent_rewards))
+                    print(f"Ep {episode} | Steps {total_steps} | Reward {ep_reward:.1f} | Avg100 {avg:.1f}")
+
+            # Compute CPT decision weights for this batch
+            episode_returns = [d[3] for d in batch_data]
+
+            if self.use_probability_weighting:
+                self.sliding_window.add_batch(episode_returns)
+                decision_weights = self.sliding_window.compute_decision_weights(episode_returns)
+            else:
+                decision_weights = np.ones(batch_size)
+
+            # Compute batch loss with decision weights
+            batch_losses = []
+            for ep_idx, (log_probs, entropies, transformed, _) in enumerate(batch_data):
+                w_i = decision_weights[ep_idx]  # stop-gradient scalar
+                policy_loss = torch.tensor(0.0)
+                entropy_loss = torch.tensor(0.0)
+                for log_prob, entropy, G in zip(log_probs, entropies, transformed):
+                    policy_loss = policy_loss - log_prob * G * w_i
+                    entropy_loss = entropy_loss + entropy
+
+                progress = total_steps / timesteps
+                current_entropy_coef = entropy_coef + (entropy_coef_final - entropy_coef) * progress
+                loss = policy_loss - current_entropy_coef * entropy_loss
+                batch_losses.append(loss)
+
+            avg_loss = sum(batch_losses) / batch_size
+            batch_losses_history.append(avg_loss.item())
+            self.optimizer.zero_grad()
+            avg_loss.backward()
+            if max_grad_norm is not None:
+                torch.nn.utils.clip_grad_norm_(self.policy.parameters(), max_norm=max_grad_norm)
+            self.optimizer.step()
+
+        return {
+            'episode_rewards': episode_rewards_history,
+            'batch_losses': batch_losses_history,
+        }
 
 
 class LLMAgent(BaseAgent):

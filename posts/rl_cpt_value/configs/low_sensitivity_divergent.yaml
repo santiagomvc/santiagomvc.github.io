@@ -24,6 +24,11 @@ agent_config:
   alpha: 0.66
   beta: 0.88
   lambda_: 2.25
+  use_probability_weighting: true
+  w_plus_gamma: 0.61
+  w_minus_gamma: 0.69
+  sliding_window_size: 5
+  sliding_window_decay: 0.8
 
 # --- agents to run (override agent_config per agent) ---
 agents:
