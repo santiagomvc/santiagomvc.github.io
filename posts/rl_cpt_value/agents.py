@@ -72,7 +72,7 @@ class REINFORCEAgent(BaseAgent):
 
     trainable = True
 
-    def __init__(self, env, lr: float = 1e-3, gamma: float = 0.99, baseline_decay: float = 0.99, baseline_type: str = "ema"):
+    def __init__(self, env, lr: float = 1e-3, gamma: float = 0.99, baseline_decay: float = 0.99, baseline_type: str = "ema", **kwargs):
         """Initialize REINFORCE agent.
 
         Args:
@@ -242,6 +242,7 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         lr: float = 1e-3,
         gamma: float = 0.99,
         baseline_type: str = "ema",
+        **kwargs,
     ):
         super().__init__(env, lr=lr, gamma=gamma, baseline_type=baseline_type)
         self.cpt_value = CPTValueFunction(alpha, beta, lambda_, reference_point)
@@ -281,8 +282,8 @@ class LLMAgent(BaseAgent):
     def act(self, state) -> int:
         """Select action using LLM with function calling."""
         cfg = load_config()
-        shape = tuple(cfg["shape"])
-        prompt = get_cliffwalking_prompt(shape, cfg["reward_cliff"], cfg["reward_step"])
+        shape = tuple(cfg["env"]["shape"])
+        prompt = get_cliffwalking_prompt(shape, cfg["env"]["reward_cliff"], cfg["env"]["reward_step"])
         messages = [
             {"role": "system", "content": prompt},
             {

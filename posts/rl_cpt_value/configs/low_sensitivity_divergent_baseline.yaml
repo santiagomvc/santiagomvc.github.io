@@ -1,27 +1,27 @@
 # --- env ---
 env:
-  shape: [4, 5]
+  shape: [3, 3]
   stochasticity: windy
-  reward_cliff: 1
+  reward_cliff: 750
   reward_step: 0
-  reward_goal: 100
-  wind_prob: 0.15
+  reward_goal: 127802
+  wind_prob: 0.20
 
 # --- training ---
 training:
-  timesteps: 350000
-  n_eval_episodes: 4
-  batch_size: 16
+  timesteps: 1000000
+  n_eval_episodes: 50
+  batch_size: 1024
   entropy_coef: 1.0
   entropy_coef_final: 0.01
-  n_seeds: 4
+  n_seeds: 5
 
 # --- agent defaults ---
 agent_config:
   lr: 0.001
-  gamma: 0.92
+  gamma: 0.810
   baseline_type: ema
-  alpha: 0.88
+  alpha: 0.66
   beta: 0.88
   lambda_: 2.25
 

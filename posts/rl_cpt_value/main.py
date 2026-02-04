@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from dotenv import load_dotenv
 
-from agents import AGENTS, get_agent
+from agents import get_agent
 from custom_cliff_walking import make_env
 from utils import load_config, save_episodes_gif, save_training_curves
 
@@ -31,7 +31,7 @@ def run_episode(env, agent, max_steps=500, config_name="base"):
         frames.append(env.render())
         total_reward += reward
         step_count += 1
-        fell_off_cliff = reward == cfg["reward_cliff"]
+        fell_off_cliff = reward == cfg["env"]["reward_cliff"]
         if fell_off_cliff:
             cliff_falls += 1
 
@@ -50,7 +50,7 @@ def run_episode(env, agent, max_steps=500, config_name="base"):
 def evaluate(env, agent, output_dir, config_name="base"):
     """Run N episodes, save GIFs, and print metrics summary."""
     cfg = load_config(config_name)
-    n_episodes = cfg["n_eval_episodes"]
+    n_episodes = cfg["training"]["n_eval_episodes"]
     all_metrics = []
     all_frames = []
 
@@ -87,51 +87,48 @@ def set_seed(seed):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="CliffWalking RL runner")
-    parser.add_argument("-a", "--agent", nargs="+", choices=list(AGENTS.keys()), required=True)
-    parser.add_argument("-c", "--config", nargs="+", default=["base"], help="Config name(s) from configs/ folder")
+    parser.add_argument("-c", "--config", nargs="+", default=["base"])
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-
     load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-    for agent_name in args.agent:
-        for config_name in args.config:
-            cfg = load_config(config_name)
-            n_seeds = cfg.get("n_seeds", 1)
-            seeds = list(range(1, n_seeds + 1))
+    for config_name in args.config:
+        cfg = load_config(config_name)
 
-            for seed in seeds:
+        for agent_entry in cfg["agents"]:
+            if isinstance(agent_entry, str):
+                agent_name = agent_entry
+                agent_overrides = {}
+            else:
+                agent_name = agent_entry["name"]
+                agent_overrides = {k: v for k, v in agent_entry.items() if k != "name"}
+
+            # Merge: defaults + per-agent overrides
+            agent_cfg = {**cfg["agent_config"], **agent_overrides}
+
+            n_seeds = cfg["training"]["n_seeds"]
+            for seed in range(1, n_seeds + 1):
                 suffix = f"_seed{seed}" if n_seeds > 1 else ""
                 output_dir = Path(f"outputs/{agent_name}_{config_name}{suffix}")
                 output_dir.mkdir(parents=True, exist_ok=True)
-
                 set_seed(seed)
-
                 env = make_env(config_name, seed=seed)
-                print(f"Using CliffWalking (shape={tuple(cfg['shape'])}, stochasticity={cfg['stochasticity']})")
 
-                if agent_name == "cpt-reinforce":
-                    baseline = cfg.get("baseline_type_cpt", cfg["baseline_type"])
-                else:
-                    baseline = cfg["baseline_type"]
-                agent = get_agent(agent_name, env, lr=cfg["lr"], gamma=cfg["gamma"], baseline_type=baseline)
+                agent = get_agent(agent_name, env, **agent_cfg)
 
                 if agent.trainable:
-                    print(f"Training {agent_name} for {cfg['timesteps']} timesteps...")
+                    print(f"Training {agent_name} for {cfg['training']['timesteps']} timesteps...")
                     history = agent.learn(
-                        env,
-                        cfg["timesteps"],
-                        batch_size=cfg["batch_size"],
-                        entropy_coef=cfg["entropy_coef"],
-                        entropy_coef_final=cfg["entropy_coef_final"],
+                        env, cfg["training"]["timesteps"],
+                        batch_size=cfg["training"]["batch_size"],
+                        entropy_coef=cfg["training"]["entropy_coef"],
+                        entropy_coef_final=cfg["training"]["entropy_coef_final"],
                     )
                     save_training_curves(history, str(output_dir), agent_name)
-                    print("Training complete. Running evaluation...")
 
                 evaluate(env, agent, output_dir, config_name=config_name)
-
                 agent.close()
                 env.close()

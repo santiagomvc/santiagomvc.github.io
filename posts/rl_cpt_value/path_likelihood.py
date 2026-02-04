@@ -93,10 +93,11 @@ def build_path_outcome_distributions(
     if env_config is None:
         env_config = load_config()
 
-    nrows, ncols = env_config['shape']
-    wind_prob = env_config.get('wind_prob', 0.0)
-    reward_step = env_config['reward_step']
-    reward_cliff = env_config['reward_cliff']
+    env = env_config['env']
+    nrows, ncols = env['shape']
+    wind_prob = env.get('wind_prob', 0.0)
+    reward_step = env['reward_step']
+    reward_cliff = env['reward_cliff']
 
     distributions = {}
 
@@ -152,10 +153,11 @@ def get_return_distribution_from_position(
     if env_config is None:
         env_config = load_config()
 
-    nrows, ncols = env_config['shape']
-    wind_prob = env_config.get('wind_prob', 0.0)
-    reward_step = env_config['reward_step']
-    reward_cliff = env_config['reward_cliff']
+    env = env_config['env']
+    nrows, ncols = env['shape']
+    wind_prob = env.get('wind_prob', 0.0)
+    reward_step = env['reward_step']
+    reward_cliff = env['reward_cliff']
 
     # Terminal states
     goal_row, goal_col = nrows - 1, ncols - 1
@@ -273,7 +275,7 @@ def build_position_return_distributions(
     if env_config is None:
         env_config = load_config()
 
-    nrows, ncols = env_config['shape']
+    nrows, ncols = env_config['env']['shape']
     distributions = {}
 
     for row in range(nrows):
@@ -360,18 +362,19 @@ def compare_value_frameworks(
     }
 
     if verbose:
-        nrows, ncols = env_config['shape']
+        env = env_config['env']
+        nrows, ncols = env['shape']
         print("=" * 60)
         print("Framework Comparison: Expected Value vs CPT Value Function")
         print("=" * 60)
-        print(f"Grid: {nrows}x{ncols}, Wind: {env_config.get('wind_prob', 0):.0%}")
-        print(f"Rewards: step={env_config['reward_step']}, cliff={env_config['reward_cliff']}")
+        print(f"Grid: {nrows}x{ncols}, Wind: {env.get('wind_prob', 0):.0%}")
+        print(f"Rewards: step={env['reward_step']}, cliff={env['reward_cliff']}")
         print()
         print(f"{'Row':<6} {'Steps':<8} {'P(cliff)':<12} {'EV':<12} {'CPT':<12}")
         print("-" * 50)
         for row in rows:
             steps = 2 * (nrows - 1 - row) + (ncols - 1)
-            p_cliff = cliff_fall_probability(row, nrows, ncols, env_config.get('wind_prob', 0))
+            p_cliff = cliff_fall_probability(row, nrows, ncols, env.get('wind_prob', 0))
             print(f"{row:<6} {steps:<8} {p_cliff:<12.4f} {ev_values[row]:<12.2f} {cpt_values[row]:<12.2f}")
         print()
         print(f"EV preferred row:  {ev_preferred}")

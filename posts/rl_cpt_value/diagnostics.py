@@ -76,10 +76,11 @@ class DiagnosticSuite:
         # Check 2: Config loads
         try:
             config = load_config()
-            assert 'shape' in config
-            assert 'wind_prob' in config
+            assert 'env' in config
+            assert 'shape' in config['env']
+            assert 'wind_prob' in config['env']
             self.add_result(DiagnosticResult(
-                "Config", True, f"Config loaded: {config['shape']} grid, wind={config['wind_prob']}"
+                "Config", True, f"Config loaded: {config['env']['shape']} grid, wind={config['env']['wind_prob']}"
             ))
         except Exception as e:
             self.add_result(DiagnosticResult(
@@ -234,12 +235,12 @@ class DiagnosticSuite:
 
     def _check_probability_normalization(self):
         """Check that outcome probabilities sum to 1."""
-        config = {
+        config = {'env': {
             'shape': [5, 5],
             'wind_prob': 0.2,
             'reward_step': -1.0,
             'reward_cliff': -50.0,
-        }
+        }}
         distributions = build_path_outcome_distributions(config)
 
         issues = []
@@ -325,12 +326,12 @@ class DiagnosticSuite:
         reward_cliff = -50.0
         rng = np.random.default_rng(42)
 
-        config = {
+        config = {'env': {
             'shape': [nrows, ncols],
             'wind_prob': wind_prob,
             'reward_step': reward_step,
             'reward_cliff': reward_cliff,
-        }
+        }}
         distributions = build_path_outcome_distributions(config)
 
         details = []
@@ -439,12 +440,12 @@ class DiagnosticSuite:
         reward_cliff = -50.0
         rng = np.random.default_rng(42)
 
-        config = {
+        config = {'env': {
             'shape': [nrows, ncols],
             'wind_prob': wind_prob,
             'reward_step': reward_step,
             'reward_cliff': reward_cliff,
-        }
+        }}
 
         details = []
         max_deviation = 0.0
@@ -532,12 +533,12 @@ class DiagnosticSuite:
 
     def _check_ev_cpt_divergence(self):
         """Check if EV and CPT produce different orderings."""
-        config = {
+        config = {'env': {
             'shape': [5, 5],
             'wind_prob': 0.2,
             'reward_step': -1.0,
             'reward_cliff': -50.0,
-        }
+        }}
         v = CPTValueFunction()
         distributions = build_path_outcome_distributions(config)
 

@@ -1,15 +1,31 @@
-shape: [4, 12]
-stochasticity: none
-reward_cliff: -100
-reward_step: -1
-reward_goal: -1
-wind_prob: 0.0
-timesteps: 350000
-n_eval_episodes: 4
-lr: 0.0001
-gamma: 0.99
-batch_size: 8
-entropy_coef: 0.5
-entropy_coef_final: 0.01
-baseline_type: ema
-n_seeds: 1
+# --- env ---
+env:
+  shape: [4, 12]
+  stochasticity: none
+  reward_cliff: -100
+  reward_step: -1
+  reward_goal: -1
+  wind_prob: 0.0
+
+# --- training ---
+training:
+  timesteps: 350000
+  n_eval_episodes: 4
+  batch_size: 8
+  entropy_coef: 0.5
+  entropy_coef_final: 0.01
+  n_seeds: 1
+
+# --- agent defaults ---
+agent_config:
+  lr: 0.0001
+  gamma: 0.99
+  baseline_type: ema
+  alpha: 0.88
+  beta: 0.88
+  lambda_: 2.25
+
+# --- agents to run (override agent_config per agent) ---
+agents:
+  - reinforce
+  - cpt-reinforce

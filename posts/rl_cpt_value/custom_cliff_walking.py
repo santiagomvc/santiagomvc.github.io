@@ -94,8 +94,9 @@ class CliffWalkingWrapper(gym.Wrapper):
 def make_env(config_name: str = "base", seed: int = None):
     """Factory function to create CliffWalking environment from config."""
     cfg = load_config(config_name)
-    shape = tuple(cfg["shape"])
-    stochasticity = cfg["stochasticity"]
+    env_cfg = cfg["env"]
+    shape = tuple(env_cfg["shape"])
+    stochasticity = env_cfg["stochasticity"]
     env = ResizableCliffWalkingEnv(
         render_mode="rgb_array",
         is_slippery=(stochasticity == "slippery"),
@@ -103,11 +104,11 @@ def make_env(config_name: str = "base", seed: int = None):
     )
     env = CliffWalkingWrapper(
         env,
-        reward_cliff=cfg["reward_cliff"],
-        reward_step=cfg["reward_step"],
-        reward_goal=cfg["reward_goal"],
+        reward_cliff=env_cfg["reward_cliff"],
+        reward_step=env_cfg["reward_step"],
+        reward_goal=env_cfg["reward_goal"],
         terminate_on_cliff=True,
-        wind_prob=cfg["wind_prob"] if stochasticity == "windy" else 0.0,
+        wind_prob=env_cfg["wind_prob"] if stochasticity == "windy" else 0.0,
     )
     if seed is not None:
         env.reset(seed=seed)
