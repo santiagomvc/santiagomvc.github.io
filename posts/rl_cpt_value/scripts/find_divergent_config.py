@@ -259,10 +259,11 @@ def analyze_config(
 
 def grid_search():
     """Search parameter space for configs with EV-risky, CPT-safe divergence."""
-    shapes = [[3, 3], [3, 4], [3, 5], [4, 3], [4, 4], [4, 5], [4, 6]]
+    # Focus on larger grids where multiple row choices are meaningful
+    shapes = [[4, 5], [4, 6], [4, 7], [5, 5], [5, 6], [5, 7], [5, 8], [6, 6], [6, 7], [6, 8]]
     gammas = np.arange(0.80, 0.96, 0.005)
-    wind_probs = np.arange(0.05, 0.20, 0.01)
-    cliff_rewards = [50, 100, 200, 500, 750, 1000]
+    wind_probs = np.arange(0.05, 0.15, 0.01)  # Lower wind for more learnable configs
+    cliff_rewards = [100, 200, 500, 750, 1000, 1500, 2000]
 
     candidates = []
     total = 0
@@ -347,29 +348,49 @@ def print_result(result: dict, mc_validate: bool = False):
 
 
 def generate_yaml(result: dict, goal_reward: int, extra: dict = None) -> str:
-    """Generate YAML config string."""
-    lines = [
-        f"shape: {result['shape']}",
-        f"stochasticity: windy",
-        f"reward_cliff: {result['cliff_reward']}",
-        f"reward_step: 0",
-        f"reward_goal: {goal_reward}",
-        f"wind_prob: {result['wind_prob']:.2f}",
-        f"gamma: {result['gamma']:.3f}",
-        f"baseline_type: ema",
-        f"baseline_type_cpt: min",
-        f"timesteps: 1000000",
-        f"n_eval_episodes: 4",
-        f"lr: 0.001",
-        f"batch_size: 1024",
-        f"entropy_coef: 1.0",
-        f"entropy_coef_final: 0.01",
-        f"n_seeds: 4",
-    ]
-    if extra:
-        for k, v in extra.items():
-            lines.append(f"{k}: {v}")
-    return '\n'.join(lines) + '\n'
+    """Generate YAML config string matching base.yaml structure."""
+    # Build nested YAML structure matching base.yaml
+    yaml_content = f"""# --- env ---
+env:
+  shape: {result['shape']}
+  stochasticity: windy
+  reward_cliff: {result['cliff_reward']}
+  reward_step: 0
+  reward_goal: {goal_reward}
+  wind_prob: {result['wind_prob']:.2f}
+
+# --- training ---
+training:
+  timesteps: 1000000
+  n_eval_episodes: 4
+  batch_size: 1024
+  entropy_coef: 1.0
+  entropy_coef_final: 0.01
+  n_seeds: 4
+
+# --- agent defaults ---
+agent_config:
+  lr: 0.001
+  gamma: {result['gamma']:.3f}
+  baseline_type: ema
+  # Original CPT parameters (Tversky & Kahneman 1992)
+  alpha: 0.88
+  beta: 0.88
+  lambda_: 2.25
+  # CPT probability weighting
+  use_probability_weighting: true
+  w_plus_gamma: 0.61
+  w_minus_gamma: 0.69
+  sliding_window_size: 5
+  sliding_window_decay: 0.8
+
+# --- agents to run ---
+agents:
+  - reinforce
+  - cpt-reinforce:
+      baseline_type: min
+"""
+    return yaml_content
 
 
 def main():

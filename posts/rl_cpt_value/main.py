@@ -102,9 +102,14 @@ if __name__ == "__main__":
             if isinstance(agent_entry, str):
                 agent_name = agent_entry
                 agent_overrides = {}
-            else:
+            elif "name" in agent_entry:
+                # Format: {"name": "agent-name", "key": "value", ...}
                 agent_name = agent_entry["name"]
                 agent_overrides = {k: v for k, v in agent_entry.items() if k != "name"}
+            else:
+                # Format: {"agent-name": {"key": "value", ...}}
+                agent_name = list(agent_entry.keys())[0]
+                agent_overrides = agent_entry[agent_name] or {}
 
             # Merge: defaults + per-agent overrides
             agent_cfg = {**cfg["agent_config"], **agent_overrides}
