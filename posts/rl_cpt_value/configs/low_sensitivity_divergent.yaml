@@ -21,7 +21,7 @@ agent_config:
   lr: 0.001
   gamma: 0.810
   baseline_type: ema
-  alpha: 0.66
+  alpha: 0.88
   beta: 0.88
   lambda_: 2.25
   use_probability_weighting: true
