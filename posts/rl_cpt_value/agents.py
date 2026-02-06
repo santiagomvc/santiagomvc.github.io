@@ -16,6 +16,7 @@ from utils import (
     get_cliffwalking_prompt,
     CPTValueFunction,
     CPTWeightingFunction,
+    PerPathSlidingWindowCPT,
     SlidingWindowCPT,
     format_cliffwalking_state,
 )
@@ -256,6 +257,7 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         lr: float = 1e-3,
         gamma: float = 0.99,
         baseline_type: str = "ema",
+        env_config: dict = None,
         **kwargs,
     ):
         super().__init__(env, lr=lr, gamma=gamma, baseline_type=baseline_type)
@@ -263,12 +265,20 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         self.use_probability_weighting = use_probability_weighting
         if use_probability_weighting:
             weighting_func = CPTWeightingFunction(w_plus_gamma, w_minus_gamma)
-            self.sliding_window = SlidingWindowCPT(
-                weighting_func,
-                max_batches=sliding_window_size,
-                decay=sliding_window_decay,
-                reference_point=reference_point,
-            )
+            if env_config is not None:
+                self.sliding_window = PerPathSlidingWindowCPT(
+                    weighting_func, env_config, gamma,
+                    max_batches=sliding_window_size,
+                    decay=sliding_window_decay,
+                    reference_point=reference_point,
+                )
+            else:
+                self.sliding_window = SlidingWindowCPT(
+                    weighting_func,
+                    max_batches=sliding_window_size,
+                    decay=sliding_window_decay,
+                    reference_point=reference_point,
+                )
 
     def _transform_returns(self, returns: list[float]) -> torch.Tensor:
         """Apply CPT value function to each per-step return.
