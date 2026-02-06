@@ -485,3 +485,64 @@ def save_training_curves(history: dict, output_dir: str, agent_name: str, window
         fig.savefig(output_path / 'losses.png', dpi=150, bbox_inches='tight')
         plt.close(fig)
         print(f"Saved {output_path / 'losses.png'}")
+
+
+def evaluate_paths(env, agent, n_episodes, config_name="base"):
+    """Evaluate which path (row) a trained agent takes.
+
+    Runs n_episodes, tracks the minimum row reached per episode
+    (determines path), and counts cliff falls.
+
+    Returns:
+        dict with keys: "path_counts" ({row: count}), "cliff_falls" (int), "n_episodes" (int)
+    """
+    cfg = load_config(config_name)
+    nrows, ncols = cfg["env"]["shape"]
+    reward_cliff = cfg["env"]["reward_cliff"]
+
+    path_counts = {}
+    cliff_falls = 0
+
+    for _ in range(n_episodes):
+        state, _ = env.reset()
+        min_row = nrows  # will be updated on first step
+        fell_off_cliff = False
+
+        for _ in range(500):
+            action = agent.act(state)
+            state, reward, terminated, truncated, _ = env.step(action)
+
+            row = state // ncols
+            if row < min_row:
+                min_row = row
+
+            if reward == reward_cliff:
+                fell_off_cliff = True
+
+            if terminated or truncated:
+                break
+
+        if fell_off_cliff:
+            cliff_falls += 1
+        path_counts[min_row] = path_counts.get(min_row, 0) + 1
+
+    return {"path_counts": path_counts, "cliff_falls": cliff_falls, "n_episodes": n_episodes}
+
+
+def summarize_paths(all_path_results, nrows, agent_name, config_name):
+    """Pool path results across seeds and print a compact single-line summary."""
+    total_eps = sum(r["n_episodes"] for r in all_path_results)
+    total_cliff = sum(r["cliff_falls"] for r in all_path_results)
+    total_paths = {}
+    for r in all_path_results:
+        for row, count in r["path_counts"].items():
+            total_paths[row] = total_paths.get(row, 0) + count
+
+    path_parts = []
+    for i in range(1, nrows):
+        row = nrows - 1 - i
+        pct = total_paths.get(row, 0) / total_eps * 100
+        path_parts.append(f"Path{i}={pct:.0f}%")
+    success_pct = (total_eps - total_cliff) / total_eps * 100
+    cliff_pct = total_cliff / total_eps * 100
+    print(f"{agent_name} ({config_name}): {' '.join(path_parts)} | Success={success_pct:.0f}% Cliff={cliff_pct:.0f}% [{total_eps} eps]")

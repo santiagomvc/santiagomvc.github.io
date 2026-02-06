@@ -37,3 +37,4 @@ agents:
   - reinforce
   - cpt-reinforce:
       baseline_type: min
+  - cpt-pg

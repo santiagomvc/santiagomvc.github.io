@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from agents import get_agent
 from custom_cliff_walking import make_env
-from utils import load_config, save_episodes_gif, save_training_curves
+from utils import load_config, save_episodes_gif, save_training_curves, evaluate_paths, summarize_paths
 
 
 ENV_NAME = "CliffWalking-v1"
@@ -115,6 +115,10 @@ if __name__ == "__main__":
             agent_cfg = {**cfg["agent_config"], **agent_overrides}
 
             n_seeds = cfg["training"]["n_seeds"]
+            nrows, ncols = cfg["env"]["shape"]
+            n_eval = cfg["training"]["n_eval_episodes"]
+            all_path_results = []
+
             for seed in range(1, n_seeds + 1):
                 suffix = f"_seed{seed}" if n_seeds > 1 else ""
                 output_dir = Path(f"outputs/{agent_name}_{config_name}{suffix}")
@@ -135,7 +139,16 @@ if __name__ == "__main__":
                         entropy_coef_final=cfg["training"]["entropy_coef_final"],
                     )
                     save_training_curves(history, str(output_dir), agent_name)
+                    np.savez(
+                        output_dir / "history.npz",
+                        episode_rewards=np.array(history["episode_rewards"]),
+                        batch_losses=np.array(history["batch_losses"]),
+                    )
 
                 evaluate(env, agent, output_dir, config_name=config_name)
+                path_result = evaluate_paths(env, agent, n_eval, config_name=config_name)
+                all_path_results.append(path_result)
                 agent.close()
                 env.close()
+
+            summarize_paths(all_path_results, nrows, agent_name, config_name)
