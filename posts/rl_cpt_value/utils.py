@@ -131,6 +131,97 @@ class CPTWeightingFunction:
         return p**d / (p**d + (1 - p)**d) ** (1 / d)
 
 
+class PerPathSlidingWindowCPT:
+    """CPT decision weights computed per-path instead of per-batch.
+
+    Uses pre-computed per-row cliff probabilities from env config to determine
+    the correct decision weight for each episode based on its path's success rate.
+
+    This fixes the batch-level weighting issue where risky success gets
+    overweighted (rare extreme in batch) instead of underweighted (likely
+    outcome on its path).
+    """
+
+    def __init__(
+        self,
+        weighting_func: CPTWeightingFunction,
+        env_config: dict,
+        gamma: float,
+        max_batches: int = 5,
+        decay: float = 0.8,
+        reference_point: float = 0.0,
+    ):
+        self.weighting_func = weighting_func
+        self.max_batches = max_batches
+        self.decay = decay
+        self.reference_point = reference_point
+        self.buffer = []
+
+        from path_likelihood import cliff_fall_probability
+
+        # Pre-compute per-row success rates and canonical returns
+        env = env_config['env']
+        nrows, ncols = env['shape']
+        wind_prob = env.get('wind_prob', 0.0)
+        goal_reward = env['reward_goal']
+
+        self.path_info = {}  # {row: (canonical_return, p_success)}
+        for row in range(nrows - 1):
+            steps = 2 * (nrows - 1 - row) + (ncols - 1)
+            p_cliff = cliff_fall_probability(row, nrows, ncols, wind_prob)
+            canonical_return = (gamma ** (steps - 1)) * goal_reward
+            self.path_info[row] = (canonical_return, 1.0 - p_cliff)
+
+        # Cliff threshold: returns below this are cliff outcomes
+        min_success_return = min(r for r, _ in self.path_info.values())
+        self.cliff_threshold = min_success_return * 0.5
+
+    def add_batch(self, episode_returns: list[float]):
+        """Add a batch of episode returns (kept for interface compatibility)."""
+        self.buffer = [(r, w * self.decay) for r, w in self.buffer]
+        self.buffer.append((np.array(episode_returns), 1.0))
+        if len(self.buffer) > self.max_batches:
+            self.buffer = self.buffer[-self.max_batches:]
+
+    def _identify_row(self, episode_return: float) -> int | None:
+        """Identify which row an episode traversed from its return value."""
+        if episode_return < self.cliff_threshold:
+            return None  # Cliff episode
+
+        best_row = None
+        best_ratio = float('inf')
+        for row, (canonical, _) in self.path_info.items():
+            if canonical > 0:
+                ratio = abs(np.log(episode_return / canonical))
+                if ratio < best_ratio:
+                    best_ratio = ratio
+                    best_row = row
+        return best_row
+
+    def compute_decision_weights(self, episode_returns: list[float]) -> np.ndarray:
+        """Compute CPT decision weights using per-path success rates."""
+        n = len(episode_returns)
+        returns = np.array(episode_returns)
+        weights = np.zeros(n)
+
+        for i in range(n):
+            row = self._identify_row(returns[i])
+
+            if row is not None:
+                _, p_success = self.path_info[row]
+                weights[i] = self.weighting_func.w_plus(p_success)
+            else:
+                riskiest_row = max(self.path_info.keys())
+                _, p_success = self.path_info[riskiest_row]
+                weights[i] = 1.0 - self.weighting_func.w_plus(p_success)
+
+        weight_sum = weights.sum()
+        if weight_sum > 0:
+            weights = weights * (n / weight_sum)
+
+        return weights
+
+
 class SlidingWindowCPT:
     """Sliding window for estimating return distribution and computing CPT decision weights.
 

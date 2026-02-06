@@ -122,6 +122,8 @@ if __name__ == "__main__":
                 set_seed(seed)
                 env = make_env(config_name, seed=seed)
 
+                if agent_name == "cpt-reinforce":
+                    agent_cfg["env_config"] = cfg
                 agent = get_agent(agent_name, env, **agent_cfg)
 
                 if agent.trainable:

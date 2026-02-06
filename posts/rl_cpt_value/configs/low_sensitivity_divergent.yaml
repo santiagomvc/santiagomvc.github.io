@@ -2,14 +2,14 @@
 env:
   shape: [5, 8]
   stochasticity: windy
-  reward_cliff: 200
+  reward_cliff: 1
   reward_step: 0
-  reward_goal: 3863
-  wind_prob: 0.08
+  reward_goal: 500000
+  wind_prob: 0.05
 
 # --- training ---
 training:
-  timesteps: 1000000
+  timesteps: 2000000
   n_eval_episodes: 4
   batch_size: 1024
   entropy_coef: 1.0
@@ -19,7 +19,7 @@ training:
 # --- agent defaults ---
 agent_config:
   lr: 0.001
-  gamma: 0.800
+  gamma: 0.830
   baseline_type: ema
   # Original CPT parameters (Tversky & Kahneman 1992)
   alpha: 0.88
