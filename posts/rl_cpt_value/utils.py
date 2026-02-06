@@ -130,6 +130,22 @@ class CPTWeightingFunction:
         d = self.gamma_minus
         return p**d / (p**d + (1 - p)**d) ** (1 / d)
 
+    def w_prime_plus(self, p: float, eps: float = 1e-7) -> float:
+        """Numerical derivative of w_plus at p."""
+        if p <= eps:
+            return self.w_plus(eps) / eps
+        if p >= 1 - eps:
+            return (1.0 - self.w_plus(1 - eps)) / eps
+        return (self.w_plus(p + eps) - self.w_plus(p - eps)) / (2 * eps)
+
+    def w_prime_minus(self, p: float, eps: float = 1e-7) -> float:
+        """Numerical derivative of w_minus at p."""
+        if p <= eps:
+            return self.w_minus(eps) / eps
+        if p >= 1 - eps:
+            return (1.0 - self.w_minus(1 - eps)) / eps
+        return (self.w_minus(p + eps) - self.w_minus(p - eps)) / (2 * eps)
+
 
 class SlidingWindowCPT:
     """Sliding window for estimating return distribution and computing CPT decision weights.

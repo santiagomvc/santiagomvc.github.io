@@ -35,3 +35,4 @@ agent_config:
 agents:
   - reinforce
   - cpt-reinforce
+  - cpt-pg

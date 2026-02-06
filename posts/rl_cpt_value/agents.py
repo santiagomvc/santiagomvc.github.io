@@ -375,6 +375,175 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         }
 
 
+class CPTPGAgent(REINFORCEAgent):
+    """CPT-PG agent from Lepel & Barakat (2024), arXiv:2410.02605.
+
+    Applies φ̂(R(τ)) to the total episode return using quantile estimation
+    across the batch. All timesteps in an episode share the same scalar weight φ̂.
+
+    Policy gradient: ∇J(θ) = E[φ(R(τ)) · Σ_t ∇θ log π(aₜ|hₜ)]
+    """
+
+    trainable = True
+
+    def __init__(
+        self,
+        env,
+        alpha: float = 0.88,
+        beta: float = 0.88,
+        lambda_: float = 2.25,
+        reference_point: float = 0.0,
+        w_plus_gamma: float = 0.61,
+        w_minus_gamma: float = 0.69,
+        lr: float = 1e-3,
+        gamma: float = 0.99,
+        **kwargs,
+    ):
+        super().__init__(env, lr=lr, gamma=gamma, baseline_type="zero")
+        self.cpt_value = CPTValueFunction(alpha, beta, lambda_, reference_point)
+        self.weighting_func = CPTWeightingFunction(w_plus_gamma, w_minus_gamma)
+
+    @staticmethod
+    def _integrate_survival(target, sorted_values, n, w_prime_func):
+        """Compute ∫₀^target w'(Ŝ(z)) dz using empirical survival function.
+
+        Steps through sorted order statistics. For each interval
+        [sorted[k-1], sorted[k]), survival = (n-k)/n. Rectangle contribution
+        = (min(target, sorted[k]) - prev) * w'(survival).
+        """
+        if target <= 0 or n == 0:
+            return 0.0
+
+        integral = 0.0
+        prev = 0.0
+
+        for k in range(n):
+            z_k = sorted_values[k]
+            if z_k <= 0:
+                continue
+            if prev >= target:
+                break
+            # Survival probability at this level: fraction of values > prev
+            survival = (n - k) / n
+            upper = min(target, z_k)
+            if upper > prev:
+                integral += (upper - prev) * w_prime_func(survival)
+            prev = z_k
+
+        # Handle remaining interval if target > max(sorted_values)
+        if prev < target:
+            integral += (target - prev) * w_prime_func(0.0)
+
+        return integral
+
+    def _compute_phi(self, returns_list):
+        """Compute φ̂(R(τ)) for each trajectory in the batch.
+
+        φ(v) = ∫₀^{u⁺(v)} w'₊(Ŝ₊(z))dz - ∫₀^{u⁻(v)} w'₋(Ŝ₋(z))dz
+        """
+        n = len(returns_list)
+        # Compute u(R_i) for each trajectory
+        u_values = np.array([self.cpt_value(r) for r in returns_list])
+
+        # Separate into gains and losses
+        u_plus = np.maximum(u_values, 0.0)
+        u_minus = np.maximum(-u_values, 0.0)
+
+        # Sort for empirical survival function
+        sorted_gains = np.sort(u_plus[u_plus > 0])
+        sorted_losses = np.sort(u_minus[u_minus > 0])
+        n_gains = len(sorted_gains)
+        n_losses = len(sorted_losses)
+
+        phi_values = np.zeros(n)
+        for i in range(n):
+            gain_integral = self._integrate_survival(
+                u_plus[i], sorted_gains, n_gains, self.weighting_func.w_prime_plus
+            )
+            loss_integral = self._integrate_survival(
+                u_minus[i], sorted_losses, n_losses, self.weighting_func.w_prime_minus
+            )
+            phi_values[i] = gain_integral - loss_integral
+
+        return phi_values
+
+    def learn(self, env, timesteps: int = 300000, batch_size: int = 8, entropy_coef: float = 0.5, entropy_coef_final: float = 0.01, max_grad_norm: float = 1.0):
+        """Train using CPT-PG (Algorithm 1, Lepel & Barakat 2024).
+
+        Collects batch of trajectories, computes φ̂(R(τ)) for each,
+        then uses φ̂ as a scalar weight for the full episode's policy gradient.
+        """
+        total_steps = 0
+        episode = 0
+        recent_rewards = []
+
+        episode_rewards_history = []
+        batch_losses_history = []
+
+        while total_steps < timesteps:
+            batch_data = []  # (log_probs, entropies, total_return)
+
+            for _ in range(batch_size):
+                state, _ = env.reset()
+                self.log_probs = []
+                self.entropies = []
+                self.rewards = []
+                done = False
+
+                while not done:
+                    action = self.act(state)
+                    state, reward, terminated, truncated, _ = env.step(action)
+                    self.rewards.append(reward)
+                    done = terminated or truncated
+                    total_steps += 1
+
+                # Compute total discounted return
+                returns = self._compute_returns(self.rewards)
+                total_return = returns[0]
+
+                batch_data.append((list(self.log_probs), list(self.entropies), total_return))
+
+                ep_reward = sum(self.rewards)
+                recent_rewards.append(ep_reward)
+                episode_rewards_history.append(ep_reward)
+                episode += 1
+                if episode % 100 == 0:
+                    avg = sum(recent_rewards[-100:]) / min(100, len(recent_rewards))
+                    print(f"Ep {episode} | Steps {total_steps} | Reward {ep_reward:.1f} | Avg100 {avg:.1f}")
+
+            # Compute φ̂ for the batch
+            total_returns = [d[2] for d in batch_data]
+            phi_values = self._compute_phi(total_returns)
+
+            # Compute batch loss
+            batch_losses = []
+            for ep_idx, (log_probs, entropies, _) in enumerate(batch_data):
+                phi_i = phi_values[ep_idx]
+                policy_loss = torch.tensor(0.0)
+                entropy_loss = torch.tensor(0.0)
+                for log_prob, entropy in zip(log_probs, entropies):
+                    policy_loss = policy_loss - phi_i * log_prob
+                    entropy_loss = entropy_loss + entropy
+
+                progress = total_steps / timesteps
+                current_entropy_coef = entropy_coef + (entropy_coef_final - entropy_coef) * progress
+                loss = policy_loss - current_entropy_coef * entropy_loss
+                batch_losses.append(loss)
+
+            avg_loss = sum(batch_losses) / batch_size
+            batch_losses_history.append(avg_loss.item())
+            self.optimizer.zero_grad()
+            avg_loss.backward()
+            if max_grad_norm is not None:
+                torch.nn.utils.clip_grad_norm_(self.policy.parameters(), max_norm=max_grad_norm)
+            self.optimizer.step()
+
+        return {
+            'episode_rewards': episode_rewards_history,
+            'batch_losses': batch_losses_history,
+        }
+
+
 class LLMAgent(BaseAgent):
     """LLM-based agent using OpenAI for action selection.
 
@@ -430,6 +599,7 @@ AGENTS = {
     "random": RandomAgent,
     "reinforce": REINFORCEAgent,
     "cpt-reinforce": CPTREINFORCEAgent,
+    "cpt-pg": CPTPGAgent,
     "llm": LLMAgent,
 }
 
@@ -453,5 +623,5 @@ def get_agent(name, env, **kwargs):
 
     if name == "random":
         return AGENTS[name](n_actions=env.action_space.n)
-    elif name in ("llm", "reinforce", "cpt-reinforce"):
+    elif name in ("llm", "reinforce", "cpt-reinforce", "cpt-pg"):
         return AGENTS[name](env, **kwargs)
