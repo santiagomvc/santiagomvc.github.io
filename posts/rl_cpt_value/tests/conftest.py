@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from custom_cliff_walking import ResizableCliffWalkingEnv, CliffWalkingWrapper
 from utils import CPTValueFunction
-from agents import REINFORCEAgent, CPTREINFORCEAgent
+from agents import REINFORCEAgent, PerStepCPTAgent, CPTPGAgent, CPTPGRUDDERAgent
 
 
 @pytest.fixture
@@ -115,6 +115,18 @@ def reinforce_agent(small_env, torch_seed):
 
 
 @pytest.fixture
-def cpt_reinforce_agent(small_env, torch_seed):
-    """CPTREINFORCEAgent with default TK1992 parameters."""
-    return CPTREINFORCEAgent(small_env, alpha=0.88, beta=0.88, lambda_=2.25)
+def cpt_pg_agent(small_env, torch_seed):
+    """CPTPGAgent with default TK1992 parameters."""
+    return CPTPGAgent(small_env, alpha=0.88, beta=0.88, lambda_=2.25)
+
+
+@pytest.fixture
+def per_step_cpt_agent(small_env, torch_seed):
+    """PerStepCPTAgent with default TK1992 parameters."""
+    return PerStepCPTAgent(small_env, alpha=0.88, beta=0.88, lambda_=2.25)
+
+
+@pytest.fixture
+def cpt_pg_rudder_agent(small_env, torch_seed):
+    """CPTPGRUDDERAgent with default TK1992 parameters."""
+    return CPTPGRUDDERAgent(small_env, alpha=0.88, beta=0.88, lambda_=2.25)

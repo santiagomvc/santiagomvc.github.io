@@ -1,6 +1,7 @@
 """Agent classes for CliffWalking RL experiments."""
 
 import json
+import math
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -16,8 +17,7 @@ from utils import (
     get_cliffwalking_prompt,
     CPTValueFunction,
     CPTWeightingFunction,
-    PerPathSlidingWindowCPT,
-    SlidingWindowCPT,
+    PerStepSlidingWindowCPT,
     format_cliffwalking_state,
 )
 
@@ -220,27 +220,23 @@ class REINFORCEAgent(BaseAgent):
         }
 
 
-class CPTREINFORCEAgent(REINFORCEAgent):
-    """REINFORCE agent with CPT value function and probability weighting.
+class PerStepCPTAgent(REINFORCEAgent):
+    """REINFORCE agent with mathematically sound per-step CPT.
 
-    Applies Cumulative Prospect Theory (Kahneman & Tversky, 1992) at two levels:
-    1. Per-step: CPT value function v(G_t) for within-episode credit assignment
-    2. Per-episode: CPT decision weights π_i for across-episode probability distortion
+    Applies CPT probability weighting at each timestep on the distribution of
+    G_t across episodes, with a separated baseline that reduces variance without
+    biasing the objective.
 
-    The decision weights are computed from the empirical return distribution
-    using a sliding window, and applied as stop-gradient scalars.
+    1. Separated baseline: v(G_t) - v(b_t) instead of v(G_t - b_t)
+       Subtracting v(b_t) after v() preserves the unbiased gradient.
+    2. Per-step decision weights π_{i,t} from PerStepSlidingWindowCPT
+       Treats {G_t^(1), ..., G_t^(N)} as a prospect at each t.
+    3. Per-timestep baselines b_t (one EMA baseline per timestep position)
 
-    CPT Parameters:
-        alpha: Diminishing sensitivity for gains (default: 0.88)
-        beta: Diminishing sensitivity for losses (default: 0.88)
-        lambda_: Loss aversion coefficient (default: 2.25)
-        reference_point: Gain/loss boundary (default: 0.0)
-        use_probability_weighting: Enable CPT probability weighting (default: True)
-        w_plus_gamma: Weighting function parameter for gains (default: 0.61)
-        w_minus_gamma: Weighting function parameter for losses (default: 0.69)
-        sliding_window_size: Number of batches in sliding window (default: 5)
-        sliding_window_decay: Exponential decay for old batches (default: 0.8)
+    Policy loss: L_i = -Σ_t π_{i,t} · [v(G_t) - v(b_t)] · log π(a_t|s_t) - c(k)·H
     """
+
+    trainable = True
 
     def __init__(
         self,
@@ -249,52 +245,34 @@ class CPTREINFORCEAgent(REINFORCEAgent):
         beta: float = 0.88,
         lambda_: float = 2.25,
         reference_point: float = 0.0,
-        use_probability_weighting: bool = True,
         w_plus_gamma: float = 0.61,
         w_minus_gamma: float = 0.69,
         sliding_window_size: int = 5,
         sliding_window_decay: float = 0.8,
         lr: float = 1e-3,
         gamma: float = 0.99,
-        baseline_type: str = "ema",
-        env_config: dict = None,
+        baseline_decay: float = 0.99,
+        max_is_ratio: float = 5.0,
         **kwargs,
     ):
-        super().__init__(env, lr=lr, gamma=gamma, baseline_type=baseline_type)
+        super().__init__(env, lr=lr, gamma=gamma, baseline_decay=baseline_decay)
         self.cpt_value = CPTValueFunction(alpha, beta, lambda_, reference_point)
-        self.use_probability_weighting = use_probability_weighting
-        if use_probability_weighting:
-            weighting_func = CPTWeightingFunction(w_plus_gamma, w_minus_gamma)
-            if env_config is not None:
-                self.sliding_window = PerPathSlidingWindowCPT(
-                    weighting_func, env_config, gamma,
-                    max_batches=sliding_window_size,
-                    decay=sliding_window_decay,
-                    reference_point=reference_point,
-                )
-            else:
-                self.sliding_window = SlidingWindowCPT(
-                    weighting_func,
-                    max_batches=sliding_window_size,
-                    decay=sliding_window_decay,
-                    reference_point=reference_point,
-                )
-
-    def _transform_returns(self, returns: list[float]) -> torch.Tensor:
-        """Apply CPT value function to each per-step return.
-
-        This preserves temporal credit assignment while applying risk-sensitive
-        transformation to return-to-go values. Earlier timesteps have larger G_t
-        (more future reward to come), so they receive proportionally more credit.
-        """
-        return torch.tensor([self.cpt_value(G - self.baseline) for G in returns])
+        self.max_is_ratio = max_is_ratio
+        self.baselines = {}  # per-timestep EMA baselines: {t: float}
+        weighting_func = CPTWeightingFunction(w_plus_gamma, w_minus_gamma)
+        self.sliding_window = PerStepSlidingWindowCPT(
+            weighting_func,
+            max_batches=sliding_window_size,
+            decay=sliding_window_decay,
+            reference_point=reference_point,
+        )
 
     def learn(self, env, timesteps: int = 300000, batch_size: int = 8, entropy_coef: float = 0.5, entropy_coef_final: float = 0.01, max_grad_norm: float = 1.0):
-        """Train using REINFORCE with CPT value function and probability weighting.
+        """Train using REINFORCE with per-step CPT probability weighting.
 
-        Extends base REINFORCE with episode-level CPT decision weights that
-        scale each episode's contribution to the policy gradient based on
-        where its return falls in the empirical distribution.
+        Collects batches of episodes, computes per-step decision weights π_{i,t}
+        from the distribution of G_t at each timestep, then uses separated
+        baseline v(G_t) - v(b_t) for the advantage.
         """
         total_steps = 0
         episode = 0
@@ -305,39 +283,31 @@ class CPTREINFORCEAgent(REINFORCEAgent):
 
         while total_steps < timesteps:
             # Collect batch of episodes
-            batch_data = []  # (log_probs, entropies, returns, episode_return)
+            batch_data = []  # (log_probs, entropies, per_step_returns, metadata)
 
             for _ in range(batch_size):
                 state, _ = env.reset()
                 self.log_probs = []
                 self.entropies = []
                 self.rewards = []
+                states = []
+                actions = []
                 done = False
 
                 while not done:
+                    states.append(state)
                     action = self.act(state)
+                    actions.append(action)
                     state, reward, terminated, truncated, _ = env.step(action)
                     self.rewards.append(reward)
                     done = terminated or truncated
                     total_steps += 1
 
+                # Compute per-step Monte Carlo returns [G_0, G_1, ..., G_T]
                 returns = self._compute_returns(self.rewards)
-                episode_return = returns[0]
+                old_log_prob = sum(lp.detach().item() for lp in self.log_probs)
 
-                # Update baseline
-                if self.baseline_type == "ema":
-                    self.baseline = self.baseline_decay * self.baseline + (1 - self.baseline_decay) * episode_return
-                elif self.baseline_type == "min":
-                    self.worst_return = min(self.worst_return, episode_return)
-                    self.baseline = self.worst_return
-                elif self.baseline_type == "max":
-                    self.best_return = max(self.best_return, episode_return)
-                    self.baseline = self.best_return
-                elif self.baseline_type == "zero":
-                    pass
-
-                transformed = self._transform_returns(returns)
-                batch_data.append((list(self.log_probs), list(self.entropies), transformed, episode_return))
+                batch_data.append((list(self.log_probs), list(self.entropies), returns, (states, actions, old_log_prob)))
 
                 ep_reward = sum(self.rewards)
                 recent_rewards.append(ep_reward)
@@ -347,29 +317,66 @@ class CPTREINFORCEAgent(REINFORCEAgent):
                     avg = sum(recent_rewards[-100:]) / min(100, len(recent_rewards))
                     print(f"Ep {episode} | Steps {total_steps} | Reward {ep_reward:.1f} | Avg100 {avg:.1f}")
 
-            # Compute CPT decision weights for this batch
-            episode_returns = [d[3] for d in batch_data]
+            # Gather per-step returns for all episodes
+            all_per_step_returns = [d[2] for d in batch_data]
 
-            if self.use_probability_weighting:
-                self.sliding_window.add_batch(episode_returns)
-                decision_weights = self.sliding_window.compute_decision_weights(episode_returns)
-            else:
-                decision_weights = np.ones(batch_size)
+            # Compute per-step CPT decision weights with importance sampling
+            all_metadata = [d[3] for d in batch_data]
+            self.sliding_window.add_batch(all_per_step_returns, all_metadata)
 
-            # Compute batch loss with decision weights
+            def _is_ratio_fn(meta):
+                states, actions, old_log_prob = meta
+                with torch.no_grad():
+                    new_log_prob = sum(
+                        torch.log(self.policy(s)[a]).item()
+                        for s, a in zip(states, actions)
+                    )
+                log_ratio = min(new_log_prob - old_log_prob, math.log(self.max_is_ratio))
+                return math.exp(log_ratio)
+
+            per_step_weights = self.sliding_window.compute_decision_weights(
+                all_per_step_returns, _is_ratio_fn
+            )
+
+            # Compute batch loss with per-step weights and separated baseline
             batch_losses = []
-            for ep_idx, (log_probs, entropies, transformed, _) in enumerate(batch_data):
-                w_i = decision_weights[ep_idx]  # stop-gradient scalar
+            # Accumulate G_t values per timestep for baseline updates
+            timestep_returns = {}  # {t: [G_t values across episodes]}
+
+            for ep_idx, (log_probs, entropies, returns, _meta) in enumerate(batch_data):
+                ep_weights = per_step_weights[ep_idx]
+
                 policy_loss = torch.tensor(0.0)
                 entropy_loss = torch.tensor(0.0)
-                for log_prob, entropy, G in zip(log_probs, entropies, transformed):
-                    policy_loss = policy_loss - log_prob * G * w_i
+
+                for t, (log_prob, entropy, G_t) in enumerate(zip(log_probs, entropies, returns)):
+                    # Per-timestep baseline
+                    b_t = self.baselines.get(t, 0.0)
+
+                    # Separated baseline: v(G_t) - v(b_t)
+                    advantage = self.cpt_value(G_t) - self.cpt_value(b_t)
+
+                    # Per-step decision weight
+                    w_it = ep_weights[t] if t < len(ep_weights) else 1.0
+
+                    policy_loss = policy_loss - log_prob * w_it * advantage
                     entropy_loss = entropy_loss + entropy
+
+                    # Track returns for baseline update
+                    if t not in timestep_returns:
+                        timestep_returns[t] = []
+                    timestep_returns[t].append(G_t)
 
                 progress = total_steps / timesteps
                 current_entropy_coef = entropy_coef + (entropy_coef_final - entropy_coef) * progress
                 loss = policy_loss - current_entropy_coef * entropy_loss
                 batch_losses.append(loss)
+
+            # Update per-timestep baselines
+            for t, g_values in timestep_returns.items():
+                mean_g = sum(g_values) / len(g_values)
+                old_b = self.baselines.get(t, 0.0)
+                self.baselines[t] = self.baseline_decay * old_b + (1 - self.baseline_decay) * mean_g
 
             avg_loss = sum(batch_losses) / batch_size
             batch_losses_history.append(avg_loss.item())
@@ -418,23 +425,25 @@ class CPTPGAgent(REINFORCEAgent):
         """Compute ∫₀^target w'(Ŝ(z)) dz using empirical survival function.
 
         Steps through sorted order statistics. For each interval
-        [sorted[k-1], sorted[k]), survival = (n-k)/n. Rectangle contribution
-        = (min(target, sorted[k]) - prev) * w'(survival).
+        [sorted[k-1], sorted[k]), the unconditional survival probability is
+        (m-k)/n where m = len(sorted_values), n = total batch size.
+        Rectangle contribution = (min(target, sorted[k]) - prev) * w'(survival).
         """
         if target <= 0 or n == 0:
             return 0.0
 
+        m = len(sorted_values)
         integral = 0.0
         prev = 0.0
 
-        for k in range(n):
+        for k in range(m):
             z_k = sorted_values[k]
             if z_k <= 0:
                 continue
             if prev >= target:
                 break
-            # Survival probability at this level: fraction of values > prev
-            survival = (n - k) / n
+            # Unconditional survival: fraction of ALL n samples with value >= z_k
+            survival = (m - k) / n
             upper = min(target, z_k)
             if upper > prev:
                 integral += (upper - prev) * w_prime_func(survival)
@@ -468,12 +477,16 @@ class CPTPGAgent(REINFORCEAgent):
         phi_values = np.zeros(n)
         for i in range(n):
             gain_integral = self._integrate_survival(
-                u_plus[i], sorted_gains, n_gains, self.weighting_func.w_prime_plus
+                u_plus[i], sorted_gains, n, self.weighting_func.w_prime_plus
             )
             loss_integral = self._integrate_survival(
-                u_minus[i], sorted_losses, n_losses, self.weighting_func.w_prime_minus
+                u_minus[i], sorted_losses, n, self.weighting_func.w_prime_minus
             )
             phi_values[i] = gain_integral - loss_integral
+
+        # Center φ̂ to remove shared constant offset from w'(1.0) singularity.
+        # Equivalent to baseline subtraction in policy gradient theorem (no bias).
+        phi_values = phi_values - phi_values.mean()
 
         return phi_values
 
@@ -554,6 +567,152 @@ class CPTPGAgent(REINFORCEAgent):
         }
 
 
+class ReturnPredictor(nn.Module):
+    """Per-step return predictor for RUDDER-style φ̂ decomposition.
+
+    Takes (state_onehot, action_onehot) → scalar contribution to φ̂.
+    Trained so that Σ_t predictor(s_t, a_t) ≈ φ̂(trajectory).
+    """
+
+    def __init__(self, n_states: int, n_actions: int, hidden: int = 32):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_states + n_actions, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, 1),
+        )
+
+    def forward(self, state_onehot: torch.Tensor, action_onehot: torch.Tensor) -> torch.Tensor:
+        x = torch.cat([state_onehot, action_onehot], dim=-1)
+        return self.net(x).squeeze(-1)
+
+
+class CPTPGRUDDERAgent(CPTPGAgent):
+    """CPT-PG with RUDDER-style learned per-step decomposition.
+
+    Trains a per-step MLP (ReturnPredictor) to decompose the episode-level φ̂
+    into per-step contributions φ̃_t, with residual correction to enforce
+    return equivalence (Σ_t φ̃_t = φ̂).
+
+    The RUDDER model learns which (state, action) pairs contribute most to φ̂,
+    enabling focused credit assignment on causally relevant actions.
+
+    Based on Arjona-Medina et al. (2019), adapted for CPT-PG's Choquet integral.
+    """
+
+    def __init__(self, env, rudder_lr: float = 1e-3, rudder_hidden: int = 32, **kwargs):
+        super().__init__(env, **kwargs)
+        self.rudder = ReturnPredictor(self.n_states, self.n_actions, rudder_hidden)
+        self.rudder_optimizer = optim.Adam(self.rudder.parameters(), lr=rudder_lr)
+
+    def learn(self, env, timesteps: int = 300000, batch_size: int = 8, entropy_coef: float = 0.5, entropy_coef_final: float = 0.01, max_grad_norm: float = 1.0):
+        total_steps = 0
+        episode = 0
+        recent_rewards = []
+
+        episode_rewards_history = []
+        batch_losses_history = []
+
+        while total_steps < timesteps:
+            batch_data = []  # (log_probs, entropies, total_return, states, actions)
+
+            for _ in range(batch_size):
+                state, _ = env.reset()
+                self.log_probs = []
+                self.entropies = []
+                self.rewards = []
+                states = []
+                actions = []
+                done = False
+
+                while not done:
+                    states.append(state)
+                    action = self.act(state)
+                    actions.append(action)
+                    state, reward, terminated, truncated, _ = env.step(action)
+                    self.rewards.append(reward)
+                    done = terminated or truncated
+                    total_steps += 1
+
+                returns = self._compute_returns(self.rewards)
+                total_return = returns[0]
+
+                batch_data.append((list(self.log_probs), list(self.entropies), total_return, states, actions))
+
+                ep_reward = sum(self.rewards)
+                recent_rewards.append(ep_reward)
+                episode_rewards_history.append(ep_reward)
+                episode += 1
+                if episode % 100 == 0:
+                    avg = sum(recent_rewards[-100:]) / min(100, len(recent_rewards))
+                    print(f"Ep {episode} | Steps {total_steps} | Reward {ep_reward:.1f} | Avg100 {avg:.1f}")
+
+            # Compute centered φ̂ for the batch
+            total_returns = [d[2] for d in batch_data]
+            phi_values = self._compute_phi(total_returns)
+
+            # Train RUDDER model: predict per-step contributions summing to φ̂
+            rudder_loss = torch.tensor(0.0)
+            for ep_idx, (_, _, _, states, actions) in enumerate(batch_data):
+                phi_target = phi_values[ep_idx]
+                pred_sum = torch.tensor(0.0)
+                for s, a in zip(states, actions):
+                    s_onehot = torch.zeros(self.n_states)
+                    s_onehot[s] = 1.0
+                    a_onehot = torch.zeros(self.n_actions)
+                    a_onehot[a] = 1.0
+                    pred_sum = pred_sum + self.rudder(s_onehot, a_onehot)
+                rudder_loss = rudder_loss + (pred_sum - phi_target) ** 2
+
+            rudder_loss = rudder_loss / batch_size
+            self.rudder_optimizer.zero_grad()
+            rudder_loss.backward()
+            self.rudder_optimizer.step()
+
+            # Decompose φ̂ to per-step using trained RUDDER model
+            batch_losses = []
+            for ep_idx, (log_probs, entropies, _, states, actions) in enumerate(batch_data):
+                phi_i = phi_values[ep_idx]
+
+                # Get per-step predictions (detached — no gradient through RUDDER for policy)
+                phi_tilde = []
+                for s, a in zip(states, actions):
+                    s_onehot = torch.zeros(self.n_states)
+                    s_onehot[s] = 1.0
+                    a_onehot = torch.zeros(self.n_actions)
+                    a_onehot[a] = 1.0
+                    phi_tilde.append(self.rudder(s_onehot, a_onehot).detach().item())
+
+                # Enforce return equivalence: distribute residual uniformly
+                residual = phi_i - sum(phi_tilde)
+                T = len(phi_tilde)
+                phi_tilde = [p + residual / T for p in phi_tilde]
+
+                policy_loss = torch.tensor(0.0)
+                entropy_loss = torch.tensor(0.0)
+                for log_prob, entropy, phi_t in zip(log_probs, entropies, phi_tilde):
+                    policy_loss = policy_loss - phi_t * log_prob
+                    entropy_loss = entropy_loss + entropy
+
+                progress = total_steps / timesteps
+                current_entropy_coef = entropy_coef + (entropy_coef_final - entropy_coef) * progress
+                loss = policy_loss - current_entropy_coef * entropy_loss
+                batch_losses.append(loss)
+
+            avg_loss = sum(batch_losses) / batch_size
+            batch_losses_history.append(avg_loss.item())
+            self.optimizer.zero_grad()
+            avg_loss.backward()
+            if max_grad_norm is not None:
+                torch.nn.utils.clip_grad_norm_(self.policy.parameters(), max_norm=max_grad_norm)
+            self.optimizer.step()
+
+        return {
+            'episode_rewards': episode_rewards_history,
+            'batch_losses': batch_losses_history,
+        }
+
+
 class LLMAgent(BaseAgent):
     """LLM-based agent using OpenAI for action selection.
 
@@ -608,8 +767,9 @@ class LLMAgent(BaseAgent):
 AGENTS = {
     "random": RandomAgent,
     "reinforce": REINFORCEAgent,
-    "cpt-reinforce": CPTREINFORCEAgent,
+    "per-step-cpt": PerStepCPTAgent,
     "cpt-pg": CPTPGAgent,
+    "cpt-pg-rudder": CPTPGRUDDERAgent,
     "llm": LLMAgent,
 }
 
@@ -618,12 +778,9 @@ def get_agent(name, env, **kwargs):
     """Factory function to create agent by name.
 
     Args:
-        name: Agent type ("random", "reinforce", "cpt-reinforce", "llm")
+        name: Agent type ("random", "reinforce", "per-step-cpt", "llm")
         env: Gymnasium environment
         **kwargs: Additional arguments passed to agent constructor
-            For reinforce: lr, gamma
-            For cpt-reinforce: alpha, beta, lambda_, reference_point, lr, gamma
-            For llm: model, verbose
 
     Returns:
         Initialized agent instance
@@ -633,5 +790,5 @@ def get_agent(name, env, **kwargs):
 
     if name == "random":
         return AGENTS[name](n_actions=env.action_space.n)
-    elif name in ("llm", "reinforce", "cpt-reinforce", "cpt-pg"):
+    elif name in ("llm", "reinforce", "per-step-cpt", "cpt-pg", "cpt-pg-rudder"):
         return AGENTS[name](env, **kwargs)

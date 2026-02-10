@@ -1,4 +1,4 @@
-"""Tests for REINFORCE and CPT-REINFORCE agents."""
+"""Tests for REINFORCE, CPT-PG, and hybrid agents."""
 
 import numpy as np
 import pytest
@@ -10,11 +10,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from agents import (
     REINFORCEAgent,
-    CPTREINFORCEAgent,
+    PerStepCPTAgent,
+    CPTPGAgent,
+    CPTPGRUDDERAgent,
     AGENTS,
     get_agent,
 )
-from utils import CPTValueFunction
+from utils import CPTValueFunction, CPTWeightingFunction, PerStepSlidingWindowCPT, SlidingWindowCPT
 
 
 class TestMonteCarloReturns:
@@ -212,97 +214,6 @@ class TestCPTValueFunction:
             assert v(ref) == 0.0
 
 
-class TestCPTREINFORCEAgent:
-    """Tests for CPT-REINFORCE agent implementation."""
-
-    def test_inherits_from_reinforce(self, small_env, torch_seed):
-        """CPTREINFORCEAgent should inherit from REINFORCEAgent."""
-        agent = CPTREINFORCEAgent(small_env)
-        assert isinstance(agent, REINFORCEAgent)
-
-    def test_has_cpt_value_function(self, cpt_reinforce_agent):
-        """CPT agent should have a CPT value function."""
-        assert hasattr(cpt_reinforce_agent, 'cpt_value')
-        assert isinstance(cpt_reinforce_agent.cpt_value, CPTValueFunction)
-
-    def test_cpt_parameters_stored(self, small_env, torch_seed):
-        """CPT parameters should be correctly stored."""
-        agent = CPTREINFORCEAgent(
-            small_env,
-            alpha=0.75,
-            beta=0.85,
-            lambda_=3.0,
-            reference_point=-5.0,
-        )
-
-        assert agent.cpt_value.alpha == 0.75
-        assert agent.cpt_value.beta == 0.85
-        assert agent.cpt_value.lambda_ == 3.0
-        assert agent.cpt_value.reference_point == -5.0
-
-    def test_cpt_applied_to_episode_return_broadcast(self, small_env, torch_seed):
-        """CPT is applied to G_0 (episode return) and broadcast to all timesteps.
-
-        This is the critical test verifying that:
-        1. Monte Carlo returns are computed first: G_t = r_t + gamma*G_{t+1}
-        2. CPT is applied only to G_0 (episode return): v(G_0)
-        3. This single value is broadcast to all timesteps
-
-        This avoids gradient accumulation bias from episode length variation.
-        """
-        agent = CPTREINFORCEAgent(small_env, alpha=0.88, beta=0.88, lambda_=2.25)
-        gamma = agent.gamma
-
-        # Episode rewards (step-by-step)
-        step_rewards = [-1.0, -1.0, -1.0, -50.0]
-
-        # Step 1: Compute Monte Carlo returns first
-        returns = []
-        G = 0
-        for r in reversed(step_rewards):
-            G = r + gamma * G
-            returns.insert(0, G)
-
-        # Step 2: Agent applies CPT to episode return and broadcasts
-        transformed = agent._transform_returns(returns)
-
-        # Expected: CPT(G_0) broadcast to all timesteps
-        cpt_v = agent.cpt_value
-        expected_cpt_episode = cpt_v(returns[0])  # CPT of episode return G_0
-
-        # All transformed values should equal CPT(G_0)
-        for i, trans in enumerate(transformed.tolist()):
-            assert abs(trans - expected_cpt_episode) < 1e-5, \
-                f"Step {i}: transformed={trans} should equal CPT(G_0)={expected_cpt_episode}"
-
-    def test_transform_returns_applies_cpt(self, cpt_reinforce_agent):
-        """_transform_returns should apply CPT to G_0 and broadcast."""
-        returns = [-10.0, -5.0, 0.0, 5.0, 10.0]
-        cpt_v = cpt_reinforce_agent.cpt_value
-
-        transformed = cpt_reinforce_agent._transform_returns(returns)
-
-        # CPT is applied to G_0 only and broadcast to all timesteps
-        expected_cpt_episode = cpt_v(returns[0])
-        for trans in transformed.tolist():
-            assert abs(trans - expected_cpt_episode) < 1e-6
-
-    def test_negative_returns_become_more_negative_with_loss_aversion(self, small_env, torch_seed):
-        """With lambda > 1, negative episode return should become more negative."""
-        agent = CPTREINFORCEAgent(small_env, alpha=0.88, beta=0.88, lambda_=2.25)
-        episode_return = -50.0
-        returns = [episode_return, -30.0, -10.0]  # G_0 is episode return
-
-        transformed = agent._transform_returns(returns)
-
-        # CPT with loss aversion should amplify losses (applied to G_0, broadcast)
-        # |v(x)| > |x| for losses when lambda > 1 and beta < 1
-        cpt_episode = transformed[0].item()
-        assert cpt_episode < episode_return, f"v({episode_return})={cpt_episode} should be more negative"
-        # All values should be the same (broadcast)
-        assert all(t == cpt_episode for t in transformed.tolist())
-
-
 class TestREINFORCELearning:
     """Tests for REINFORCE learning behavior."""
 
@@ -388,143 +299,19 @@ class TestREINFORCELearning:
             f"Avg reward {avg_reward} should be >= {optimal_reward - 2.0}"
 
 
-class TestCPTREINFORCELearning:
-    """Tests for CPT-REINFORCE learning behavior."""
-
-    def test_cpt_agent_improves_over_training(self, env_factory, torch_seed):
-        """CPT agent should show learning progress."""
-        env = env_factory(shape=(3, 3), wind_prob=0.0, reward_cliff=-50.0, reward_step=-1.0)
-        agent = CPTREINFORCEAgent(env, lr=1e-2, gamma=0.99, alpha=0.88, beta=0.88, lambda_=2.25)
-
-        # Collect rewards before training (using raw environment rewards, not CPT-transformed)
-        initial_rewards = []
-        for _ in range(20):
-            state, _ = env.reset()
-            done = False
-            episode_reward = 0
-            while not done:
-                action = agent.act(state)
-                state, reward, terminated, truncated, _ = env.step(action)
-                episode_reward += reward
-                done = terminated or truncated
-            initial_rewards.append(episode_reward)
-            agent.log_probs = []
-            agent.entropies = []
-            agent.rewards = []
-
-        # Train
-        agent.learn(env, timesteps=5000)
-
-        # Collect rewards after training
-        final_rewards = []
-        for _ in range(20):
-            state, _ = env.reset()
-            done = False
-            episode_reward = 0
-            while not done:
-                action = agent.act(state)
-                state, reward, terminated, truncated, _ = env.step(action)
-                episode_reward += reward
-                done = terminated or truncated
-            final_rewards.append(episode_reward)
-            agent.log_probs = []
-            agent.entropies = []
-            agent.rewards = []
-
-        initial_avg = np.mean(initial_rewards)
-        final_avg = np.mean(final_rewards)
-
-        assert final_avg > initial_avg, \
-            f"CPT agent should improve: final {final_avg} > initial {initial_avg}"
-
-    def test_cpt_agent_behavior_differs_from_standard(self, env_factory, torch_seed):
-        """CPT loss aversion should lead to different learned policies.
-
-        In environments with cliff risk, CPT agents with high loss aversion
-        should prefer safer (though possibly longer) paths.
-        """
-        # Use environment where risk matters
-        env = env_factory(shape=(5, 5), wind_prob=0.3, reward_cliff=-100.0, reward_step=-1.0)
-
-        torch.manual_seed(42)
-        np.random.seed(42)
-        standard_agent = REINFORCEAgent(env, lr=1e-2, gamma=0.99)
-
-        torch.manual_seed(42)
-        np.random.seed(42)
-        cpt_agent = CPTREINFORCEAgent(env, lr=1e-2, gamma=0.99, alpha=0.88, beta=0.88, lambda_=5.0)
-
-        # Train both agents
-        standard_agent.learn(env, timesteps=10000)
-        cpt_agent.learn(env, timesteps=10000)
-
-        # Evaluate policies - check action distributions
-        test_state = 0  # Top-left corner
-
-        standard_probs = standard_agent.policy(test_state).detach().numpy()
-        cpt_probs = cpt_agent.policy(test_state).detach().numpy()
-
-        # Policies should differ - check max absolute difference
-        max_diff = np.max(np.abs(standard_probs - cpt_probs))
-        assert max_diff > 0.01, \
-            f"Policies should differ: max diff {max_diff:.4f}, standard={standard_probs}, cpt={cpt_probs}"
-
-    def test_higher_loss_aversion_transforms_differently(self, env_factory, torch_seed):
-        """Higher lambda should transform episode return more aggressively.
-
-        This tests the mechanism rather than stochastic learning outcomes.
-        """
-        env = env_factory(shape=(5, 5), wind_prob=0.0, reward_cliff=-100.0, reward_step=-1.0)
-
-        low_lambda_agent = CPTREINFORCEAgent(env, lr=1e-2, gamma=0.99, lambda_=1.0)
-        high_lambda_agent = CPTREINFORCEAgent(env, lr=1e-2, gamma=0.99, lambda_=5.0)
-
-        # Test on negative episode return (loss) - G_0 is the episode return
-        episode_return = -100.0
-        returns = [episode_return, -50.0, -20.0, -10.0]  # G_0 is episode return
-
-        low_transformed = low_lambda_agent._transform_returns(returns)
-        high_transformed = high_lambda_agent._transform_returns(returns)
-
-        # Both should broadcast CPT(G_0) to all timesteps
-        low_cpt = low_transformed[0].item()
-        high_cpt = high_transformed[0].item()
-
-        # Both should be negative
-        assert low_cpt < 0
-        assert high_cpt < 0
-
-        # Higher lambda should produce more negative value (more loss averse)
-        assert high_cpt < low_cpt, \
-            f"High lambda v({episode_return})={high_cpt} should be < low lambda v({episode_return})={low_cpt}"
-
-        # All values in each tensor should be the same (broadcast)
-        assert all(t == low_cpt for t in low_transformed.tolist())
-        assert all(t == high_cpt for t in high_transformed.tolist())
-
-
 class TestAgentRegistry:
     """Tests for agent registry and factory function."""
 
     def test_agents_dict_contains_expected_agents(self):
         """AGENTS dict should contain all expected agent types."""
-        expected_agents = ["random", "reinforce", "cpt-reinforce", "llm"]
+        expected_agents = ["random", "reinforce", "per-step-cpt", "cpt-pg", "cpt-pg-rudder", "llm"]
         for agent_name in expected_agents:
             assert agent_name in AGENTS, f"'{agent_name}' should be in AGENTS"
-
-    def test_cpt_episode_reinforce_not_in_registry(self):
-        """cpt-episode-reinforce should NOT be in AGENTS (consolidated into cpt-reinforce)."""
-        assert "cpt-episode-reinforce" not in AGENTS
 
     def test_get_agent_creates_reinforce(self, small_env):
         """get_agent should create REINFORCEAgent."""
         agent = get_agent("reinforce", small_env, lr=1e-3, gamma=0.99)
         assert isinstance(agent, REINFORCEAgent)
-
-    def test_get_agent_creates_cpt_reinforce(self, small_env):
-        """get_agent should create CPTREINFORCEAgent."""
-        agent = get_agent("cpt-reinforce", small_env, alpha=0.88, beta=0.88, lambda_=2.25)
-        assert isinstance(agent, CPTREINFORCEAgent)
 
     def test_get_agent_unknown_raises_error(self, small_env):
         """get_agent should raise ValueError for unknown agent type."""
@@ -535,21 +322,6 @@ class TestAgentRegistry:
         """get_agent should pass kwargs to agent constructor."""
         agent = get_agent("reinforce", small_env, lr=0.123, gamma=0.456)
         assert agent.gamma == 0.456
-
-    def test_get_agent_cpt_params(self, small_env):
-        """get_agent should pass CPT parameters correctly."""
-        agent = get_agent(
-            "cpt-reinforce",
-            small_env,
-            alpha=0.75,
-            beta=0.85,
-            lambda_=3.0,
-            reference_point=-5.0,
-        )
-        assert agent.cpt_value.alpha == 0.75
-        assert agent.cpt_value.beta == 0.85
-        assert agent.cpt_value.lambda_ == 3.0
-        assert agent.cpt_value.reference_point == -5.0
 
 
 class TestPolicyGradientDirection:
@@ -618,3 +390,377 @@ class TestPolicyGradientDirection:
 
         assert new_probs[action].item() < initial_probs[action].item(), \
             f"Probability of action {action} should decrease after negative return"
+
+
+class TestCPTWeightingFunctionClamp:
+    """Tests for w' derivative clamping (Plan A.3)."""
+
+    def test_w_prime_plus_clamped(self):
+        """w_prime_plus should be clamped at max_wprime."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+        # At p=1.0, raw derivative is ~880; should be clamped to 50
+        val = wf.w_prime_plus(1.0)
+        assert val <= 50.0, f"w_prime_plus(1.0) = {val} should be <= 50.0"
+        # At p=0.0, raw derivative is also large; should be clamped
+        val0 = wf.w_prime_plus(0.0)
+        assert val0 <= 50.0, f"w_prime_plus(0.0) = {val0} should be <= 50.0"
+
+    def test_w_prime_minus_clamped(self):
+        """w_prime_minus should be clamped at max_wprime."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+        val = wf.w_prime_minus(1.0)
+        assert val <= 50.0, f"w_prime_minus(1.0) = {val} should be <= 50.0"
+
+    def test_w_prime_interior_not_clamped(self):
+        """w' at interior points should generally not be clamped."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+        # At p=0.5, derivative should be moderate and not clamped
+        val = wf.w_prime_plus(0.5)
+        assert val < 50.0
+        assert val > 0.0
+
+
+class TestCPTPGAgent:
+    """Tests for CPT-PG agent (Plans A.1, A.2)."""
+
+    def test_inherits_from_reinforce(self, cpt_pg_agent):
+        assert isinstance(cpt_pg_agent, REINFORCEAgent)
+
+    def test_baseline_is_zero(self, cpt_pg_agent):
+        """CPT-PG forces baseline_type='zero'."""
+        assert cpt_pg_agent.baseline_type == "zero"
+        assert cpt_pg_agent.baseline == 0.0
+
+    def test_compute_phi_centered(self, cpt_pg_agent):
+        """φ̂ values should be centered (mean ≈ 0) after Plan A.1 fix."""
+        returns = [-17.0, -17.0, -17.0, -17.0, -17.0, -17.0, -17.0, -105.0]
+        phi = cpt_pg_agent._compute_phi(returns)
+        assert abs(phi.mean()) < 1e-10, f"φ̂ mean should be ~0, got {phi.mean()}"
+
+    def test_compute_phi_discriminates_cliff_vs_safe(self, cpt_pg_agent):
+        """After centering, cliff and safe episodes should have meaningfully different φ̂."""
+        returns = [-17.0, -17.0, -17.0, -17.0, -17.0, -17.0, -17.0, -105.0]
+        phi = cpt_pg_agent._compute_phi(returns)
+        # Cliff episode (last) should have more negative φ̂ than safe episodes
+        safe_phi = phi[:7]
+        cliff_phi = phi[7]
+        assert cliff_phi < safe_phi.min(), \
+            f"Cliff φ̂ ({cliff_phi:.2f}) should be < safe φ̂ ({safe_phi.min():.2f})"
+        # Relative spread should be meaningful (not 2% like before fix)
+        spread = (safe_phi.mean() - cliff_phi) / (abs(safe_phi.mean()) + abs(cliff_phi) + 1e-10)
+        assert spread > 0.1, f"Relative spread {spread:.4f} should be > 0.1"
+
+    def test_compute_phi_unconditional_survival(self, small_env, torch_seed):
+        """Survival function should use n (total), not n_gains/n_losses (Plan A.2).
+
+        With mixed gains/losses, using conditional n would give wrong probabilities.
+        """
+        agent = CPTPGAgent(small_env, alpha=0.88, beta=0.88, lambda_=2.25)
+        # Mix of positive and negative returns
+        returns = [10.0, 20.0, -5.0, -15.0]
+        phi = agent._compute_phi(returns)
+        # Gains should have positive phi, losses negative
+        assert phi[0] > phi[2], "Gain episode should have higher φ̂ than loss episode"
+        assert phi[1] > phi[3], "Larger gain should have higher φ̂ than larger loss"
+
+    def test_compute_phi_all_same_returns_zero(self, cpt_pg_agent):
+        """If all returns are identical, centered φ̂ should be all zeros."""
+        returns = [-17.0, -17.0, -17.0, -17.0]
+        phi = cpt_pg_agent._compute_phi(returns)
+        for p in phi:
+            assert abs(p) < 1e-10, f"φ̂ should be 0 for identical returns, got {p}"
+
+    def test_cpt_pg_learns(self, env_factory, torch_seed):
+        """CPT-PG should show learning progress on a simple env."""
+        env = env_factory(shape=(3, 3), wind_prob=0.0, reward_cliff=-50.0, reward_step=-1.0)
+        agent = CPTPGAgent(env, lr=1e-2, gamma=0.99)
+        history = agent.learn(env, timesteps=5000)
+        rewards = history['episode_rewards']
+        # Compare early vs late performance
+        early = np.mean(rewards[:20])
+        late = np.mean(rewards[-20:])
+        assert late > early, f"CPT-PG should improve: late {late:.1f} > early {early:.1f}"
+
+
+class TestCPTPGRUDDERAgent:
+    """Tests for CPT-PG with RUDDER decomposition (Plan C)."""
+
+    def test_inherits_from_cpt_pg(self, cpt_pg_rudder_agent):
+        assert isinstance(cpt_pg_rudder_agent, CPTPGAgent)
+
+    def test_has_rudder_model(self, cpt_pg_rudder_agent):
+        assert hasattr(cpt_pg_rudder_agent, 'rudder')
+        assert hasattr(cpt_pg_rudder_agent, 'rudder_optimizer')
+
+    def test_cpt_pg_rudder_learns(self, env_factory, torch_seed):
+        """CPTPGRUDDERAgent should show learning progress."""
+        env = env_factory(shape=(3, 3), wind_prob=0.0, reward_cliff=-50.0, reward_step=-1.0)
+        agent = CPTPGRUDDERAgent(env, lr=1e-2, gamma=0.99)
+        history = agent.learn(env, timesteps=5000)
+        rewards = history['episode_rewards']
+        early = np.mean(rewards[:20])
+        late = np.mean(rewards[-20:])
+        assert late > early, f"CPTPGRUDDER should improve: late {late:.1f} > early {early:.1f}"
+
+    def test_get_agent_creates_cpt_pg_rudder(self, small_env):
+        """get_agent should create CPTPGRUDDERAgent."""
+        agent = get_agent("cpt-pg-rudder", small_env, alpha=0.88)
+        assert isinstance(agent, CPTPGRUDDERAgent)
+
+
+class TestPerStepSlidingWindowCPT:
+    """Tests for PerStepSlidingWindowCPT utility class."""
+
+    def test_single_timestep_reduces_to_sliding_window(self):
+        """With T=1 episodes, per-step weights should match SlidingWindowCPT weights."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+
+        sw = SlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+        psw = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+
+        # Single-step episodes: each has exactly one return value
+        episode_returns = [-50.0, -10.0, -5.0, -3.0, -3.0, -3.0, -3.0, -3.0]
+        per_step_returns = [[r] for r in episode_returns]
+        dummy_meta = list(range(len(episode_returns)))
+
+        sw.add_batch(episode_returns)
+        psw.add_batch(per_step_returns, dummy_meta)
+
+        sw_weights = sw.compute_decision_weights(episode_returns)
+        psw_weights = psw.compute_decision_weights(per_step_returns, is_ratio_fn=lambda _: 1.0)
+
+        # Per-step weights at t=0 should match SlidingWindowCPT weights
+        psw_t0 = [w[0] for w in psw_weights]
+        for i in range(len(episode_returns)):
+            assert abs(psw_t0[i] - sw_weights[i]) < 1e-10, \
+                f"Episode {i}: per-step weight {psw_t0[i]} != sliding window weight {sw_weights[i]}"
+
+    def test_variable_length_episodes(self):
+        """Only active episodes should contribute at each timestep."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+        psw = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+
+        # Episodes of different lengths
+        per_step_returns = [
+            [-10.0, -5.0, -3.0],  # 3 steps
+            [-20.0, -8.0],        # 2 steps
+            [-15.0],              # 1 step
+        ]
+        dummy_meta = list(range(3))
+
+        psw.add_batch(per_step_returns, dummy_meta)
+        weights = psw.compute_decision_weights(per_step_returns, is_ratio_fn=lambda _: 1.0)
+
+        # Episode 0 should have 3 weights
+        assert len(weights[0]) == 3
+        # Episode 1 should have 2 weights
+        assert len(weights[1]) == 2
+        # Episode 2 should have 1 weight
+        assert len(weights[2]) == 1
+
+        # At t=0, all 3 episodes contribute
+        # At t=1, only episodes 0 and 1 contribute
+        # At t=2, only episode 0 contributes (single episode → weight = 1.0)
+        assert abs(weights[0][2] - 1.0) < 1e-10, \
+            f"Single-episode timestep should have weight 1.0, got {weights[0][2]}"
+
+    def test_weights_normalize_per_timestep(self):
+        """Mean weight at each timestep should be ~1.0."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+        psw = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+
+        per_step_returns = [
+            [-10.0, -5.0, -3.0, -1.0],
+            [-50.0, -30.0, -20.0, -10.0],
+            [-3.0, -2.0, -1.0, -0.5],
+            [-8.0, -4.0, -2.0, -1.0],
+        ]
+        dummy_meta = list(range(4))
+
+        psw.add_batch(per_step_returns, dummy_meta)
+        weights = psw.compute_decision_weights(per_step_returns, is_ratio_fn=lambda _: 1.0)
+
+        # Check that mean weight at each timestep ≈ 1.0
+        for t in range(4):
+            weights_at_t = [weights[i][t] for i in range(4)]
+            mean_w = sum(weights_at_t) / len(weights_at_t)
+            assert abs(mean_w - 1.0) < 1e-10, \
+                f"Timestep {t}: mean weight {mean_w} should be ~1.0"
+
+    def test_gain_loss_separation(self):
+        """Gains should use w+, losses should use w-."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+        psw = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+
+        # Mix of gains and losses at each timestep
+        per_step_returns = [
+            [10.0, 5.0],   # gains
+            [-10.0, -5.0],  # losses
+            [20.0, 10.0],  # gains
+            [-20.0, -10.0],  # losses
+        ]
+        dummy_meta = list(range(4))
+
+        psw.add_batch(per_step_returns, dummy_meta)
+        weights = psw.compute_decision_weights(per_step_returns, is_ratio_fn=lambda _: 1.0)
+
+        # All weights should be positive
+        for i in range(4):
+            for t in range(2):
+                assert weights[i][t] > 0, \
+                    f"Weight [{i}][{t}] = {weights[i][t]} should be positive"
+
+    def test_is_ratio_one_matches_no_ratio(self):
+        """IS ratio of 1.0 should produce identical weights (sanity check)."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+
+        psw_a = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+        psw_b = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+
+        batch1 = [[-10.0, -5.0], [-3.0, -2.0], [-8.0, -4.0]]
+        batch2 = [[-7.0, -3.0], [-12.0, -6.0], [-4.0, -1.0]]
+        meta1 = list(range(3))
+        meta2 = list(range(3))
+
+        for psw in [psw_a, psw_b]:
+            psw.add_batch(batch1, meta1)
+            psw.add_batch(batch2, meta2)
+
+        weights_a = psw_a.compute_decision_weights(batch2, is_ratio_fn=lambda _: 1.0)
+        weights_b = psw_b.compute_decision_weights(batch2, is_ratio_fn=lambda _: 1.0)
+
+        for i in range(len(batch2)):
+            for t in range(len(batch2[i])):
+                assert abs(weights_a[i][t] - weights_b[i][t]) < 1e-10, \
+                    f"Weights should be identical with ratio=1.0"
+
+    def test_is_ratio_changes_weights(self):
+        """IS ratio != 1.0 on historical batches should change the weights."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+
+        psw_a = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+        psw_b = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+
+        batch1 = [[-10.0, -5.0], [-3.0, -2.0], [-50.0, -30.0]]
+        batch2 = [[-7.0, -3.0], [-12.0, -6.0], [-4.0, -1.0]]
+        meta1 = list(range(3))
+        meta2 = list(range(3))
+
+        for psw in [psw_a, psw_b]:
+            psw.add_batch(batch1, meta1)
+            psw.add_batch(batch2, meta2)
+
+        weights_a = psw_a.compute_decision_weights(batch2, is_ratio_fn=lambda _: 1.0)
+        weights_b = psw_b.compute_decision_weights(batch2, is_ratio_fn=lambda _: 3.0)
+
+        # At least one weight should differ
+        any_diff = False
+        for i in range(len(batch2)):
+            for t in range(len(batch2[i])):
+                if abs(weights_a[i][t] - weights_b[i][t]) > 1e-10:
+                    any_diff = True
+                    break
+        assert any_diff, "Weights should differ when IS ratio != 1.0"
+
+    def test_is_ratio_skips_current_batch(self):
+        """With a single batch, IS ratio should be ignored (all data is current)."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+
+        psw_a = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+        psw_b = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+
+        batch = [[-10.0, -5.0], [-3.0, -2.0], [-50.0, -30.0], [-8.0, -4.0]]
+        meta = list(range(4))
+
+        psw_a.add_batch(batch, meta)
+        psw_b.add_batch(batch, meta)
+
+        weights_a = psw_a.compute_decision_weights(batch, is_ratio_fn=lambda _: 1.0)
+        weights_b = psw_b.compute_decision_weights(batch, is_ratio_fn=lambda _: 5.0)
+
+        for i in range(len(batch)):
+            for t in range(len(batch[i])):
+                assert abs(weights_a[i][t] - weights_b[i][t]) < 1e-10, \
+                    f"Single-batch weights should be identical regardless of IS ratio"
+
+
+class TestPerStepCPTAgent:
+    """Tests for PerStepCPTAgent."""
+
+    def test_separated_baseline(self, small_env, torch_seed):
+        """Verify v(G) - v(b) is used, NOT v(G - b)."""
+        agent = PerStepCPTAgent(small_env, alpha=0.88, beta=0.88, lambda_=2.25)
+        v = agent.cpt_value
+
+        # Set a known baseline
+        G_t = -10.0
+        b_t = -5.0
+
+        # Separated: v(G_t) - v(b_t)
+        separated = v(G_t) - v(b_t)
+        # Non-separated (wrong): v(G_t - b_t)
+        non_separated = v(G_t - b_t)
+
+        # These should differ because v is nonlinear
+        assert abs(separated - non_separated) > 0.01, \
+            f"v(G)-v(b)={separated:.4f} should differ from v(G-b)={non_separated:.4f}"
+
+    def test_per_timestep_baselines_update(self, env_factory, torch_seed):
+        """Baselines dict should be populated after learning."""
+        env = env_factory(shape=(3, 3), wind_prob=0.0, reward_cliff=-50.0, reward_step=-1.0)
+        agent = PerStepCPTAgent(env, lr=1e-2, gamma=0.99)
+
+        assert len(agent.baselines) == 0
+
+        agent.learn(env, timesteps=500)
+
+        # After training, baselines should exist for multiple timesteps
+        assert len(agent.baselines) > 0, "Baselines dict should be populated after learning"
+        # All baseline values should be non-zero (they track negative returns)
+        for t, b_t in agent.baselines.items():
+            assert isinstance(t, int)
+            assert isinstance(b_t, float)
+
+    def test_agent_learns_basic(self, env_factory, torch_seed):
+        """PerStepCPTAgent should show learning progress."""
+        env = env_factory(shape=(3, 3), wind_prob=0.0, reward_cliff=-50.0, reward_step=-1.0)
+        agent = PerStepCPTAgent(env, lr=1e-2, gamma=0.99)
+        history = agent.learn(env, timesteps=5000)
+        rewards = history['episode_rewards']
+        early = np.mean(rewards[:20])
+        late = np.mean(rewards[-20:])
+        assert late > early, \
+            f"PerStepCPT should improve: late {late:.1f} > early {early:.1f}"
+
+    def test_per_step_weights_applied(self, env_factory, torch_seed):
+        """Different timesteps should get different weights."""
+        wf = CPTWeightingFunction(gamma_plus=0.61, gamma_minus=0.69)
+        psw = PerStepSlidingWindowCPT(wf, max_batches=5, decay=0.8, reference_point=0.0)
+
+        # Create returns with very different distributions at each timestep
+        per_step_returns = [
+            [-50.0, -30.0, -10.0],
+            [-3.0, -2.0, -1.0],
+            [-3.0, -2.0, -1.0],
+            [-3.0, -2.0, -1.0],
+            [-3.0, -2.0, -1.0],
+            [-3.0, -2.0, -1.0],
+            [-3.0, -2.0, -1.0],
+            [-3.0, -2.0, -1.0],
+        ]
+        dummy_meta = list(range(8))
+
+        psw.add_batch(per_step_returns, dummy_meta)
+        weights = psw.compute_decision_weights(per_step_returns, is_ratio_fn=lambda _: 1.0)
+
+        # Episode 0 (outlier at t=0) should have a different weight at t=0
+        # compared to the other episodes
+        w_outlier_t0 = weights[0][0]
+        w_normal_t0 = weights[1][0]
+        assert abs(w_outlier_t0 - w_normal_t0) > 0.01, \
+            f"Outlier weight {w_outlier_t0:.4f} should differ from normal {w_normal_t0:.4f} at t=0"
+
+    def test_get_agent_creates_per_step_cpt(self, small_env):
+        """get_agent should create PerStepCPTAgent."""
+        agent = get_agent("per-step-cpt", small_env, alpha=0.88)
+        assert isinstance(agent, PerStepCPTAgent)

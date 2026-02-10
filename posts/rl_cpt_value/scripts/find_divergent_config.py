@@ -378,7 +378,6 @@ agent_config:
   beta: 0.88
   lambda_: 2.25
   # CPT probability weighting
-  use_probability_weighting: true
   w_plus_gamma: 0.61
   w_minus_gamma: 0.69
   sliding_window_size: 5
@@ -387,7 +386,7 @@ agent_config:
 # --- agents to run ---
 agents:
   - reinforce
-  - cpt-reinforce:
+  - per-step-cpt:
       baseline_type: min
 """
     return yaml_content

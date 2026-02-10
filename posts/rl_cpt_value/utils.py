@@ -130,21 +130,25 @@ class CPTWeightingFunction:
         d = self.gamma_minus
         return p**d / (p**d + (1 - p)**d) ** (1 / d)
 
-    def w_prime_plus(self, p: float, eps: float = 1e-7) -> float:
-        """Numerical derivative of w_plus at p."""
+    def w_prime_plus(self, p: float, eps: float = 1e-7, max_wprime: float = 50.0) -> float:
+        """Numerical derivative of w_plus at p, clamped for Lipschitz bound."""
         if p <= eps:
-            return self.w_plus(eps) / eps
-        if p >= 1 - eps:
-            return (1.0 - self.w_plus(1 - eps)) / eps
-        return (self.w_plus(p + eps) - self.w_plus(p - eps)) / (2 * eps)
+            raw = self.w_plus(eps) / eps
+        elif p >= 1 - eps:
+            raw = (1.0 - self.w_plus(1 - eps)) / eps
+        else:
+            raw = (self.w_plus(p + eps) - self.w_plus(p - eps)) / (2 * eps)
+        return min(raw, max_wprime)
 
-    def w_prime_minus(self, p: float, eps: float = 1e-7) -> float:
-        """Numerical derivative of w_minus at p."""
+    def w_prime_minus(self, p: float, eps: float = 1e-7, max_wprime: float = 50.0) -> float:
+        """Numerical derivative of w_minus at p, clamped for Lipschitz bound."""
         if p <= eps:
-            return self.w_minus(eps) / eps
-        if p >= 1 - eps:
-            return (1.0 - self.w_minus(1 - eps)) / eps
-        return (self.w_minus(p + eps) - self.w_minus(p - eps)) / (2 * eps)
+            raw = self.w_minus(eps) / eps
+        elif p >= 1 - eps:
+            raw = (1.0 - self.w_minus(1 - eps)) / eps
+        else:
+            raw = (self.w_minus(p + eps) - self.w_minus(p - eps)) / (2 * eps)
+        return min(raw, max_wprime)
 
 
 class PerPathSlidingWindowCPT:
@@ -345,6 +349,137 @@ class SlidingWindowCPT:
         result = np.zeros(n)
         result[sorted_indices] = decision_weights
         return result
+
+
+class PerStepSlidingWindowCPT:
+    """Per-timestep CPT decision weights from the distribution of G_t at each t.
+
+    For each timestep position t, gathers all G_t values across episodes that
+    are still active at t, then applies CPT probability weighting to that
+    per-timestep distribution. This is the correct per-step CPT formulation:
+    it treats {G_t^(1), G_t^(2), ..., G_t^(N)} as a prospect at each t.
+    """
+
+    def __init__(
+        self,
+        weighting_func: CPTWeightingFunction,
+        max_batches: int = 5,
+        decay: float = 0.8,
+        reference_point: float = 0.0,
+    ):
+        self.weighting_func = weighting_func
+        self.max_batches = max_batches
+        self.decay = decay
+        self.reference_point = reference_point
+        self.buffer = []  # list of (per_step_returns_list, weight, metadata)
+
+    def add_batch(self, batch_per_step_returns: list[list[float]], episode_metadata: list):
+        """Add a batch where each element is [G_0, G_1, ..., G_T] for one episode.
+
+        Args:
+            batch_per_step_returns: Per-step returns for each episode.
+            episode_metadata: Opaque metadata per episode, passed to is_ratio_fn later.
+        """
+        self.buffer = [(data, w * self.decay, meta) for data, w, meta in self.buffer]
+        self.buffer.append((batch_per_step_returns, 1.0, episode_metadata))
+        if len(self.buffer) > self.max_batches:
+            self.buffer = self.buffer[-self.max_batches:]
+
+    def compute_decision_weights(self, batch_per_step_returns: list[list[float]], is_ratio_fn) -> list[list[float]]:
+        """Compute π_{i,t} for each episode i, timestep t.
+
+        For each timestep t, gather all G_t values from episodes that are
+        still active at t (episode length > t). Apply SlidingWindowCPT-style
+        weighting to that per-timestep distribution.
+
+        Returns list of lists: weights[i][t] = π_{i,t}
+        """
+        n_episodes = len(batch_per_step_returns)
+        if n_episodes == 0:
+            return []
+
+        max_T = max(len(ep) for ep in batch_per_step_returns)
+
+        # Initialize output weights
+        weights = [[] for _ in range(n_episodes)]
+
+        for t in range(max_T):
+            # Gather all G_t values from buffer + current batch for episodes active at t
+            all_returns_t = []
+            all_sample_weights = []
+            for buf_idx, (buf_data, buf_weight, buf_meta) in enumerate(self.buffer):
+                is_current_batch = (buf_idx == len(self.buffer) - 1)
+                for ep_idx, ep in enumerate(buf_data):
+                    if t < len(ep):
+                        sample_weight = buf_weight
+                        if not is_current_batch:
+                            sample_weight *= is_ratio_fn(buf_meta[ep_idx])
+                        all_returns_t.append(ep[t])
+                        all_sample_weights.append(sample_weight)
+
+            all_returns_t = np.array(all_returns_t) if all_returns_t else np.array([])
+            all_sample_weights = np.array(all_sample_weights) if all_sample_weights else np.array([])
+            total_weight = all_sample_weights.sum() if len(all_sample_weights) > 0 else 0.0
+
+            # Collect current batch indices active at this timestep
+            active_indices = [i for i in range(n_episodes) if t < len(batch_per_step_returns[i])]
+            n_active = len(active_indices)
+
+            if n_active == 0:
+                continue
+
+            if total_weight == 0:
+                # No historical data, uniform weights
+                for i in active_indices:
+                    weights[i].append(1.0)
+                continue
+
+            # Get current batch returns at timestep t for active episodes
+            current_returns_t = np.array([batch_per_step_returns[i][t] for i in active_indices])
+
+            # Compute per-timestep decision weights using CPT weighting
+            # Same gain/loss separation logic as SlidingWindowCPT
+            sorted_indices = np.argsort(current_returns_t)
+            sorted_returns = current_returns_t[sorted_indices]
+
+            decision_weights_t = np.zeros(n_active)
+            unique_returns = np.unique(sorted_returns)
+
+            for r_i in unique_returns:
+                x_i = r_i - self.reference_point
+                tie_mask = sorted_returns == r_i
+                n_ties = tie_mask.sum()
+
+                if x_i >= 0:
+                    # Gains: decumulative weighting
+                    p_geq = np.sum(all_sample_weights[all_returns_t >= r_i]) / total_weight
+                    p_gt = np.sum(all_sample_weights[all_returns_t > r_i]) / total_weight
+                    w_geq = self.weighting_func.w_plus(p_geq)
+                    w_gt = self.weighting_func.w_plus(p_gt)
+                    rank_weight = (w_geq - w_gt) / n_ties
+                else:
+                    # Losses: cumulative weighting
+                    p_leq = np.sum(all_sample_weights[all_returns_t <= r_i]) / total_weight
+                    p_lt = np.sum(all_sample_weights[all_returns_t < r_i]) / total_weight
+                    w_leq = self.weighting_func.w_minus(p_leq)
+                    w_lt = self.weighting_func.w_minus(p_lt)
+                    rank_weight = (w_leq - w_lt) / n_ties
+
+                decision_weights_t[tie_mask] = rank_weight
+
+            # Normalize so mean weight = 1.0 among active episodes at this t
+            weight_sum = decision_weights_t.sum()
+            if weight_sum > 0:
+                decision_weights_t = decision_weights_t * (n_active / weight_sum)
+
+            # Map back to original episode order
+            result_t = np.zeros(n_active)
+            result_t[sorted_indices] = decision_weights_t
+
+            for idx_pos, i in enumerate(active_indices):
+                weights[i].append(float(result_t[idx_pos]))
+
+        return weights
 
 
 # =============================================================================
