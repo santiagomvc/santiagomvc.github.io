@@ -45,9 +45,11 @@ The experiments should be ordered with two criteria in mind: How much do the exp
 * Status quo bias
 * Endowment effect
 
-Analyze how our current CPT-PG implementation approaches the Baseline variable of CPT. Do we need to add something in our configuration to play with that variable. All experiments should be controlled by a config, making them simpler to run, document and repeat. Split The fourfold pattern into 4 experiments and add them in the begining of the list.
+All experiments should be controlled by a config, making them simpler to run, document and repeat. Take a deep look at each parameter meaining and including in the plan an explanation of what the parameter controls and how it affects behavior, possible values, etc.
 
-Also be clear about the metrics and how are we identifying changes in behavior. The most important part is finding different behavioral patterns in rational and descriptive patterns. How are we finding those behavioral differences. One important way I want to include is how risky is the row they decide to traverse (the highest row they went before start moving right), but feel free to add and propose different success and behavior criteria.
+Split The fourfold pattern into 4 experiments and add them in the begining of the list.
+
+Also be clear about the metrics and how are we identifying changes in behavior. The most important part is finding different behavioral patterns in rational and descriptive patterns. How are we finding those behavioral differences. One important way I want to include is how risky is the row they decide to traverse (the highest row they went on before start moving right), but feel free to add and propose different success and behavior criteria.
 
 ## Notes
 

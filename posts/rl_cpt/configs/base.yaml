@@ -24,6 +24,7 @@ agent_config:
   alpha: 0.88
   beta: 0.88
   lambda_: 2.25
+  reference_point: 0.0  # CPT agents only: separates gains from losses in value function
   # CPT probability weighting (Tversky & Kahneman 1992, eq. 6)
   w_plus_gamma: 0.61
   w_minus_gamma: 0.69
