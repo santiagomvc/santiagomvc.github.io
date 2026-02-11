@@ -684,7 +684,7 @@ Compare CPT-PG (adaptive reference) vs CPT-PG (fixed reference=0) vs REINFORCE.
 ## Notes
 
 * Remember to use only `reinforce` and `cpt-pg` agents. The others are blocked for now.
-* Large batch sizes is pretty important since some important estimators depend on the batch size. Don't have it lower than 64.
+* Large batch sizes is pretty important since some important estimators depend on the batch size. Don't have it lower than 32.
 * After the experiment is done, save a single gift with the expected behavior for each agent.
 * Prepare a good strategy for learning when we need high wind probabilities for the experiment, which will make learning harder (example: taller grids, different reward values, etc.)
 

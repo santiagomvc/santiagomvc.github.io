@@ -655,9 +655,13 @@ def evaluate_paths(env, agent, n_episodes, config_name="base"):
         min_row = nrows  # will be updated on first step
         fell_off_cliff = False
 
+        cum_reward = 0
+        t = 0
         for _ in range(500):
-            action = agent.act(state)
+            action = agent.act(state, cum_reward=cum_reward, timestep=t)
             state, reward, terminated, truncated, _ = env.step(action)
+            cum_reward += reward
+            t += 1
 
             row = state // ncols
             if row < min_row:

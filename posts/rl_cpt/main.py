@@ -25,11 +25,15 @@ def run_episode(env, agent, max_steps=500, config_name="base"):
 
     cfg = load_config(config_name)
     fell_off_cliff = False
+    cum_reward = 0
+    t = 0
     for _ in range(max_steps):
-        action = agent.act(state)
+        action = agent.act(state, cum_reward=cum_reward, timestep=t)
         state, reward, terminated, truncated, _ = env.step(action)
         frames.append(env.render())
         total_reward += reward
+        cum_reward += reward
+        t += 1
         step_count += 1
         fell_off_cliff = reward == cfg["env"]["reward_cliff"]
         if fell_off_cliff:

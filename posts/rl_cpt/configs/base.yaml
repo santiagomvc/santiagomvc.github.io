@@ -11,7 +11,7 @@ env:
 training:
   timesteps: 350000
   n_eval_episodes: 4
-  batch_size: 8
+  batch_size: 64
   entropy_coef: 0.5
   entropy_coef_final: 0.01
   n_seeds: 1
@@ -30,6 +30,8 @@ agent_config:
   w_minus_gamma: 0.69
   sliding_window_size: 5
   sliding_window_decay: 0.8
+  center_phi: false
+  augmented_state: true
 
 # --- agents to run (override agent_config per agent) ---
 agents:

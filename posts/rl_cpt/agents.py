@@ -54,19 +54,29 @@ class BaseAgent(ABC):
 class PolicyNetwork(nn.Module):
     """Simple MLP policy network for discrete action spaces."""
 
-    def __init__(self, n_states: int = 25, n_actions: int = 4, hidden: int = 64):
+    def __init__(self, n_states: int = 25, n_actions: int = 4, hidden: int = 64,
+                 augmented: bool = False, max_timestep: int = 200):
         super().__init__()
         self.n_states = n_states
+        self.augmented = augmented
+        self.max_timestep = max_timestep
+        input_size = n_states + (2 if augmented else 0)
         self.net = nn.Sequential(
-            nn.Linear(n_states, hidden),
+            nn.Linear(input_size, hidden),
             nn.ReLU(),
             nn.Linear(hidden, n_actions),
         )
 
-    def forward(self, state: int) -> torch.Tensor:
+    def forward(self, state: int, cum_reward: float = 0.0, timestep: int = 0) -> torch.Tensor:
         """Convert state int to one-hot and return action probabilities."""
-        x = torch.zeros(self.n_states)
-        x[state] = 1.0
+        if self.augmented:
+            x = torch.zeros(self.n_states + 2)
+            x[state] = 1.0
+            x[self.n_states] = cum_reward / 100.0
+            x[self.n_states + 1] = timestep / self.max_timestep
+        else:
+            x = torch.zeros(self.n_states)
+            x[state] = 1.0
         return torch.softmax(self.net(x), dim=-1)
 
 
@@ -101,7 +111,7 @@ class REINFORCEAgent(BaseAgent):
         self.entropies = []
         self.rewards = []
 
-    def act(self, state) -> int:
+    def act(self, state, **kwargs) -> int:
         """Sample action from policy and store log probability and entropy."""
         probs = self.policy(state)
         dist = Categorical(probs)
@@ -242,11 +252,26 @@ class CPTPGAgent(REINFORCEAgent):
         w_minus_gamma: float = 0.69,
         lr: float = 1e-3,
         gamma: float = 0.99,
+        center_phi: bool = False,
+        augmented_state: bool = True,
         **kwargs,
     ):
         super().__init__(env, lr=lr, gamma=gamma, baseline_type="zero")
         self.cpt_value = CPTValueFunction(alpha, beta, lambda_, reference_point)
         self.weighting_func = CPTWeightingFunction(w_plus_gamma, w_minus_gamma)
+        self.center_phi = center_phi
+        if augmented_state:
+            self.policy = PolicyNetwork(self.n_states, self.n_actions, augmented=True)
+            self.optimizer = optim.Adam(self.policy.parameters(), lr=lr)
+
+    def act(self, state, cum_reward=0.0, timestep=0, **kwargs):
+        """Sample action from policy, passing cumulative reward and timestep."""
+        probs = self.policy(state, cum_reward, timestep)
+        dist = Categorical(probs)
+        action = dist.sample()
+        self.log_probs.append(dist.log_prob(action))
+        self.entropies.append(dist.entropy())
+        return action.item()
 
     @staticmethod
     def _integrate_survival(target, sorted_values, n, w_prime_func):
@@ -299,8 +324,6 @@ class CPTPGAgent(REINFORCEAgent):
         # Sort for empirical survival function
         sorted_gains = np.sort(u_plus[u_plus > 0])
         sorted_losses = np.sort(u_minus[u_minus > 0])
-        n_gains = len(sorted_gains)
-        n_losses = len(sorted_losses)
 
         phi_values = np.zeros(n)
         for i in range(n):
@@ -312,9 +335,8 @@ class CPTPGAgent(REINFORCEAgent):
             )
             phi_values[i] = gain_integral - loss_integral
 
-        # Center φ̂ to remove shared constant offset from w'(1.0) singularity.
-        # Equivalent to baseline subtraction in policy gradient theorem (no bias).
-        phi_values = phi_values - phi_values.mean()
+        if self.center_phi:
+            phi_values = phi_values - phi_values.mean()
 
         return phi_values
 
@@ -340,11 +362,15 @@ class CPTPGAgent(REINFORCEAgent):
                 self.entropies = []
                 self.rewards = []
                 done = False
+                cum_reward = 0.0
+                t = 0
 
                 while not done:
-                    action = self.act(state)
+                    action = self.act(state, cum_reward, t)
                     state, reward, terminated, truncated, _ = env.step(action)
                     self.rewards.append(reward)
+                    cum_reward += reward
+                    t += 1
                     done = terminated or truncated
                     total_steps += 1
 
