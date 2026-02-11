@@ -114,6 +114,12 @@ if __name__ == "__main__":
             # Merge: defaults + per-agent overrides
             agent_cfg = {**cfg["agent_config"], **agent_overrides}
 
+            # Build override suffix for unique output directories
+            override_suffix = ""
+            if agent_overrides:
+                parts = [f"{k}{v}" for k, v in sorted(agent_overrides.items())]
+                override_suffix = "_" + "_".join(parts)
+
             n_seeds = cfg["training"]["n_seeds"]
             nrows, ncols = cfg["env"]["shape"]
             n_eval = cfg["training"]["n_eval_episodes"]
@@ -121,7 +127,7 @@ if __name__ == "__main__":
 
             for seed in range(1, n_seeds + 1):
                 suffix = f"_seed{seed}" if n_seeds > 1 else ""
-                output_dir = Path(f"outputs/{agent_name}_{config_name}{suffix}")
+                output_dir = Path(f"outputs/{agent_name}{override_suffix}_{config_name}{suffix}")
                 output_dir.mkdir(parents=True, exist_ok=True)
                 set_seed(seed)
                 env = make_env(config_name, seed=seed)

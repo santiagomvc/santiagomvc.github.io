@@ -9,6 +9,16 @@ import yaml
 from PIL import Image
 
 
+def _deep_merge(base: dict, override: dict) -> dict:
+    """Recursively merge override into base dict."""
+    for key, value in override.items():
+        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+            _deep_merge(base[key], value)
+        else:
+            base[key] = value
+    return base
+
+
 def load_config(config_name: str = "base"):
     """Load configuration from YAML file, inheriting defaults from base.yaml."""
     config_dir = Path(__file__).parent / "configs"
@@ -16,7 +26,9 @@ def load_config(config_name: str = "base"):
         cfg = yaml.safe_load(f)
     if config_name != "base":
         with open(config_dir / f"{config_name}.yaml") as f:
-            cfg.update(yaml.safe_load(f))
+            override = yaml.safe_load(f)
+            if override:
+                _deep_merge(cfg, override)
     return cfg
 
 
