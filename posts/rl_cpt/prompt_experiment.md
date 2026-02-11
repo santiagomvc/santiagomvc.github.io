@@ -686,12 +686,12 @@ Compare CPT-PG (adaptive reference) vs CPT-PG (fixed reference=0) vs REINFORCE.
 1. **`stochasticity: windy`** — ALWAYS set this in configs that use wind_prob. Without it, wind is disabled.
 2. **Positive domain requires `reward_step: 0`** — non-zero step rewards in positive domain cause unwanted behavior. Use gamma as the path-length penalty.
 3. **Deep merge is active** — experiment configs only need to specify parameters that differ from base.yaml.
-4. **2 concurrent training runs maximum** — inform the lead agent before starting training.
+4. **2 concurrent training runs maximum** — inform the lead agent before starting training. Other agents can work in parallel on other tasks like documentation, calculations, proposing new experiments, etc.
 5. **Iterate on configs** — the starting configs are educated guesses. You will likely need to adjust parameters. Run analytical search first, then quick training (2 seeds), then confirm (4 seeds).
 6. **The main goal is behavioral differences** — a "successful" experiment shows CPT and REINFORCE choosing different paths, in the direction predicted by CPT theory.
 7. **Document everything** — record what configs you tried, what worked, what didn't, and why.
 8. The lead agent should **keep an eye on compute resources** and make sure we are not crashing our compute, controlling runs accordingly
-9. **Multiple experiments and runs are expected** to reach a succesful config.
+9. **Multiple experiments and runs are expected** to reach a succesful config. Think deeply about the proposed experiments and the possible consequences before running.
 10. Feel free to **read the research, review the codebase or run calculations as needed**.
 10. Any **code changes that can break the experiments flow must be coordinated and confirmed with the lead agent** to avoid catastrophic changes.
 11. **Feel free to ask any questions** you need to clarify or improve experimentation performance. This goes to the lead and all the other agents. Asking questions improves speed and success probability.
