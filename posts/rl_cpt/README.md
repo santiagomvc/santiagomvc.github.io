@@ -28,12 +28,12 @@ I'm writing a blogpost about how the behavior of AI agents compares to human beh
 
 7. Implement the environment changes for each effect
 
-* Change sensitivity for small amounts (for gains and losses) X
 * Risk aversion for gains
 * Risk seeking for losses
 * Loss aversion
 * Status quo bias
 * Endowment effect (reference points)
+* Change sensitivity for small amounts (for gains and losses) X
 
 8. Build a table with the results for all the agents and environments.
 
