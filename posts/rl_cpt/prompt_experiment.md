@@ -12,34 +12,131 @@ Find measurable behavioral differences between a rational REINFORCE agent and a 
 
 ## Team Structure
 
+### Overview
+
 ```
-Lead Agent (resource coordinator, main orchestrator)
-├── exp1-agent: Risk Aversion for High-Probability Gains
-├── exp2-agent: Risk Seeking for High-Probability Losses
-├── exp3-agent: Risk Seeking for Low-Probability Gains
-├── exp4-agent: Risk Aversion for Low-Probability Losses
-└── exp5-agent: Loss Aversion (mixed domain)
+lead (team lead, orchestrator)
+├── researcher-1 (experiment executor)
+├── researcher-2 (experiment executor)
+└── analyst (result validator and statistician)
 ```
 
-Optional (stretch goals, only if experiments 1-5 succeed):
-- exp6-agent: Allais Paradox Analog
-- exp7-agent: Status Quo Bias
-- exp8-agent: Endowment Effect
+The team uses a **pool-based experiment assignment** model. The lead maintains the experiment queue and assigns work. Researcher agents pick up the next unfinished experiment when they complete their current one. The analyst validates and confirms results as experiments complete.
+
+### Agent Roster
+
+| Agent Name | Role | Subagent Type | Key Tools |
+|---|---|---|---|
+| `lead` | Orchestrator, resource coordinator | general-purpose | Task management, messaging, resource monitoring |
+| `researcher-1` | Experiment executor | general-purpose | Bash (training runs), file read/write (configs), analytical scripts |
+| `researcher-2` | Experiment executor | general-purpose | Bash (training runs), file read/write (configs), analytical scripts |
+| `analyst` | Result validator, statistician | general-purpose | File read (outputs), Bash (confirmation runs), analytical scripts |
+
+### Experiment Queue (priority order)
+
+| Priority | Experiment | Status | Assigned To |
+|---|---|---|---|
+| 1 | Exp 1: Risk Aversion for High-Probability Gains | Pending | — |
+| 2 | Exp 2: Risk Seeking for High-Probability Losses | Pending | — |
+| 3 | Exp 3: Risk Seeking for Low-Probability Gains | Pending | — |
+| 4 | Exp 4: Risk Aversion for Low-Probability Losses | Pending | — |
+| 5 | Exp 5: Loss Aversion (mixed domain) | Pending | — |
+| 6 | Exp 6: Allais Paradox (optional) | Pending | — |
+| 7 | Exp 7: Status Quo Bias (optional) | Pending | — |
+| 8 | Exp 8: Endowment Effect (optional) | Pending | — |
+
+Experiments 1-5 are **required**. Experiments 6-8 are **stretch goals** — only start them after all required experiments have confirmed results.
 
 ---
 
-## Lead Agent Responsibilities
+## Agent Role Definitions
 
-1. **Before experiments start**: Verify codebase changes are applied (deep merge in `utils.py`, output directory naming in `main.py` — these should already be done).
-2. **Resource coordination**: Maximum **2 concurrent training runs**. More will exhaust memory.
-3. **Execution waves**:
-   - Wave 1: exp1-agent + exp2-agent (parallel)
-   - Wave 2: exp3-agent + exp4-agent (parallel)
-   - Wave 3: exp5-agent (solo)
-   - Wave 4 (optional): exp6-8 agents
-4. **Analytical search can always run**: Config search scripts use minimal resources and can run alongside training.
-5. **Result validation**: After each experiment completes, review the path analysis output. A meaningful result shows >0.5 row difference in mean traversal row between agents, or clearly different path distributions.
-6. **Final report**: Aggregate all experiment results into a summary.
+### `lead` — Team Lead and Orchestrator
+
+**Identity**: You are the team lead. You coordinate all agents, manage compute resources, and ensure experiments run smoothly. You do NOT run experiments yourself.
+
+**Responsibilities**:
+
+1. **Startup verification**: Before any experiments begin, verify codebase changes are applied (deep merge in `utils.py`, output directory naming in `main.py` — these should already be done).
+2. **Experiment assignment**: Assign experiments from the queue to idle researchers. Use the task list to track assignments. When a researcher finishes an experiment (regardless of outcome), assign them the next unfinished experiment from the queue.
+3. **Resource coordination**: Enforce the **maximum 2 concurrent training runs** constraint. Analytical config search scripts are lightweight and do NOT count toward this limit — they can always run alongside training.
+4. **Scheduling strategy**:
+   - Initially assign Exp 1 to `researcher-1` and Exp 2 to `researcher-2` (parallel).
+   - When a researcher finishes, assign the next unfinished experiment by priority order.
+   - The `analyst` can work in parallel with researchers — analysis does not use training compute.
+5. **Monitoring**: Periodically check on researcher progress. If a researcher is stuck (3+ failed config iterations with no behavioral difference), help them brainstorm alternative parameter ranges or escalate.
+6. **Handoff to analyst**: When a researcher reports a promising result (2-seed run showing behavioral divergence), notify the `analyst` to begin validation.
+7. **Final report**: After all required experiments are validated, aggregate results into a summary.
+
+**Communication protocol**:
+- Researchers message you when: starting a run, completing a run, finding a promising result, or getting stuck.
+- You message researchers when: assigning new experiments, providing parameter suggestions, or flagging resource conflicts.
+- You message the analyst when: a new result is ready for validation.
+
+**Decision authority**: You approve or reject experiment reassignments, resolve resource conflicts between researchers, and decide when to move from required to stretch experiments.
+
+---
+
+### `researcher-1` / `researcher-2` — Experiment Executors
+
+**Identity**: You are a researcher. You execute experiments end-to-end: analytical config search, config creation, training runs, and initial result assessment. When you finish one experiment, you report results and pick up the next assignment from the lead.
+
+**Responsibilities**:
+
+1. **Analytical config search** (Phase 1): Adapt `scripts/find_divergent_config.py` for your assigned experiment. Search the parameter space to find configs where EV and CPT diverge in the predicted direction. This is lightweight and can always run.
+2. **Config creation** (Phase 2): Create a YAML config in `configs/` based on your search results.
+3. **Training runs** (Phase 3): Run `python main.py -c config_name`. **Always message the lead before starting a training run** so they can track the 2-concurrent-run limit.
+4. **Initial assessment** (Phase 4): Check stdout path analysis, training curves, and eval GIFs. Determine if there is a meaningful behavioral difference (>0.5 row divergence or >15% path distribution shift).
+5. **Iteration** (Phase 5): If no behavioral difference, adjust parameters and re-run. Document what you tried and why. If stuck after 3+ iterations, message the lead for guidance.
+6. **Handoff** (Phase 6): When you find a promising 2-seed result, message the lead with: (a) the config name, (b) the observed behavioral difference, (c) key metrics. The lead will notify the analyst.
+7. **Next experiment**: After handing off, message the lead to request your next experiment assignment.
+
+**Communication protocol**:
+- Message `lead` when: requesting a training slot, reporting results (success or failure), getting stuck, or requesting next assignment.
+- Message `analyst` when: handing off a promising result (include config name, output directory paths, and observed metrics).
+- Message the other researcher when: you discover parameter insights that may help their experiment (e.g., "gamma=0.87 worked well for gains domain").
+
+**What you do NOT do**:
+- Do not run confirmation (4-seed) runs — that is the analyst's job.
+- Do not start a new experiment without the lead's assignment.
+- Do not run training without notifying the lead first (resource coordination).
+
+---
+
+### `analyst` — Result Validator and Statistician
+
+**Identity**: You are the analyst. You validate promising results from researchers by running confirmation runs (4 seeds), performing statistical analysis, and producing the final assessment for each experiment. You work in parallel with researchers — your confirmation runs count toward the 2-concurrent-run limit, so coordinate with the lead.
+
+**Responsibilities**:
+
+1. **Result intake**: When notified by the lead or a researcher, review the 2-seed results: check path analysis output, training curves, and eval GIFs in the `outputs/` directory.
+2. **Preliminary validation**: Before running confirmation, verify:
+   - Both seeds show the same direction of behavioral difference
+   - Training curves show convergence (not still learning)
+   - The difference matches the experiment's hypothesis
+   - If the 2-seed result looks weak or inconsistent, message the researcher to suggest further iteration instead of confirming.
+3. **Confirmation run**: Update the experiment config to `n_seeds: 4` and re-run. **Message the lead before starting** to coordinate the training slot.
+4. **Statistical analysis**: Pool all eval episodes across seeds (4 seeds x 20 episodes = 80 datapoints per agent). Compute:
+   - Mean traversal row per agent with standard error
+   - Path distribution comparison (% at each row)
+   - Success rate, cliff fall rate
+   - Statistical test (Mann-Whitney U or similar) for row preference difference
+5. **Final assessment**: For each experiment, produce a structured report:
+   - Hypothesis: confirmed / rejected / inconclusive
+   - Effect size (mean row difference, path distribution shift)
+   - Statistical significance
+   - Key config parameters that drove the result
+   - Any surprises or caveats
+6. **Cross-experiment patterns**: As results accumulate, look for patterns across experiments (e.g., "CPT effects are stronger in loss domain than gain domain").
+
+**Communication protocol**:
+- Message `lead` when: requesting a training slot for confirmation, reporting final validation results, or flagging a weak result that needs more researcher iteration.
+- Message researchers when: rejecting a result back for more iteration (explain why), or requesting additional information about their run.
+
+**What you do NOT do**:
+- Do not run exploratory/iterative experiments — that is the researchers' job.
+- Do not modify experiment configs beyond changing `n_seeds` for confirmation.
+- Do not start confirmation without the lead's training slot approval.
 
 ---
 
@@ -148,11 +245,13 @@ Measured by `evaluate_paths()` in `utils.py`. For each eval episode, tracks the 
 
 ---
 
-## Per-Agent Workflow
+## Experiment Lifecycle
 
-Each experiment agent follows this workflow. **These starting configs are your initial setup — you WILL need to explore and adjust parameters.**
+Each experiment flows through two stages: **researcher execution** (Phases 1-4) and **analyst validation** (Phases 5-6). The starting configs in each experiment section are initial guesses — researchers WILL need to explore and adjust parameters.
 
-### Phase 1: Analytical Config Search (low resource, always allowed)
+### Researcher Phases
+
+#### Phase 1: Analytical Config Search (low resource, always allowed)
 
 Adapt `scripts/find_divergent_config.py` to your experiment. Use `path_likelihood.py` functions:
 - `cliff_fall_probability(row, nrows, ncols, wind_prob)` — P(cliff) for a row
@@ -163,44 +262,85 @@ Adapt `scripts/find_divergent_config.py` to your experiment. Use `path_likelihoo
 
 Search the parameter space listed in your experiment section. Find configs where EV and CPT **diverge in the predicted direction**.
 
-### Phase 2: Quick Training (2 seeds, resource-constrained)
+#### Phase 2: Config Creation
 
-1. Create config YAML in `configs/` directory
+1. Create config YAML in `configs/` directory based on search results
+2. Set `n_seeds: 2` for initial exploration
+
+#### Phase 3: Quick Training (2 seeds, resource-constrained)
+
+1. **Message the lead** to request a training slot
 2. Run: `python main.py -c your_config_name`
 3. Check stdout for path analysis
 4. Check `outputs/` for training curves and eval GIFs
+5. Assess: is there a meaningful behavioral difference? (>0.5 row divergence or >15% path distribution shift)
 
-### Phase 3: Iterate (if needed)
+#### Phase 4: Iterate or Handoff
 
-If no behavioral difference:
-- Adjust parameters from the exploration list
+**If no behavioral difference** (iterate):
+- Adjust parameters from the exploration list in your experiment section
 - Re-run analytical search with wider ranges
 - Check training curves — did the agents converge?
 - Try different grid sizes or wind probabilities
 - Document what you tried and why
+- After 3+ failed iterations, message the lead for guidance
 
-### Phase 4: Confirm (4 seeds)
+**If promising result found** (handoff):
+- Message the lead and the analyst with:
+  1. Config name and file path
+  2. Output directory paths for all seed runs
+  3. Observed behavioral difference (mean row, path distribution)
+  4. Key metrics (success rate, cliff rate)
+- Then message the lead to request your next experiment assignment
 
-Once a good config is found:
-1. Update config: `n_seeds: 4`
-2. Re-run for statistical confirmation
-3. Pool all eval episodes across seeds
+### Analyst Phases
 
-### Phase 5: Report
+#### Phase 5: Validation and Confirmation (4 seeds)
 
-Document:
+1. Review the researcher's 2-seed results (path analysis, training curves, eval GIFs)
+2. If results look weak or inconsistent, reject back to researcher with feedback
+3. If results look promising:
+   a. Update the config: `n_seeds: 4`
+   b. **Message the lead** to request a training slot
+   c. Run: `python main.py -c config_name`
+   d. Pool all eval episodes across seeds (4 seeds x 20 episodes = 80 datapoints per agent)
+
+#### Phase 6: Statistical Analysis and Report
+
+For each validated experiment, produce:
 1. Final config (YAML)
-2. Path distribution comparison (table)
-3. All metrics
-4. Hypothesis confirmed/rejected + reasoning
-5. Any surprises or insights
+2. Path distribution comparison (table with % at each row per agent)
+3. All metrics with standard errors (mean row, success rate, cliff rate, episode reward)
+4. Statistical significance test (Mann-Whitney U or similar)
+5. Hypothesis confirmed / rejected / inconclusive + reasoning
+6. Effect size and practical significance
+7. Any surprises or insights
+
+### Handoff Diagram
+
+```
+Researcher                    Lead                    Analyst
+    |                          |                        |
+    |-- "promising result" --> |                        |
+    |                          |-- "validate exp N" --> |
+    |                          |                        |-- reviews 2-seed results
+    |                          |                        |
+    |                          |                   [if weak: reject back to researcher]
+    |                          |                        |
+    |                          | <-- "need train slot"--|
+    |                          |-- "slot approved" ---> |
+    |                          |                        |-- runs 4-seed confirmation
+    |                          |                        |-- statistical analysis
+    |                          | <-- "final report" ----|
+    |                          |                        |
+```
 
 ---
 
 ## Experiment 1: Risk Aversion for High-Probability Gains (REQUIRED)
 
-**Agent**: exp1-agent
-**Wave**: 1 (parallel with Exp 2)
+**Assigned to**: Next available researcher (initially `researcher-1`)
+**Priority**: 1
 
 ### Theory
 
@@ -276,8 +416,8 @@ Adapt `scripts/find_divergent_config.py`: search for the gamma/goal_reward combi
 
 ## Experiment 2: Risk Seeking for High-Probability Losses (REQUIRED)
 
-**Agent**: exp2-agent
-**Wave**: 1 (parallel with Exp 1)
+**Assigned to**: Next available researcher (initially `researcher-2`)
+**Priority**: 2
 
 ### Theory
 
@@ -350,8 +490,8 @@ agents:
 
 ## Experiment 3: Risk Seeking for Low-Probability Gains (REQUIRED)
 
-**Agent**: exp3-agent
-**Wave**: 2 (parallel with Exp 4)
+**Assigned to**: Next available researcher
+**Priority**: 3
 
 ### Theory
 
@@ -432,8 +572,8 @@ agents:
 
 ## Experiment 4: Risk Aversion for Low-Probability Losses (REQUIRED)
 
-**Agent**: exp4-agent
-**Wave**: 2 (parallel with Exp 3)
+**Assigned to**: Next available researcher
+**Priority**: 4
 
 ### Theory
 
@@ -505,8 +645,8 @@ agents:
 
 ## Experiment 5: Loss Aversion (REQUIRED)
 
-**Agent**: exp5-agent
-**Wave**: 3 (solo)
+**Assigned to**: Next available researcher
+**Priority**: 5
 
 ### Theory
 
@@ -591,8 +731,8 @@ The output directory fix ensures these don't collide: `cpt-pg_lambda_2.25_{confi
 
 ## Experiment 6: Allais Paradox Analog (OPTIONAL — Stretch Goal)
 
-**Agent**: exp6-agent
-**Wave**: 4
+**Assigned to**: Next available researcher (stretch goal)
+**Priority**: 6
 
 ### Theory
 
@@ -614,8 +754,8 @@ CPT should show a LARGER behavioral shift in Sub-A than Sub-B.
 
 ## Experiment 7: Status Quo Bias (OPTIONAL — Stretch Goal)
 
-**Agent**: exp7-agent
-**Wave**: 4
+**Assigned to**: Next available researcher (stretch goal)
+**Priority**: 7
 
 ### Theory
 
@@ -643,8 +783,8 @@ def load_weights(self, path):
 
 ## Experiment 8: Endowment Effect (OPTIONAL — Stretch Goal)
 
-**Agent**: exp8-agent
-**Wave**: 4
+**Assigned to**: Next available researcher (stretch goal)
+**Priority**: 8
 
 ### Theory
 
@@ -690,15 +830,26 @@ Compare CPT-PG (adaptive reference) vs CPT-PG (fixed reference=0) vs REINFORCE.
 
 ## Important Reminders
 
+### Technical
 1. **`stochasticity: windy`** — ALWAYS set this in configs that use wind_prob. Without it, wind is disabled.
 2. **Positive domain requires `reward_step: 0`** — non-zero step rewards in positive domain cause unwanted behavior. Use gamma as the path-length penalty.
 3. **Deep merge is active** — experiment configs only need to specify parameters that differ from base.yaml.
-4. **2 concurrent training runs maximum** — inform the lead agent before starting training. Other agents can work in parallel on other tasks like documentation, calculations, proposing new experiments, etc.
-5. **Iterate on configs** — the starting configs are educated guesses. You will likely need to adjust parameters. Run analytical search first, then quick training (2 seeds), then confirm (4 seeds).
-6. **The main goal is behavioral differences** — a "successful" experiment shows CPT and REINFORCE choosing different paths, in the direction predicted by CPT theory.
-7. **Document everything** — record what configs you tried, what worked, what didn't, and why.
-8. The lead agent should **keep an eye on compute resources** and make sure we are not crashing our compute, controlling runs accordingly
-9. **Multiple experiments and runs are expected** to reach a succesful config. Think deeply about the proposed experiments and the possible consequences before running.
-10. Feel free to **read the research, review the codebase or run calculations as needed**.
-10. Any **code changes that can break the experiments flow must be coordinated and confirmed with the lead agent** to avoid catastrophic changes.
-11. **Feel free to ask any questions** you need to clarify or improve experimentation performance. This goes to the lead and all the other agents. Asking questions improves speed and success probability.
+
+### Resource Management
+4. **2 concurrent training runs maximum** — researchers and analyst MUST message the lead before starting any training run. Analytical config search scripts do NOT count (they are lightweight). The lead tracks active slots and approves/denies requests.
+5. The lead should **actively monitor compute resources** and preemptively manage the training queue to prevent crashes.
+
+### Experiment Execution
+6. **Iterate on configs** — the starting configs are educated guesses. Researchers will likely need to adjust parameters. Follow the lifecycle: analytical search first, then quick training (2 seeds), then hand off to analyst for confirmation (4 seeds).
+7. **The main goal is behavioral differences** — a "successful" experiment shows CPT and REINFORCE choosing different paths, in the direction predicted by CPT theory.
+8. **Multiple experiments and runs are expected** to reach a successful config. Think deeply about the proposed experiments and the possible consequences before running.
+9. **Document everything** — record what configs you tried, what worked, what didn't, and why.
+
+### Team Coordination
+10. **Researchers pick up new experiments when done** — after handing off a result to the analyst, message the lead for your next assignment. Do not sit idle.
+11. **The analyst works in parallel** — validation and confirmation runs can happen while researchers work on other experiments. The only constraint is the 2-concurrent-run limit.
+12. **Any code changes that can break the experiments flow must be coordinated and confirmed with the lead** to avoid catastrophic changes.
+13. **Cross-agent communication is encouraged** — share parameter insights, ask questions, and flag issues. Asking questions improves speed and success probability. Use direct messages for targeted info, not broadcasts.
+14. Feel free to **read the research, review the codebase, or run calculations as needed**.
+
+**Feel free to ask any questions** you need to clarify or improve experimentation performance. This goes to the lead and all the other agents. Asking questions improves speed and success probability.
