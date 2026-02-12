@@ -30,8 +30,8 @@ agent_config:
   w_minus_gamma: 0.69
   sliding_window_size: 5
   sliding_window_decay: 0.8
-  center_phi: false
-  augmented_state: true
+  center_phi: true
+  augmented_state: false
 
 # --- agents to run (override agent_config per agent) ---
 agents:

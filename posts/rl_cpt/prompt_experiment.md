@@ -18,10 +18,10 @@ Find measurable behavioral differences between a rational REINFORCE agent and a 
 lead (team lead, orchestrator)
 ├── researcher-1 (experiment executor)
 ├── researcher-2 (experiment executor)
-└── analyst (result validator and statistician)
+└── researcher-3 (experiment executor)
 ```
 
-The team uses a **pool-based experiment assignment** model. The lead maintains the experiment queue and assigns work. Researcher agents pick up the next unfinished experiment when they complete their current one. The analyst validates and confirms results as experiments complete.
+The team uses a **pool-based experiment assignment** model. The lead maintains the experiment queue and assigns work. Researcher agents pick up the next unfinished experiment when they complete their current one. The lead **actively controls parallel execution** to manage memory constraints — never let all three researchers run heavy training simultaneously. Keep agents busy with a mix of computation-heavy (training) and computation-light (analytical search, paper review, config design) tasks at all times.
 
 ### Agent Roster
 
@@ -30,7 +30,7 @@ The team uses a **pool-based experiment assignment** model. The lead maintains t
 | `lead` | Orchestrator, resource coordinator | general-purpose | Task management, messaging, resource monitoring |
 | `researcher-1` | Experiment executor | general-purpose | Bash (training runs), file read/write (configs), analytical scripts |
 | `researcher-2` | Experiment executor | general-purpose | Bash (training runs), file read/write (configs), analytical scripts |
-| `analyst` | Result validator, statistician | general-purpose | File read (outputs), Bash (confirmation runs), analytical scripts |
+| `researcher-3` | Experiment executor | general-purpose | Bash (training runs), file read/write (configs), analytical scripts |
 
 ### Experiment Queue (priority order)
 
@@ -60,26 +60,40 @@ Experiments 1-5 are **required**. Experiments 6-8 are **stretch goals** — only
 1. **Startup verification**: Before any experiments begin, verify codebase changes are applied (deep merge in `utils.py`, output directory naming in `main.py` — these should already be done).
 2. **Experiment assignment**: Assign experiments from the queue to idle researchers. Use the task list to track assignments. When a researcher finishes an experiment (regardless of outcome), assign them the next unfinished experiment from the queue.
 3. **Resource coordination**: Enforce the **maximum 2 concurrent training runs** constraint. Analytical config search scripts are lightweight and do NOT count toward this limit — they can always run alongside training.
-4. **Scheduling strategy**:
-   - Initially assign Exp 1 to `researcher-1` and Exp 2 to `researcher-2` (parallel).
-   - When a researcher finishes, assign the next unfinished experiment by priority order.
-   - The `analyst` can work in parallel with researchers — analysis does not use training compute.
-5. **Monitoring**: Periodically check on researcher progress. If a researcher is stuck (3+ failed config iterations with no behavioral difference), help them brainstorm alternative parameter ranges or escalate.
-6. **Handoff to analyst**: When a researcher reports a promising result (2-seed run showing behavioral divergence), notify the `analyst` to begin validation.
-7. **Final report**: After all required experiments are validated, aggregate results into a summary.
+4. **Memory-aware scheduling**: You have 3 researchers but must **stagger their heavy work** to avoid memory pressure. At any given time:
+   - At most 2 researchers should be running training (heavy compute).
+   - The 3rd researcher should be doing lightweight work: analytical config search, reading papers/code, designing configs, reviewing results.
+   - Rotate who is doing heavy vs. light work as experiments progress.
+   - **Keep all agents busy at all times** — if a researcher can't train, assign them preparatory work (config search, paper review, result analysis) for their next experiment.
+5. **Initial scheduling**:
+   - Assign Exp 1 to `researcher-1` (training) and Exp 2 to `researcher-2` (training).
+   - Assign `researcher-3` to begin analytical config search and paper review for Exp 3 (lightweight prep).
+   - When a training slot opens, `researcher-3` can start training and the finished researcher moves to lightweight prep for their next experiment.
+6. **Monitoring**: Periodically check on researcher progress. If a researcher is stuck (3+ failed config iterations with no behavioral difference), help them brainstorm alternative parameter ranges or escalate.
+7. **Result validation**: Each researcher validates their own results — they run the confirmation (4-seed) run and statistical analysis themselves. If validation fails, they iterate immediately without waiting for reassignment.
+8. **Final report**: After all required experiments are validated, aggregate results into a summary.
 
 **Communication protocol**:
 - Researchers message you when: starting a run, completing a run, finding a promising result, or getting stuck.
 - You message researchers when: assigning new experiments, providing parameter suggestions, or flagging resource conflicts.
-- You message the analyst when: a new result is ready for validation.
 
 **Decision authority**: You approve or reject experiment reassignments, resolve resource conflicts between researchers, and decide when to move from required to stretch experiments.
 
 ---
 
-### `researcher-1` / `researcher-2` — Experiment Executors
+### `researcher-1` / `researcher-2` / `researcher-3` — Experiment Executors
 
-**Identity**: You are a researcher. You execute experiments end-to-end: analytical config search, config creation, training runs, and initial result assessment. When you finish one experiment, you report results and pick up the next assignment from the lead.
+**Identity**: You are a researcher. You execute experiments end-to-end: analytical config search, config creation, training runs, and initial result assessment. You are also expected to **deeply understand the theoretical foundations** by reading the research papers and codebase. When you finish one experiment, you report results and pick up the next assignment from the lead.
+
+**Research foundation**: Before and during experimentation, you should read and reference:
+- `research/reinforce.pdf` — REINFORCE algorithm foundations
+- `research/cpt-pg.pdf` — CPT-PG algorithm (the core paper for this project)
+- `research/prospect_theory.pdf` — Kahneman & Tversky's original prospect theory
+- `research/cumulative_prospect_theory.pdf` — Tversky & Kahneman's cumulative prospect theory extension
+
+Use these papers to guide your experimentation. Understand *why* certain parameter choices should produce specific behaviors. When iterating on configs, reason from the theory — don't just grid-search blindly. Your goal is to find configs that produce the behavioral differences predicted by CPT. If results don't align with theory and research, investigate why before moving on.
+
+Also read the codebase (`agents.py`, `utils.py`, `custom_cliff_walking.py`, `path_likelihood.py`) to understand how the theory is implemented in practice.
 
 **Responsibilities**:
 
@@ -88,55 +102,17 @@ Experiments 1-5 are **required**. Experiments 6-8 are **stretch goals** — only
 3. **Training runs** (Phase 3): Run `python main.py -c config_name`. **Always message the lead before starting a training run** so they can track the 2-concurrent-run limit.
 4. **Initial assessment** (Phase 4): Check stdout path analysis, training curves, and eval GIFs. Determine if there is a meaningful behavioral difference (>0.5 row divergence or >15% path distribution shift).
 5. **Iteration** (Phase 5): If no behavioral difference, adjust parameters and re-run. Document what you tried and why. If stuck after 3+ iterations, message the lead for guidance.
-6. **Handoff** (Phase 6): When you find a promising 2-seed result, message the lead with: (a) the config name, (b) the observed behavioral difference, (c) key metrics. The lead will notify the analyst.
-7. **Next experiment**: After handing off, message the lead to request your next experiment assignment.
+6. **Self-validation** (Phase 6): When you find a promising 2-seed result, validate it yourself — update the config to `n_seeds: 4`, re-run, pool eval episodes (4 seeds x 20 episodes = 80 datapoints), and compute statistical analysis (mean row, path distribution, Mann-Whitney U test). If validation fails (results are weak, inconsistent across seeds, or don't match hypothesis), **iterate immediately** — adjust parameters and go back to Phase 3. Do not wait for reassignment.
+7. **Final report** (Phase 7): Once validation succeeds, produce a structured report (hypothesis confirmed/rejected/inconclusive, effect size, statistical significance) and message the lead with the final results.
+8. **Next experiment**: After completing a validated experiment, message the lead to request your next assignment.
 
 **Communication protocol**:
-- Message `lead` when: requesting a training slot, reporting results (success or failure), getting stuck, or requesting next assignment.
-- Message `analyst` when: handing off a promising result (include config name, output directory paths, and observed metrics).
-- Message the other researcher when: you discover parameter insights that may help their experiment (e.g., "gamma=0.87 worked well for gains domain").
+- Message `lead` when: requesting a training slot, reporting final validated results (success or failure), getting stuck, or requesting next assignment.
+- Message other researchers when: you discover parameter insights that may help their experiment (e.g., "gamma=0.87 worked well for gains domain").
 
 **What you do NOT do**:
-- Do not run confirmation (4-seed) runs — that is the analyst's job.
 - Do not start a new experiment without the lead's assignment.
 - Do not run training without notifying the lead first (resource coordination).
-
----
-
-### `analyst` — Result Validator and Statistician
-
-**Identity**: You are the analyst. You validate promising results from researchers by running confirmation runs (4 seeds), performing statistical analysis, and producing the final assessment for each experiment. You work in parallel with researchers — your confirmation runs count toward the 2-concurrent-run limit, so coordinate with the lead.
-
-**Responsibilities**:
-
-1. **Result intake**: When notified by the lead or a researcher, review the 2-seed results: check path analysis output, training curves, and eval GIFs in the `outputs/` directory.
-2. **Preliminary validation**: Before running confirmation, verify:
-   - Both seeds show the same direction of behavioral difference
-   - Training curves show convergence (not still learning)
-   - The difference matches the experiment's hypothesis
-   - If the 2-seed result looks weak or inconsistent, message the researcher to suggest further iteration instead of confirming.
-3. **Confirmation run**: Update the experiment config to `n_seeds: 4` and re-run. **Message the lead before starting** to coordinate the training slot.
-4. **Statistical analysis**: Pool all eval episodes across seeds (4 seeds x 20 episodes = 80 datapoints per agent). Compute:
-   - Mean traversal row per agent with standard error
-   - Path distribution comparison (% at each row)
-   - Success rate, cliff fall rate
-   - Statistical test (Mann-Whitney U or similar) for row preference difference
-5. **Final assessment**: For each experiment, produce a structured report:
-   - Hypothesis: confirmed / rejected / inconclusive
-   - Effect size (mean row difference, path distribution shift)
-   - Statistical significance
-   - Key config parameters that drove the result
-   - Any surprises or caveats
-6. **Cross-experiment patterns**: As results accumulate, look for patterns across experiments (e.g., "CPT effects are stronger in loss domain than gain domain").
-
-**Communication protocol**:
-- Message `lead` when: requesting a training slot for confirmation, reporting final validation results, or flagging a weak result that needs more researcher iteration.
-- Message researchers when: rejecting a result back for more iteration (explain why), or requesting additional information about their run.
-
-**What you do NOT do**:
-- Do not run exploratory/iterative experiments — that is the researchers' job.
-- Do not modify experiment configs beyond changing `n_seeds` for confirmation.
-- Do not start confirmation without the lead's training slot approval.
 
 ---
 
@@ -247,7 +223,7 @@ Measured by `evaluate_paths()` in `utils.py`. For each eval episode, tracks the 
 
 ## Experiment Lifecycle
 
-Each experiment flows through two stages: **researcher execution** (Phases 1-4) and **analyst validation** (Phases 5-6). The starting configs in each experiment section are initial guesses — researchers WILL need to explore and adjust parameters.
+Each experiment is owned end-to-end by a single researcher: **exploration** (Phases 1-4), **self-validation** (Phase 5-6), and **final report** (Phase 7). If validation fails, the researcher iterates immediately. The starting configs in each experiment section are initial guesses — researchers WILL need to explore and adjust parameters.
 
 ### Researcher Phases
 
@@ -285,29 +261,25 @@ Search the parameter space listed in your experiment section. Find configs where
 - Document what you tried and why
 - After 3+ failed iterations, message the lead for guidance
 
-**If promising result found** (handoff):
-- Message the lead and the analyst with:
-  1. Config name and file path
-  2. Output directory paths for all seed runs
-  3. Observed behavioral difference (mean row, path distribution)
-  4. Key metrics (success rate, cliff rate)
-- Then message the lead to request your next experiment assignment
+**If promising result found** (proceed to self-validation):
+- Move directly to Phase 5 — do not hand off to another researcher.
 
-### Analyst Phases
+### Self-Validation Phases (same researcher)
 
 #### Phase 5: Validation and Confirmation (4 seeds)
 
-1. Review the researcher's 2-seed results (path analysis, training curves, eval GIFs)
-2. If results look weak or inconsistent, reject back to researcher with feedback
+1. Review your own 2-seed results critically (path analysis, training curves, eval GIFs)
+2. If results look weak or inconsistent, go back to Phase 3 immediately — adjust parameters and re-run
 3. If results look promising:
    a. Update the config: `n_seeds: 4`
    b. **Message the lead** to request a training slot
    c. Run: `python main.py -c config_name`
    d. Pool all eval episodes across seeds (4 seeds x 20 episodes = 80 datapoints per agent)
+4. **If validation fails** (4-seed results are weaker, inconsistent, or don't match hypothesis): go back to Phase 3 and iterate. Do NOT report a failed validation as final — fix it first.
 
 #### Phase 6: Statistical Analysis and Report
 
-For each validated experiment, produce:
+Once 4-seed validation succeeds, produce:
 1. Final config (YAML)
 2. Path distribution comparison (table with % at each row per agent)
 3. All metrics with standard errors (mean row, success rate, cliff rate, episode reward)
@@ -316,23 +288,27 @@ For each validated experiment, produce:
 6. Effect size and practical significance
 7. Any surprises or insights
 
-### Handoff Diagram
+### Experiment Flow Diagram
 
 ```
-Researcher                    Lead                    Analyst
-    |                          |                        |
-    |-- "promising result" --> |                        |
-    |                          |-- "validate exp N" --> |
-    |                          |                        |-- reviews 2-seed results
-    |                          |                        |
-    |                          |                   [if weak: reject back to researcher]
-    |                          |                        |
-    |                          | <-- "need train slot"--|
-    |                          |-- "slot approved" ---> |
-    |                          |                        |-- runs 4-seed confirmation
-    |                          |                        |-- statistical analysis
-    |                          | <-- "final report" ----|
-    |                          |                        |
+Researcher                     Lead
+    |                            |
+    |-- Phase 1-2 (config) ---  |
+    |-- "need train slot" ----> |
+    |                            |-- "slot approved"
+    |-- Phase 3 (2-seed run) -- |
+    |-- Phase 4 (assess) ----  |
+    |                            |
+    |   [if weak: loop back to Phase 3, iterate params]
+    |                            |
+    |-- Phase 5 (4-seed run) -- |
+    |                            |
+    |   [if validation fails: loop back to Phase 3]
+    |                            |
+    |-- Phase 6 (stats) ------  |
+    |-- "final report" -------> |
+    |-- "request next exp" ---> |
+    |                            |
 ```
 
 ---
@@ -836,18 +812,18 @@ Compare CPT-PG (adaptive reference) vs CPT-PG (fixed reference=0) vs REINFORCE.
 3. **Deep merge is active** — experiment configs only need to specify parameters that differ from base.yaml.
 
 ### Resource Management
-4. **2 concurrent training runs maximum** — researchers and analyst MUST message the lead before starting any training run. Analytical config search scripts do NOT count (they are lightweight). The lead tracks active slots and approves/denies requests.
+4. **2 concurrent training runs maximum** — researchers MUST message the lead before starting any training run. Analytical config search scripts do NOT count (they are lightweight). The lead tracks active slots and approves/denies requests.
 5. The lead should **actively monitor compute resources** and preemptively manage the training queue to prevent crashes.
 
 ### Experiment Execution
-6. **Iterate on configs** — the starting configs are educated guesses. Researchers will likely need to adjust parameters. Follow the lifecycle: analytical search first, then quick training (2 seeds), then hand off to analyst for confirmation (4 seeds).
+6. **Iterate on configs** — the starting configs are educated guesses. Researchers will likely need to adjust parameters. Follow the lifecycle: analytical search first, then quick training (2 seeds), then self-validate with confirmation (4 seeds). If validation fails, iterate immediately.
 7. **The main goal is behavioral differences** — a "successful" experiment shows CPT and REINFORCE choosing different paths, in the direction predicted by CPT theory.
 8. **Multiple experiments and runs are expected** to reach a successful config. Think deeply about the proposed experiments and the possible consequences before running.
 9. **Document everything** — record what configs you tried, what worked, what didn't, and why.
 
 ### Team Coordination
-10. **Researchers pick up new experiments when done** — after handing off a result to the analyst, message the lead for your next assignment. Do not sit idle.
-11. **The analyst works in parallel** — validation and confirmation runs can happen while researchers work on other experiments. The only constraint is the 2-concurrent-run limit.
+10. **Researchers own experiments end-to-end** — each researcher explores, validates, and reports their own experiment. After completing a validated experiment, message the lead for your next assignment. Do not sit idle.
+11. **Self-validation keeps momentum** — researchers validate their own results and iterate immediately on failure, avoiding handoff delays. The only resource constraint is the 2-concurrent-run limit.
 12. **Any code changes that can break the experiments flow must be coordinated and confirmed with the lead** to avoid catastrophic changes.
 13. **Cross-agent communication is encouraged** — share parameter insights, ask questions, and flag issues. Asking questions improves speed and success probability. Use direct messages for targeted info, not broadcasts.
 14. Feel free to **read the research, review the codebase, or run calculations as needed**.
