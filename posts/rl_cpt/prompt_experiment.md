@@ -8,6 +8,10 @@ This document is the operating manual for a team of agents executing experiments
 
 Find measurable behavioral differences between a rational REINFORCE agent and a human-like CPT-PG agent. The primary signal is **which row (path) the agent chooses to traverse** — some rows are riskier (closer to cliff), some rows are safer.
 
+We need **at least 3 replicable differences found**. Focus on finding at least three significant differences first, then focus on the rest of experiments.
+
+* THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS. This should be visible in the gifs saved.
+
 ---
 
 ## Team Structure
@@ -205,6 +209,8 @@ Measured by `evaluate_paths()` in `utils.py`. For each eval episode, tracks the 
 - **Path distribution**: % of episodes at each row.
 - **Row preference divergence**: Difference in mean traversal row between REINFORCE and CPT-PG.
 
+THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS.
+
 ### Secondary Metrics
 | Metric | How to Measure | Purpose |
 |---|---|---|
@@ -224,6 +230,8 @@ Measured by `evaluate_paths()` in `utils.py`. For each eval episode, tracks the 
 ## Experiment Lifecycle
 
 Each experiment is owned end-to-end by a single researcher: **exploration** (Phases 1-4), **self-validation** (Phase 5-6), and **final report** (Phase 7). If validation fails, the researcher iterates immediately. The starting configs in each experiment section are initial guesses — researchers WILL need to explore and adjust parameters.
+
+We need **at least 3 replicable differences found**. Focus on finding at least three significant differences first, then focus on the rest of experiments.
 
 ### Researcher Phases
 
@@ -249,7 +257,7 @@ Search the parameter space listed in your experiment section. Find configs where
 2. Run: `python main.py -c your_config_name`
 3. Check stdout for path analysis
 4. Check `outputs/` for training curves and eval GIFs
-5. Assess: is there a meaningful behavioral difference? (>0.5 row divergence or >15% path distribution shift)
+5. Assess: is there a meaningful behavioral difference? THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS.
 
 #### Phase 4: Iterate or Handoff
 
@@ -803,6 +811,7 @@ Compare CPT-PG (adaptive reference) vs CPT-PG (fixed reference=0) vs REINFORCE.
 * Large batch sizes is pretty important since some important estimators depend on the batch size. Don't have it lower than 32.
 * After the experiment is done, save a single gift with the expected behavior for each agent.
 * Prepare a good strategy for learning when we need high wind probabilities for the experiment, which will make learning harder (example: taller grids, different reward values, etc.)
+* THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS. This should be visible in the gifs saved.
 
 ## Important Reminders
 
@@ -817,15 +826,16 @@ Compare CPT-PG (adaptive reference) vs CPT-PG (fixed reference=0) vs REINFORCE.
 
 ### Experiment Execution
 6. **Iterate on configs** — the starting configs are educated guesses. Researchers will likely need to adjust parameters. Follow the lifecycle: analytical search first, then quick training (2 seeds), then self-validate with confirmation (4 seeds). If validation fails, iterate immediately.
-7. **The main goal is behavioral differences** — a "successful" experiment shows CPT and REINFORCE choosing different paths, in the direction predicted by CPT theory.
+7. **The main goal is behavioral differences** — a "successful" experiment shows CPT and REINFORCE choosing different paths, in the direction predicted by CPT theory. THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS.
 8. **Multiple experiments and runs are expected** to reach a successful config. Think deeply about the proposed experiments and the possible consequences before running.
 9. **Document everything** — record what configs you tried, what worked, what didn't, and why.
+10. We need **at least 3 replicable differences found**. Focus on finding at least three significant differences first, then focus on the rest of experiments.
 
 ### Team Coordination
-10. **Researchers own experiments end-to-end** — each researcher explores, validates, and reports their own experiment. After completing a validated experiment, message the lead for your next assignment. Do not sit idle.
-11. **Self-validation keeps momentum** — researchers validate their own results and iterate immediately on failure, avoiding handoff delays. The only resource constraint is the 2-concurrent-run limit.
-12. **Any code changes that can break the experiments flow must be coordinated and confirmed with the lead** to avoid catastrophic changes.
-13. **Cross-agent communication is encouraged** — share parameter insights, ask questions, and flag issues. Asking questions improves speed and success probability. Use direct messages for targeted info, not broadcasts.
-14. Feel free to **read the research, review the codebase, or run calculations as needed**.
+11. **Researchers own experiments end-to-end** — each researcher explores, validates, and reports their own experiment. After completing a validated experiment, message the lead for your next assignment. Do not sit idle.
+12. **Self-validation keeps momentum** — researchers validate their own results and iterate immediately on failure, avoiding handoff delays. The only resource constraint is the 2-concurrent-run limit.
+13. **Any code changes that can break the experiments flow must be coordinated and confirmed with the lead** to avoid catastrophic changes.
+14. **Cross-agent communication is encouraged** — share parameter insights, ask questions, and flag issues. Asking questions improves speed and success probability. Use direct messages for targeted info, not broadcasts.
+15. Feel free to **read the research, review the codebase, or run calculations as needed**.
 
 **Feel free to ask any questions** you need to clarify or improve experimentation performance. This goes to the lead and all the other agents. Asking questions improves speed and success probability.
