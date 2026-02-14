@@ -101,13 +101,13 @@ Also read the codebase (`agents.py`, `utils.py`, `custom_cliff_walking.py`, `pat
 
 **Responsibilities**:
 
-1. **Analytical config search** (Phase 1): Adapt `scripts/find_divergent_config.py` for your assigned experiment. Search the parameter space to find configs where EV and CPT diverge in the predicted direction. This is lightweight and can always run.
-2. **Config creation** (Phase 2): Create a YAML config in `configs/` based on your search results.
-3. **Training runs** (Phase 3): Run `python main.py -c config_name`. **Always message the lead before starting a training run** so they can track the 2-concurrent-run limit.
-4. **Initial assessment** (Phase 4): Check stdout path analysis, training curves, and eval GIFs. Determine if there is a meaningful behavioral difference (>0.5 row divergence or >15% path distribution shift).
-5. **Iteration** (Phase 5): If no behavioral difference, adjust parameters and re-run. Document what you tried and why. If stuck after 3+ iterations, message the lead for guidance.
-6. **Self-validation** (Phase 6): When you find a promising 2-seed result, validate it yourself — update the config to `n_seeds: 4`, re-run, pool eval episodes (4 seeds x 20 episodes = 80 datapoints), and compute statistical analysis (mean row, path distribution, Mann-Whitney U test). If validation fails (results are weak, inconsistent across seeds, or don't match hypothesis), **iterate immediately** — adjust parameters and go back to Phase 3. Do not wait for reassignment.
-7. **Final report** (Phase 7): Once validation succeeds, produce a structured report (hypothesis confirmed/rejected/inconclusive, effect size, statistical significance) and message the lead with the final results.
+1. **Analytical divergence search** (Phase 1): Adapt `scripts/find_divergent_config.py` for your assigned experiment. Use `path_likelihood.py` to find configs where EV and CPT analytically prefer different paths in the direction predicted by the experiment hypothesis. This is lightweight and can always run.
+2. **Tipping point search** (Phase 2a): Starting from the Phase 1 config, binary-search the primary parameter (gamma for gains domain, reward_step/wind_prob for losses domain) to find where REINFORCE is near-indifferent between the risky and safe paths (EV margin < 5% between top-2 rows). See the "Tipping Point Search Reference" section.
+3. **REINFORCE-only validation** (Phase 2b): Run REINFORCE alone (`agents: [reinforce]`, 2 seeds) to confirm the tipping point — look for slow convergence, reward oscillation, and path distribution spread. **Message the lead before starting.** If not at tipping point, adjust and repeat Phase 2a.
+4. **CPT-PG training** (Phase 3): Run both agents on the tipping-point config (`agents: [reinforce, cpt-pg]`, 2 seeds). Since REINFORCE is near the decision boundary, CPT's distortions should push CPT-PG to the other side. **Message the lead before starting.**
+5. **Theory-guided diagnosis** (Phase 4): If no behavioral divergence, use the diagnostic checklist in the "Tipping Point Search Reference" section to identify which CPT mechanism is inactive or misdirected. Adjust parameters and loop back to Phase 2 or 3. If stuck after 3+ iterations, message the lead.
+6. **Self-validation** (Phase 5): When you find a promising 2-seed divergence, validate it yourself — update to `n_seeds: 4`, re-run, pool eval episodes (4 seeds x 20 episodes = 80 datapoints), and compute statistical analysis (mean row, path distribution, Mann-Whitney U test). If validation fails, **iterate immediately** — go back to Phase 3 or 2.
+7. **Statistical analysis and report** (Phase 6): Once validation succeeds, produce a structured report (hypothesis confirmed/rejected/inconclusive, effect size, statistical significance) and message the lead with the final results.
 8. **Next experiment**: After completing a validated experiment, message the lead to request your next assignment.
 
 **Communication protocol**:
@@ -197,6 +197,78 @@ The `make_env()` function in `custom_cliff_walking.py` only applies wind when `s
 | `reference_point` | Gain/loss boundary | 0.0 default. Key for Exp 5 (mixed domain). |
 | `w_plus_gamma` | Prob weighting (gains) | 0.61 (overweights small p, underweights large p) |
 | `w_minus_gamma` | Prob weighting (losses) | 0.69 (same inverse-S for losses) |
+| `center_phi` | Center phi-hat values | **Must be `true` for pure-domain experiments (Exp 1-4)**. Subtracts mean phi so CPT creates relative positive/negative weights. |
+
+---
+
+## Tipping Point Search Reference
+
+### Core Idea
+
+Instead of searching for configs where EV and CPT diverge widely and hoping the RL agents reproduce the divergence, we find REINFORCE's **decision boundary** — the configuration where REINFORCE is nearly indifferent between the risky and safe paths — then train CPT-PG on that borderline config. Since REINFORCE is barely favoring one path, CPT's probability weighting and value distortions only need a small push to flip CPT-PG's preference to the other side.
+
+### Tipping Point Search Algorithm
+
+**For gains domain (Exp 1, 3):**
+1. Fix shape, wind_prob, goal_reward, cliff_reward from the Phase 1 config
+2. Sweep gamma in [0.80, 0.95] at 0.01 increments
+3. For each gamma, compute discounted EV per row using `discounted_ev()` from `scripts/find_divergent_config.py`
+4. Record which row EV prefers and the margin: `(EV_best - EV_second) / |EV_best|`
+5. Find `gamma_tipping` where the margin is minimized (or where preferred row flips)
+6. Set gamma slightly toward the EV-optimal side: target EV margin of 1-5%
+
+**For losses domain (Exp 2, 4):**
+1. Fix shape, gamma=0.98, reward_cliff from the Phase 1 config
+2. Sweep reward_step in [-0.5, -3.0] and wind_prob in [0.03, 0.10]
+3. For each (reward_step, wind_prob), compute EV per row
+4. Pick the combination where EV margin is 1-5% between top-2 rows
+
+**For mixed domain (Exp 5):**
+1. Keep all rewards in losses domain (step<0, goal<0, cliff<0) for training stability
+2. Sweep reference_point to find where some returns fall above and some below the reference
+3. Lambda=2.25 amplifies losses relative to gains around the reference point, creating CPT divergence
+
+### How to Recognize the Tipping Point (Training Signatures)
+
+When validating the tipping point with a REINFORCE-only run (Phase 2b), look for these signatures:
+
+| Signature | What to Look For | Too Far from Tipping Point |
+|---|---|---|
+| **Slow convergence** | Reward doesn't stabilize until 50-80% of timesteps | Converges before 40% of timesteps |
+| **Reward oscillation** | Smoothed reward curve (in `rewards.png`) shows up-down swings before settling | Monotonic climb to plateau |
+| **Path distribution spread** | eval shows 60-70% on preferred row, 20-30% on alternative | 95%+ on one row |
+| **Seed sensitivity** | At least 1 of 2 seeds shows meaningful exploration of alternative path | Both seeds converge instantly to same row |
+
+If REINFORCE converges too quickly or too strongly to one path, the EV advantage is too large — adjust the primary search variable to bring it closer to indifference.
+
+### Probability Weighting Reference Table
+
+Pre-computed values from `CPTWeightingFunction` (`utils.py`). Use this to quickly check whether your experiment's cliff probability falls in the overweighting or underweighting zone.
+
+| p (actual) | w+(p) | ratio w+/p | w-(p) | ratio w-/p | Zone |
+|---|---|---|---|---|---|
+| 0.01 | 0.034 | 3.4x | 0.021 | 2.1x | Strong overweight |
+| 0.05 | 0.103 | 2.1x | 0.079 | 1.6x | Strong overweight |
+| 0.10 | 0.166 | 1.7x | 0.135 | 1.4x | Moderate overweight |
+| 0.30 | 0.348 | 1.2x | 0.312 | 1.0x | Near neutral |
+| 0.50 | 0.421 | 0.84x | 0.435 | 0.87x | Moderate underweight |
+| 0.70 | 0.534 | 0.76x | — | — | Strong underweight |
+| 0.90 | 0.742 | 0.82x | 0.790 | 0.88x | Strong underweight |
+
+### Theory-Guided Diagnostic Checklist (Phase 4)
+
+When CPT-PG and REINFORCE do NOT diverge, systematically check each CPT mechanism:
+
+| CPT Mechanism | When Active | How to Check | Fix if Inactive |
+|---|---|---|---|
+| **Value compression** (α=0.88) | Gains > 10 | Is `v(G_risky)/v(G_safe)` significantly different from `G_risky/G_safe`? | Increase goal_reward or cliff_reward to get larger absolute returns |
+| **Loss convexity** (β=0.88) | Losses < -10 | Same check for losses | Increase \|step\| or \|cliff\| |
+| **Prob overweighting** | p < 0.15 | Check `w(p_cliff)/p_cliff` in table above — is ratio > 1.5? | Adjust wind_prob to put cliff probability in the overweighting zone |
+| **Prob underweighting** | p > 0.40 | Check `w(p)/p` in table — is ratio < 0.95? | Adjust wind_prob |
+| **Loss aversion** (λ=2.25) | Mixed domain (gains AND losses) | Are returns BOTH above AND below reference_point? | Adjust reference_point to straddle returns. Lambda cancels in pure domains! |
+| **center_phi** | Pure domains (all gains or all losses) | Are phi values near-uniform before centering? | Set `center_phi: true` — **required for Exp 1-4** |
+| **Tipping point shifted** | After any parameter change | Is REINFORCE still borderline? | Re-run Phase 2a/2b after adjustments |
+| **Training failure** | CPT-PG reward curve is flat | Check training curves, compare to REINFORCE | Adjust lr, entropy_coef, batch_size |
 
 ---
 
@@ -229,48 +301,69 @@ THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFEREN
 
 ## Experiment Lifecycle
 
-Each experiment is owned end-to-end by a single researcher: **exploration** (Phases 1-4), **self-validation** (Phase 5-6), and **final report** (Phase 7). If validation fails, the researcher iterates immediately. The starting configs in each experiment section are initial guesses — researchers WILL need to explore and adjust parameters.
+Each experiment is owned end-to-end by a single researcher. The core strategy is the **tipping-point approach**: find the configuration where REINFORCE is nearly indifferent between paths, then exploit that indifference with CPT-PG. If validation fails, the researcher iterates immediately. The starting configs in each experiment section are initial guesses — researchers WILL need to explore and adjust parameters.
 
 We need **at least 3 replicable differences found**. Focus on finding at least three significant differences first, then focus on the rest of experiments.
 
 ### Researcher Phases
 
-#### Phase 1: Analytical Config Search (low resource, always allowed)
+#### Phase 1: Analytical Divergence Search (low resource, always allowed)
 
 Adapt `scripts/find_divergent_config.py` to your experiment. Use `path_likelihood.py` functions:
 - `cliff_fall_probability(row, nrows, ncols, wind_prob)` — P(cliff) for a row
 - `calculate_path_cpt_value(outcomes, value_func, weighting_func)` — CPT value with proper decision weights
 - `calculate_path_expected_value(outcomes)` — EV value
 - `build_path_outcome_distributions(env_config)` — outcome distributions for each row
-- `compare_value_frameworks(env_config, cpt_params)` — compare EV vs CPT preferences
+- `compare_value_frameworks(env_config, cpt_params)` — compare EV vs CPT preferences (**always pass `use_probability_weighting: True` in cpt_params**)
 
-Search the parameter space listed in your experiment section. Find configs where EV and CPT **diverge in the predicted direction**.
+Search the parameter space listed in your experiment section. Find configs where EV and CPT **diverge in the predicted direction**. The acceptance criterion is: `ev_preferred_row != cpt_preferred_row`, matching the experiment's hypothesis.
 
-#### Phase 2: Config Creation
+#### Phase 2a: Tipping Point Search (analytical, low resource)
 
-1. Create config YAML in `configs/` directory based on search results
-2. Set `n_seeds: 2` for initial exploration
+Starting from the Phase 1 config, find where REINFORCE is nearly indifferent between the risky and safe paths:
 
-#### Phase 3: Quick Training (2 seeds, resource-constrained)
+1. Identify the **primary search variable** for your experiment (see per-experiment sections below — typically gamma for gains domain, reward_step/wind_prob for losses domain)
+2. Binary-search that variable to find where EV margin between the top-2 rows is < 5%
+3. See the **Tipping Point Search Reference** section for the algorithm and domain-specific guidance
+4. Create config YAML in `configs/` with `n_seeds: 2` and `agents: [reinforce]` (REINFORCE only for Phase 2b)
+
+#### Phase 2b: Validate the Tipping Point (REINFORCE-only training)
 
 1. **Message the lead** to request a training slot
-2. Run: `python main.py -c your_config_name`
-3. Check stdout for path analysis
-4. Check `outputs/` for training curves and eval GIFs
-5. Assess: is there a meaningful behavioral difference? THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS.
+2. Run: `python main.py -c your_config_name` (REINFORCE only)
+3. Check training signatures against the tipping-point criteria (see reference section):
+   - Slow convergence (settles at 50-80% of timesteps, not before 40%)
+   - Reward oscillation in `rewards.png` before stabilizing
+   - Path distribution spread: 60-70% on preferred row, not 95%+ on one row
+   - Seed sensitivity: at least 1 of 2 seeds shows exploration of alternative path
+4. **If NOT at tipping point**: adjust the primary search variable and repeat Phase 2a
+5. **If at tipping point**: proceed to Phase 3
 
-#### Phase 4: Iterate or Handoff
+#### Phase 3: CPT-PG Training (2 seeds, resource-constrained)
 
-**If no behavioral difference** (iterate):
-- Adjust parameters from the exploration list in your experiment section
-- Re-run analytical search with wider ranges
-- Check training curves — did the agents converge?
-- Try different grid sizes or wind probabilities
-- Document what you tried and why
-- After 3+ failed iterations, message the lead for guidance
+1. Update config to include both agents: `agents: [reinforce, cpt-pg]`
+2. Ensure `center_phi: true` is set for pure-domain experiments (Exp 1-4)
+3. **Message the lead** to request a training slot
+4. Run: `python main.py -c your_config_name`
+5. Check stdout for path analysis, training curves, and eval GIFs
+6. Assess: do the agents converge to **different preferred rows** in the direction predicted by CPT theory?
 
-**If promising result found** (proceed to self-validation):
-- Move directly to Phase 5 — do not hand off to another researcher.
+THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS.
+
+#### Phase 4: Theory-Guided Diagnosis (if no divergence)
+
+If CPT-PG and REINFORCE choose the same path, use the **diagnostic checklist** in the Tipping Point Search Reference section. Systematically check:
+
+1. **phi-hat uniformity** — need `center_phi: true` in pure domains?
+2. **Probability weighting direction** — is w(p)/p pushing in the expected direction for this wind_prob? Check the reference table.
+3. **Value compression magnitude** — are absolute returns large enough (> 50) for meaningful compression?
+4. **Domain compatibility** — mixed gains domain (cliff<0, goal>0, step=0) fails with CPT-PG. Avoid it.
+5. **Tipping point shifted** — did parameter adjustments move the tipping point? Re-verify REINFORCE is still borderline.
+6. **Training convergence** — if CPT-PG reward curve is flat, the issue is training not CPT theory. Adjust lr, entropy, batch_size.
+
+After diagnosis, loop back to Phase 2 or 3 with adjusted parameters. After 3+ failed iterations, message the lead for guidance.
+
+**If promising divergence found** — proceed to Phase 5.
 
 ### Self-Validation Phases (same researcher)
 
@@ -299,24 +392,46 @@ Once 4-seed validation succeeds, produce:
 ### Experiment Flow Diagram
 
 ```
-Researcher                     Lead
-    |                            |
-    |-- Phase 1-2 (config) ---  |
-    |-- "need train slot" ----> |
-    |                            |-- "slot approved"
-    |-- Phase 3 (2-seed run) -- |
-    |-- Phase 4 (assess) ----  |
-    |                            |
-    |   [if weak: loop back to Phase 3, iterate params]
-    |                            |
-    |-- Phase 5 (4-seed run) -- |
-    |                            |
-    |   [if validation fails: loop back to Phase 3]
-    |                            |
-    |-- Phase 6 (stats) ------  |
-    |-- "final report" -------> |
-    |-- "request next exp" ---> |
-    |                            |
+Researcher                              Lead
+    |                                     |
+    |-- Phase 1: Analytical Divergence    |
+    |   (use path_likelihood.py)          |
+    |   Output: config where EV!=CPT      |
+    |                                     |
+    |-- Phase 2a: Tipping Point Search    |
+    |   (binary search on gamma/step/wind)|
+    |   Output: config where EV margin<5% |
+    |                                     |
+    |-- "need train slot (REINFORCE only)"|
+    |   --------------------------------> |
+    |                                     |-- "slot approved"
+    |-- Phase 2b: Validate Tipping Point  |
+    |   (2-seed REINFORCE-only run)       |
+    |   Check: slow convergence?          |
+    |   Check: path distribution spread?  |
+    |   Check: seed sensitivity?          |
+    |                                     |
+    |   [If NOT at tipping point:         |
+    |    adjust, loop to Phase 2a]        |
+    |                                     |
+    |-- "need train slot (both agents)"   |
+    |   --------------------------------> |
+    |                                     |-- "slot approved"
+    |-- Phase 3: CPT-PG Training          |
+    |   (2-seed, both agents)             |
+    |   Check: different row preferences? |
+    |   Check: matches CPT theory?        |
+    |                                     |
+    |   [If no divergence: Phase 4        |
+    |    diagnosis, loop to Phase 2 or 3] |
+    |                                     |
+    |-- Phase 5: Validation (4 seeds)     |
+    |   [If fails: loop to Phase 3]       |
+    |                                     |
+    |-- Phase 6: Stats & Report           |
+    |-- "final report" -----------------> |
+    |-- "request next exp" -------------> |
+    |                                     |
 ```
 
 ---
@@ -386,13 +501,22 @@ agents:
 | `wind_prob` | [0.03, 0.05, 0.07, 0.10] | Keep ≤0.10 for high-probability regime. |
 | `shape` | [4,5], [4,6], [4,7], [5,5], [5,6] | Larger = more path differentiation but harder to train. |
 
-### Config Search Approach
+### Tipping Point Strategy
 
-Adapt `scripts/find_divergent_config.py`: search for the gamma/goal_reward combination where EV prefers risky but CPT prefers safe. Use `path_likelihood.py` `calculate_path_cpt_value()` with a `CPTWeightingFunction` for proper probability weighting (the existing search script uses simplified CPT without probability weighting).
+**Primary search variable**: `gamma`
+**Tipping range**: [0.85, 0.92]
+**How it works**: At low gamma (0.80-0.85), REINFORCE strongly prefers risky path (short path is less discounted). At high gamma (0.93+), REINFORCE prefers safe path (risk of cliff outweighs discount advantage). The tipping point is in between.
+
+1. **Phase 1**: Find a gamma where EV prefers risky but CPT prefers safe (use `compare_value_frameworks` with `use_probability_weighting: True`)
+2. **Phase 2a**: Binary-search gamma to find where REINFORCE's EV margin between risky and safe is < 5%
+3. **Phase 2b**: Run REINFORCE-only. Look for oscillation between rows and slow convergence
+4. **Phase 3**: Add CPT-PG. CPT's value compression (`v(G_risky)^0.88` compresses large risky gains more than safe gains) + probability underweighting of high success probability should tip CPT toward the safer path
+
+**CPT mechanism active here**: Value compression (α=0.88, concave) + probability underweighting of high-p success (w+(0.82) ≈ 0.71 < 0.82)
 
 ### Expected Outcome
 
-- **REINFORCE**: Prefers risky path (row 2) — correctly computes higher EV despite small risk
+- **REINFORCE**: Barely prefers risky path (row 2) at the tipping point — slow to converge, oscillates
 - **CPT-PG**: Prefers safe path (row 0 or 1) — value compression + probability underweighting makes safe more attractive
 - Mean traversal row: CPT < REINFORCE
 
@@ -463,9 +587,22 @@ agents:
 | `shape` | [4,5], [4,6], [4,7] | Affects step count differences between paths. |
 | `gamma` | [0.95, 0.97, 0.99] | Higher accumulates more step losses. |
 
+### Tipping Point Strategy
+
+**Primary search variable**: `reward_step` (secondary: `wind_prob`)
+**Tipping range**: reward_step in [-1.0, -2.5], wind_prob in [0.05, 0.10]
+**How it works**: At high |step| (e.g., -2.5), REINFORCE prefers risky path (safe path's many steps are very costly). At low |step| (e.g., -0.5), REINFORCE prefers safe (cliff risk dominates over step cost). The tipping point is in between.
+
+1. **Phase 1**: Find a reward_step where EV prefers safe but CPT prefers risky
+2. **Phase 2a**: Sweep reward_step to find where REINFORCE's EV margin is < 5%
+3. **Phase 2b**: Run REINFORCE-only. Look for oscillation and slow convergence
+4. **Phase 3**: Add CPT-PG. CPT's loss convexity (−λ|x|^0.88 is convex, making certain losses feel disproportionately bad) + probability underweighting (w−(0.66) < 0.66, reduces perceived high success probability) should push CPT toward the riskier path
+
+**CPT mechanism active here**: Loss convexity (β=0.88) + probability underweighting of high p_success. Use `center_phi: true` since all returns are negative.
+
 ### Expected Outcome
 
-- **REINFORCE**: Prefers safe path (minimizes expected loss)
+- **REINFORCE**: Barely prefers safe path at the tipping point — slow to converge
 - **CPT-PG**: Prefers risky path (gambles to escape certain loss)
 - Mean traversal row: CPT > REINFORCE
 - CPT may have higher cliff fall rate (confirms risk-seeking)
@@ -540,14 +677,30 @@ agents:
 | `batch_size` | [16, 32] | Larger batches stabilize high-variance training. |
 | `timesteps` | [500000, 750000] | May need more training for convergence. |
 
-**This is the hardest experiment.** The probability overweighting effect is strong theoretically but may be hard to learn. If the risky path almost never succeeds during training, the agent may never explore it enough. Consider:
-- Starting with moderate wind and gradually increasing
-- Using very large goal rewards (1000+) to amplify the signal
-- Using row 1 (d=2) instead of row 2 (d=1) for intermediate risk levels
+**This is the hardest experiment.** The probability overweighting effect is strong theoretically but may be hard to learn. If the risky path almost never succeeds during training, the agent may never explore it enough.
+
+### Tipping Point Strategy
+
+**Primary search variable**: `gamma` (secondary: `wind_prob`)
+**Tipping range**: gamma in [0.85, 0.92], wind_prob in [0.20, 0.35]
+**How it works**: At low gamma, REINFORCE prefers risky (short path barely discounted, lottery worth trying). At high gamma, REINFORCE prefers safe (risk-adjusted EV of long safe path dominates). The tipping point is where REINFORCE barely prefers safe.
+
+1. **Phase 1**: Find a gamma/wind_prob where EV prefers safe but CPT prefers risky (probability overweighting flips CPT's preference)
+2. **Phase 2a**: Binary-search gamma to find where REINFORCE barely prefers safe (EV margin < 5%)
+3. **Phase 2b**: Run REINFORCE-only. Since success is rare, look for: mostly safe path but occasional risky exploration, seed disagreement on preferred row
+4. **Phase 3**: Add CPT-PG. CPT overweights the small probability of the big gain: `w+(0.10) ≈ 0.17` (1.7x overweight). This should be enough to flip CPT-PG toward the risky path at the tipping point.
+
+**CPT mechanism active here**: Probability overweighting of small p_success (w+(p) >> p for p < 0.15). Check the probability weighting table for your specific wind_prob.
+
+**Practical tips for this hard experiment:**
+- Consider row 1 (d=2) instead of row 2 (d=1) for intermediate risk levels with higher success rates
+- Use very large goal rewards (1000+) to amplify the lottery signal
+- Use `batch_size: 32` to stabilize the high-variance environment
+- May need `timesteps: 500000-750000` for convergence
 
 ### Expected Outcome
 
-- **REINFORCE**: Strong safe-path preference (correctly penalizes low probability)
+- **REINFORCE**: Barely prefers safe path at the tipping point — slow convergence, explores risky path occasionally
 - **CPT-PG**: Weaker safe preference or risky preference (overweights small p of big gain)
 - Mean traversal row: CPT > REINFORCE
 - CPT likely has higher cliff fall rate (the "lottery" usually loses)
@@ -618,9 +771,22 @@ agents:
 | `shape` | [5,5], [5,6], [5,7], [5,8] | 5 rows for more path granularity. |
 | `gamma` | [0.97, 0.98, 0.99] | High gamma in loss domain. |
 
+### Tipping Point Strategy
+
+**Primary search variable**: `wind_prob` (secondary: `reward_step`)
+**Tipping range**: wind_prob in [0.04, 0.08], targeting row 2 cliff probability ~1-3%
+**How it works**: At low wind_prob, REINFORCE prefers row 2 (tiny risk, shorter path). At higher wind_prob, REINFORCE shifts to row 1 (risk becomes non-negligible). The tipping point is where REINFORCE barely prefers row 2.
+
+1. **Phase 1**: Find a wind_prob where EV prefers row 2 but CPT prefers row 1 (CPT overweights the small cliff probability at row 2)
+2. **Phase 2a**: Sweep wind_prob to find where REINFORCE's EV margin between row 2 and row 1 is < 5%
+3. **Phase 2b**: Run REINFORCE-only. Look for: some seeds choosing row 2, others choosing row 1
+4. **Phase 3**: Add CPT-PG. CPT overweights the small cliff probability: `w-(0.014) ≈ 0.035` (2.5x overweight). This should tip CPT-PG away from row 2 toward the safer row 1 or 0.
+
+**CPT mechanism active here**: Probability overweighting of small p_cliff (w-(p) >> p for p < 0.05). Use `center_phi: true` since all returns are negative.
+
 ### Expected Outcome
 
-- **REINFORCE**: May accept row 2 (tiny risk, shorter path, fewer step losses)
+- **REINFORCE**: Barely accepts row 2 at the tipping point (tiny risk, shorter path, fewer step losses)
 - **CPT-PG**: Avoids row 2, prefers row 0 or 1 (overweights the tiny cliff probability)
 - Mean traversal row: CPT < REINFORCE
 - CPT should have near-0% cliff falls
@@ -704,9 +870,23 @@ agents:
 
 The output directory fix ensures these don't collide: `cpt-pg_lambda_2.25_{config}` vs `cpt-pg_lambda_1.0_{config}`.
 
+### Tipping Point Strategy
+
+**Primary search variable**: `reference_point`
+**How it works**: This experiment requires a mixed domain where some returns are "gains" and some are "losses" relative to the reference point, so that lambda=2.25 can differentially amplify the loss side. However, mixed gains domain (cliff<0, goal>0, step=0) is known to FAIL with CPT-PG.
+
+**Critical design constraint**: Keep all rewards in losses domain (step<0, goal<0, cliff<0) for training stability. Use a shifted `reference_point` (e.g., -20) so that:
+- Safe path returns (e.g., -12) are ABOVE the reference → treated as "gains" by CPT
+- Cliff returns (e.g., -104) are BELOW the reference → treated as "losses" by CPT, amplified by λ=2.25
+
+1. **Phase 1**: Find a reference_point where EV is near-indifferent but CPT strongly prefers safe (lambda amplifies the loss side)
+2. **Phase 2a**: Sweep reference_point to find where REINFORCE barely prefers risky (EV margin < 5%)
+3. **Phase 2b**: Run REINFORCE-only to validate the tipping point
+4. **Phase 3**: Add CPT-PG with λ=2.25. The loss amplification should push CPT-PG firmly toward safe
+
 ### Expected Outcome
 
-- **REINFORCE**: Evaluates gamble symmetrically, may accept risky path
+- **REINFORCE**: Barely prefers risky path at the tipping point
 - **CPT-PG (λ=2.25)**: Strongly avoids risky path (loss amplified 2.25x)
 - **CPT-PG (λ=1.0, control)**: Behaves more like REINFORCE
 - The λ=2.25 vs λ=1.0 comparison directly isolates loss aversion's impact
@@ -819,23 +999,27 @@ Compare CPT-PG (adaptive reference) vs CPT-PG (fixed reference=0) vs REINFORCE.
 1. **`stochasticity: windy`** — ALWAYS set this in configs that use wind_prob. Without it, wind is disabled.
 2. **Positive domain requires `reward_step: 0`** — non-zero step rewards in positive domain cause unwanted behavior. Use gamma as the path-length penalty.
 3. **Deep merge is active** — experiment configs only need to specify parameters that differ from base.yaml.
+4. **`center_phi: true` is required** for all pure-domain experiments (Exp 1-4). Without it, phi-hat values are near-uniform and CPT-PG behaves like REINFORCE.
+5. **`compare_value_frameworks` must use probability weighting** — always pass `use_probability_weighting: True` in cpt_params when calling this function.
+6. **REINFORCE-only training runs** (Phase 2b) are half the compute of a full run and do NOT count against the 2-concurrent-run limit.
 
 ### Resource Management
-4. **2 concurrent training runs maximum** — researchers MUST message the lead before starting any training run. Analytical config search scripts do NOT count (they are lightweight). The lead tracks active slots and approves/denies requests.
-5. The lead should **actively monitor compute resources** and preemptively manage the training queue to prevent crashes.
+7. **2 concurrent training runs maximum** — researchers MUST message the lead before starting any training run. Analytical config search scripts and REINFORCE-only Phase 2b runs do NOT count (they are lightweight / half compute). The lead tracks active slots and approves/denies requests.
+8. The lead should **actively monitor compute resources** and preemptively manage the training queue to prevent crashes.
 
 ### Experiment Execution
-6. **Iterate on configs** — the starting configs are educated guesses. Researchers will likely need to adjust parameters. Follow the lifecycle: analytical search first, then quick training (2 seeds), then self-validate with confirmation (4 seeds). If validation fails, iterate immediately.
-7. **The main goal is behavioral differences** — a "successful" experiment shows CPT and REINFORCE choosing different paths, in the direction predicted by CPT theory. THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS.
-8. **Multiple experiments and runs are expected** to reach a successful config. Think deeply about the proposed experiments and the possible consequences before running.
-9. **Document everything** — record what configs you tried, what worked, what didn't, and why.
-10. We need **at least 3 replicable differences found**. Focus on finding at least three significant differences first, then focus on the rest of experiments.
+9. **Use the tipping-point strategy** — the starting configs are educated guesses. Follow the lifecycle: analytical divergence search (Phase 1) → tipping point search (Phase 2a) → REINFORCE-only validation (Phase 2b) → CPT-PG training (Phase 3) → diagnosis if needed (Phase 4) → 4-seed validation (Phase 5). If validation fails, iterate immediately.
+10. **The main goal is behavioral differences** — a "successful" experiment shows CPT and REINFORCE choosing different paths, in the direction predicted by CPT theory. THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS.
+11. **Find REINFORCE's indifference point first** — the key insight is that CPT's distortions are small relative to a strong EV preference. By finding where REINFORCE is barely choosing one path, even small CPT effects can flip the preference. Don't skip Phase 2.
+12. **Use the diagnostic checklist when stuck** — Phase 4 provides a structured theory-grounded approach to debugging. Check each CPT mechanism against the probability weighting table before making random parameter changes.
+13. **Document everything** — record what configs you tried, what worked, what didn't, and why.
+14. We need **at least 3 replicable differences found**. Focus on finding at least three significant differences first, then focus on the rest of experiments.
 
 ### Team Coordination
-11. **Researchers own experiments end-to-end** — each researcher explores, validates, and reports their own experiment. After completing a validated experiment, message the lead for your next assignment. Do not sit idle.
-12. **Self-validation keeps momentum** — researchers validate their own results and iterate immediately on failure, avoiding handoff delays. The only resource constraint is the 2-concurrent-run limit.
-13. **Any code changes that can break the experiments flow must be coordinated and confirmed with the lead** to avoid catastrophic changes.
-14. **Cross-agent communication is encouraged** — share parameter insights, ask questions, and flag issues. Asking questions improves speed and success probability. Use direct messages for targeted info, not broadcasts.
-15. Feel free to **read the research, review the codebase, or run calculations as needed**.
+15. **Researchers own experiments end-to-end** — each researcher explores, validates, and reports their own experiment. After completing a validated experiment, message the lead for your next assignment. Do not sit idle.
+16. **Self-validation keeps momentum** — researchers validate their own results and iterate immediately on failure, avoiding handoff delays. The only resource constraint is the 2-concurrent-run limit.
+17. **Any code changes that can break the experiments flow must be coordinated and confirmed with the lead** to avoid catastrophic changes.
+18. **Cross-agent communication is encouraged** — share parameter insights, ask questions, and flag issues. Asking questions improves speed and success probability. Use direct messages for targeted info, not broadcasts.
+19. Feel free to **read the research, review the codebase, or run calculations as needed**.
 
 **Feel free to ask any questions** you need to clarify or improve experimentation performance. This goes to the lead and all the other agents. Asking questions improves speed and success probability.
