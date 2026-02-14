@@ -122,16 +122,7 @@ This variant combines CPT-PG with RUDDER-style learned credit assignment. A per-
 
 ## Conclusions and Lessons Learned
 
-Four experiments confirmed that CPT-PG produces the behavioral shifts predicted by Cumulative Prospect Theory. The "Sure Thing" effect (Exp 1, *d* = 0.88) and "Lottery Ticket" effect (Exp 3, *d* = 0.83) both show large effect sizes, while loss aversion (Exp 5, *d* = 0.55) and the "Insurance Policy" (Exp 4, *d* = 0.38) show moderate effects with high statistical significance.
 
-Key technical insights from this project:
-
-- **The `center_phi` trick is essential.** In pure domains (all gains or all losses), CPT weights are all same-signed, reducing CPT-PG to vanilla REINFORCE. Subtracting the batch mean restores the CPT effect.
-- **Domain matters.** CPT-PG works reliably in losses domains and pure positive gains. It fails in mixed domains (positive goal, negative cliff, zero step cost) because sparse rewards combined with `center_phi` can produce zero gradients.
-- **Lambda cancels in pure domains.** Loss aversion only matters when outcomes straddle the reference point. In pure losses, lambda is just a scaling factor. A shifted reference point activates lambda without leaving the losses training domain.
-- **Simpler is better.** Per-step CPT and RUDDER decomposition added complexity without clear gains. The standard CPT-PG algorithm with `center_phi` was the most reliable approach.
-
-The LLM agent (GPT-5-mini) makes for an interesting comparison point. It receives the same environment information but has no training --- just a system prompt describing the grid. Its behavior varies across experiments but generally reflects a "common sense" risk attitude that sometimes aligns with CPT predictions and sometimes does not.
 
 
 ## References
