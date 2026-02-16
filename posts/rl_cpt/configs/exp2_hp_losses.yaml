@@ -1,0 +1,57 @@
+# Experiment 2: Risk Seeking for High-Probability Losses
+#
+# CPT Fourfold Pattern: risk seeking when losses are probable.
+# Mechanism: diminishing sensitivity (beta=0.5) compresses large losses
+# more than small ones. The risky path (row 2, 4 steps) has shorter
+# length but 1.8% cliff risk. EV penalizes this risk; CPT compresses
+# the cliff loss, making the shorter path relatively more attractive.
+#
+# w_minus_gamma=1.0 removes probability overweighting for losses,
+# isolating the diminishing sensitivity mechanism.
+#
+# Grid: 5x4 with 4 viable rows, wind=0.095
+# EV prefers row 1 (safe, 6 steps, P(cliff)=0%)
+# CPT prefers row 2 (risky, 4 steps, P(cliff)=1.8%)
+# Row 3 (riskiest, 2 steps) avoided by both
+# Row 0 (safest, 8 steps) suboptimal for both (21% worse)
+#
+# EV margin: 8.13%, CPT margin: 5.81%
+# P(cliff) safe: 0%, risky: 1.80%
+#
+# Results (8 seeds, 160 episodes each):
+#   REINFORCE:  Path2=27% Path3=32% Path4=39% | mean_reward=-22.69
+#   CPT-PG:     Path2=87% Path3=11% Path4=1%  | mean_reward=-11.84
+#   Mann-Whitney p = 7.77e-05, Cohen's d = 2.89
+
+env:
+  shape: [5, 4]
+  stochasticity: windy
+  reward_cliff: -150
+  reward_step: -1
+  reward_goal: -1
+  wind_prob: 0.095
+
+training:
+  timesteps: 750000
+  n_eval_episodes: 20
+  batch_size: 64
+  entropy_coef: 0.5
+  entropy_coef_final: 0.01
+  n_seeds: 8
+
+agent_config:
+  lr: 0.0005
+  gamma: 0.99
+  baseline_type: ema
+  center_phi: true
+  augmented_state: false
+  alpha: 0.88
+  beta: 0.5
+  lambda_: 2.25
+  reference_point: 0.0
+  w_plus_gamma: 0.61
+  w_minus_gamma: 1.0
+
+agents:
+  - reinforce
+  - cpt-pg

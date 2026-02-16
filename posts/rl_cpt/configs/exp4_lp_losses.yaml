@@ -1,0 +1,57 @@
+# Experiment 4: Risk Aversion for Low-Probability Losses
+#
+# CPT overweights rare cliff outcomes -> "insurance" behavior
+# Grid: 4x8, wind=0.04, gamma=0.96, cliff=-10
+#
+# EV preferred: row 2 (9 steps, P(cliff)=24.9%)
+# CPT preferred: row 1 (11 steps, P(cliff)=0.96%)
+#
+# Mechanism: With a mild cliff penalty (-10), EV sees the short risky path
+# as optimal (17% margin over row 0). But CPT overweights the cliff
+# probabilities: w-(0.249) = 0.29 (1.2x) for row 2, w-(0.0096) = 0.040
+# (4.2x) for row 1. The relative overweighting at low probabilities makes
+# the intermediate row 1 (with its very low 1% cliff rate) appear optimally
+# balanced under CPT, while the risky row 2's cliff prob is overweighted.
+#
+# This is the "insurance" effect: CPT agents avoid a path whose EV is best
+# because they overweight its rare catastrophe probability.
+#
+# Domain: losses with reference point shift for trainability.
+# reference_point=-12 creates mixed domain (row 1,2 success = gains, cliff = losses)
+# so CPT-PG phi-hat differentiates paths (avoids pure-domain phi uniformity).
+#
+# EV margin: 17% (row 2 vs row 0), CPT margin: 19%
+# 8 seeds, 500K timesteps
+
+env:
+  shape: [4, 8]
+  stochasticity: windy
+  reward_cliff: -10
+  reward_step: -1
+  reward_goal: -1
+  wind_prob: 0.04
+
+training:
+  timesteps: 500000
+  n_eval_episodes: 20
+  batch_size: 64
+  entropy_coef: 0.5
+  entropy_coef_final: 0.01
+  n_seeds: 8
+
+agent_config:
+  lr: 0.0005
+  gamma: 0.96
+  baseline_type: ema
+  alpha: 0.88
+  beta: 0.88
+  lambda_: 2.25
+  reference_point: -12.0
+  w_plus_gamma: 0.61
+  w_minus_gamma: 0.69
+  center_phi: true
+  augmented_state: false
+
+agents:
+  - reinforce
+  - cpt-pg

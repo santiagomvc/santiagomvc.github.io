@@ -739,54 +739,63 @@ class CPTPGAgent(REINFORCEAgent):
 #         }
 
 
-# class LLMAgent(BaseAgent):
-#     """LLM-based agent using OpenAI for action selection.
+class LLMAgent(BaseAgent):
+    """LLM-based agent using OpenAI for action selection.
 
-#     Uses function calling with ReAct-style reasoning to navigate the environment.
-#     No training required - uses prompt engineering for decision making.
-#     """
+    Uses function calling with ReAct-style reasoning to navigate the environment.
+    No training required - uses prompt engineering for decision making.
+    """
 
-#     def __init__(self, env, model: str = "gpt-5-mini", verbose: bool = False):
-#         """Initialize LLM agent.
+    def __init__(self, env, model: str = "gpt-5-mini", verbose: bool = False,
+                 config_name: str = "base", **kwargs):
+        """Initialize LLM agent.
 
-#         Args:
-#             env: Gymnasium environment
-#             model: OpenAI model name (default: gpt-5-mini)
-#             verbose: Print reasoning to stdout (default: False)
-#         """
-#         self.client = OpenAI()  # Uses OPENAI_API_KEY env var
-#         self.model = model
-#         self.verbose = verbose
+        Args:
+            env: Gymnasium environment
+            model: OpenAI model name (default: gpt-5-mini)
+            verbose: Print reasoning to stdout (default: False)
+            config_name: Config name for environment parameters
+            **kwargs: Absorbed silently (agent_config keys)
+        """
+        self.client = OpenAI()  # Uses OPENAI_API_KEY env var
+        self.model = model
+        self.verbose = verbose
+        self.cfg = load_config(config_name)
 
-#     def act(self, state) -> int:
-#         """Select action using LLM with function calling."""
-#         cfg = load_config()
-#         shape = tuple(cfg["env"]["shape"])
-#         prompt = get_cliffwalking_prompt(shape, cfg["env"]["reward_cliff"], cfg["env"]["reward_step"])
-#         messages = [
-#             {"role": "system", "content": prompt},
-#             {
-#                 "role": "user",
-#                 "content": f"Current state:\n{format_cliffwalking_state(state, shape)}\n\nSelect your action.",
-#             },
-#         ]
+    def act(self, state, **kwargs) -> int:
+        """Select action using LLM with function calling."""
+        shape = tuple(self.cfg["env"]["shape"])
+        prompt = get_cliffwalking_prompt(
+            shape,
+            self.cfg["env"]["reward_cliff"],
+            self.cfg["env"]["reward_step"],
+            self.cfg["env"]["reward_goal"],
+            self.cfg["env"].get("wind_prob", 0.0),
+        )
+        messages = [
+            {"role": "system", "content": prompt},
+            {
+                "role": "user",
+                "content": f"Current state:\n{format_cliffwalking_state(state, shape)}\n\nSelect your action.",
+            },
+        ]
 
-#         response = self.client.chat.completions.create(
-#             model=self.model,
-#             messages=messages,
-#             tools=[CLIFFWALKING_ACTION_TOOL],
-#             tool_choice={"type": "function", "function": {"name": "select_action"}},
-#         )
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            tools=[CLIFFWALKING_ACTION_TOOL],
+            tool_choice={"type": "function", "function": {"name": "select_action"}},
+        )
 
-#         # Extract action from function call
-#         tool_call = response.choices[0].message.tool_calls[0]
-#         args = json.loads(tool_call.function.arguments)
+        # Extract action from function call
+        tool_call = response.choices[0].message.tool_calls[0]
+        args = json.loads(tool_call.function.arguments)
 
-#         if self.verbose:
-#             print(f"State {state}: {args['reasoning']}")
-#             print(f"  -> Action: {args['action']}")
+        if self.verbose:
+            print(f"State {state}: {args['reasoning']}")
+            print(f"  -> Action: {args['action']}")
 
-#         return args["action"]
+        return args["action"]
 
 
 # Agent registry for extensibility
@@ -796,7 +805,7 @@ AGENTS = {
     # "per-step-cpt": PerStepCPTAgent,
     "cpt-pg": CPTPGAgent,
     # "cpt-pg-rudder": CPTPGRUDDERAgent,
-    # "llm": LLMAgent,
+    "llm": LLMAgent,
 }
 
 

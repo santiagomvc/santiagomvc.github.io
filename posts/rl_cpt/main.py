@@ -1,6 +1,7 @@
 """CliffWalking environment runner with CLI."""
 
 import argparse
+import json
 from pathlib import Path
 
 import numpy as np
@@ -92,6 +93,9 @@ def set_seed(seed):
 def parse_args():
     parser = argparse.ArgumentParser(description="CliffWalking RL runner")
     parser.add_argument("-c", "--config", nargs="+", default=["base"])
+    parser.add_argument("-a", "--agent", default=None, help="Run only this agent type")
+    parser.add_argument("--n-eval", type=int, default=None, help="Override n_eval_episodes")
+    parser.add_argument("--n-seeds", type=int, default=None, help="Override n_seeds")
     return parser.parse_args()
 
 
@@ -101,6 +105,12 @@ if __name__ == "__main__":
 
     for config_name in args.config:
         cfg = load_config(config_name)
+        if args.agent:
+            cfg["agents"] = [args.agent]
+        if args.n_eval:
+            cfg["training"]["n_eval_episodes"] = args.n_eval
+        if args.n_seeds:
+            cfg["training"]["n_seeds"] = args.n_seeds
 
         for agent_entry in cfg["agents"]:
             if isinstance(agent_entry, str):
@@ -117,6 +127,7 @@ if __name__ == "__main__":
 
             # Merge: defaults + per-agent overrides
             agent_cfg = {**cfg["agent_config"], **agent_overrides}
+            agent_cfg["config_name"] = config_name
 
             # Build override suffix for unique output directories
             override_suffix = ""
@@ -132,6 +143,9 @@ if __name__ == "__main__":
             for seed in range(1, n_seeds + 1):
                 suffix = f"_seed{seed}" if n_seeds > 1 else ""
                 output_dir = Path(f"outputs/{agent_name}{override_suffix}_{config_name}{suffix}")
+                if (output_dir / "history.npz").exists() or (output_dir / "eval.gif").exists():
+                    print(f"Skipping {output_dir} (already exists)")
+                    continue
                 output_dir.mkdir(parents=True, exist_ok=True)
                 set_seed(seed)
                 env = make_env(config_name, seed=seed)
@@ -156,6 +170,12 @@ if __name__ == "__main__":
                 evaluate(env, agent, output_dir, config_name=config_name)
                 path_result = evaluate_paths(env, agent, n_eval, config_name=config_name)
                 all_path_results.append(path_result)
+                with open(output_dir / "path_result.json", "w") as f:
+                    json.dump({
+                        "path_counts": {str(k): v for k, v in path_result["path_counts"].items()},
+                        "cliff_falls": path_result["cliff_falls"],
+                        "n_episodes": path_result["n_episodes"],
+                    }, f)
                 agent.close()
                 env.close()
 

@@ -498,7 +498,8 @@ class PerStepSlidingWindowCPT:
 # LLM Agent prompt and tooling
 # =============================================================================
 
-def get_cliffwalking_prompt(shape: tuple[int, int], reward_cliff: float, reward_step: float) -> str:
+def get_cliffwalking_prompt(shape: tuple[int, int], reward_cliff: float, reward_step: float,
+                            reward_goal: float = -1.0, wind_prob: float = 0.0) -> str:
     """Generate CliffWalking prompt for configurable grid size and rewards."""
     nrows, ncols = shape
     start_pos = (nrows - 1) * ncols
@@ -506,7 +507,14 @@ def get_cliffwalking_prompt(shape: tuple[int, int], reward_cliff: float, reward_
     cliff_start = start_pos + 1
     cliff_end = goal_pos - 1
 
-    return f"""You are an RL agent navigating a {nrows}x{ncols} grid world (CliffWalking).
+    wind_section = ""
+    if wind_prob > 0:
+        wind_section = f"""
+WIND:
+- At each step, there is a {wind_prob*100:.0f}% chance your action is replaced with DOWN (wind pushes you toward the cliff).
+- Higher rows are farther from the cliff and therefore safer, but require more steps."""
+
+    return f"""You are an agent navigating a {nrows}x{ncols} grid world (CliffWalking).
 
 LAYOUT:
 - Grid: {nrows} rows (0-{nrows-1}) x {ncols} columns (0-{ncols-1})
@@ -522,10 +530,10 @@ ACTIONS:
 
 REWARDS:
 - Each step: {reward_step}
-- Falling off cliff: {reward_cliff}, return to start
-- Reaching goal: episode ends
-
-OBJECTIVE: Reach the goal with minimum total penalty. The safe path goes UP from start, RIGHT across top rows, then DOWN to goal.
+- Falling off cliff: {reward_cliff} (episode ends)
+- Reaching goal: {reward_goal} (episode ends)
+{wind_section}
+OBJECTIVE: Reach the goal and maximize your total reward.
 
 Think step-by-step before choosing your action."""
 

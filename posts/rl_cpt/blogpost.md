@@ -22,50 +22,54 @@ Each experiment configures rewards, wind strength, and grid size to create a dif
 
 <!-- Config: exp1_hp_gains | 5x5, step=0, goal=100, cliff=5, wind=0.05, gamma=0.90, ref=25 -->
 
-Imagine you are offered two options:
+**Environment**: 5x5 grid. Steps cost nothing. Reaching the goal: +100. Falling off the cliff: +5. Wind pushes you down with 5% probability each step.
 
-- **Option A**: An 88% chance of winning \$500, with a 12% chance of getting just \$30.
-- **Option B**: A 95% chance of winning \$400, with a 5% chance of getting \$30.
+![Initial environment](images/env_exp1.png)
 
-Option A has a higher expected payoff (\$443 vs \$381). A rational agent picks A. But most people pick B --- they prefer the near-certainty of a slightly lower reward over the risk of missing out. This is the *certainty effect*: when gains are probable, people become risk-averse.
+The shorter path hugs the cliff edge and reaches the goal faster, yielding a higher reward. The longer path climbs higher, taking more steps through the wind but staying far from the cliff. **Which path would you take?**
 
-In our grid world, the agent faces exactly this tradeoff. The risky path (closer to the cliff) reaches the goal in fewer steps, yielding a higher discounted reward, but has a ~12% chance of falling off. The safer path takes more steps but has a ~95% success rate.
+::: {layout-ncol=3}
+![REINFORCE](outputs/reinforce_exp1_hp_gains_seed1/eval_4ep.gif){group="exp1"}
 
-::: {layout-ncol=2}
-![REINFORCE](outputs/reinforce_exp1_hp_gains_seed1/eval.gif){group="exp1"}
+![CPT-PG](outputs/cpt-pg_exp1_hp_gains_seed1/eval_4ep.gif){group="exp1"}
 
-![CPT-PG](outputs/cpt-pg_exp1_hp_gains_seed1/eval.gif){group="exp1"}
+![LLM Agent](outputs/llm_exp1_hp_gains/eval.gif){group="exp1"}
 :::
-
-CPT produces this risk aversion through two mechanisms working together. First, *diminishing sensitivity*: the value function $v(x) = x^{0.88}$ is concave for gains, so the marginal value of each additional dollar decreases --- the jump from \$400 to \$500 feels smaller than from \$0 to \$100. Second, *probability underweighting*: CPT's weighting function compresses high probabilities, so the 88% success chance on the risky path is perceived as lower than 88%. Together, these make the safer, more certain option feel disproportionately attractive.
 
 **Result**: REINFORCE locks onto the riskiest path (Path1 = 100%). CPT-PG shifts decisively toward safety (Path2 = 89%, Path1 = 11%). Mann-Whitney *p* = 0.020, Cohen's *d* = 16.7, Cramer's *V* = 0.88.
 
 ![Path distribution for Experiment 1](images/exp1_path_distribution.png){#fig-exp1}
+
+With no step cost and a large goal reward, the risky path close to the cliff is the expected-value-optimal choice --- fewer steps means less discounting, and the wind risk is low enough that the higher reward more than compensates for the occasional cliff fall.
+
+CPT-PG avoids this path through the *certainty effect*: when gains are probable, people become risk-averse. Diminishing sensitivity compresses the reward difference between paths, while probability underweighting makes the high success rate on the risky path *feel* less certain. Together, these push the agent toward the safer option, even though it has lower expected value.
 
 
 ## Experiment 2: The Lottery Ticket
 
 <!-- Config: exp3_lp_gains | 7x7, step=-1, cliff=3, goal=100, wind=0.11, gamma=0.90, ref=40.75 -->
 
-Now flip the scenario. Instead of probable gains, imagine a long-shot gamble:
+**Environment**: 7x7 grid. Each step costs -1. Reaching the goal: +100. Falling off the cliff: +3. Wind pushes you down with 11% probability each step.
 
-- **Option A**: A safe route with a 93% chance of a moderate payoff.
-- **Option B**: A risky route with only a 56% chance of reaching the goal --- but if you make it, the payoff is 56% higher.
+![Initial environment](images/env_exp2.png)
 
-A rational agent picks A (higher expected value). But humans buy lottery tickets. We overweight the small probability of a big win, making unlikely jackpots feel more probable than they are. This is the *lottery ticket effect*: when gains are improbable, people become risk-seeking.
+The risky path runs close to the cliff, reaching the goal in fewer steps for a much higher net reward --- but wind makes falling a real possibility. The safe path stays higher, giving up reward for reliability. **Which path would you take?**
 
-In this 7x7 grid with a per-step cost of $-1$, the risky path (row 5, closest to the cliff) has a 44% chance of falling, but when it succeeds, its discounted return is 41 --- far higher than the safe path's 26. The safe path (row 4) succeeds 93% of the time but takes more steps through the wind. A rational agent picks the safe path for its higher expected value. But CPT overweights the 56% chance of the big payoff while diminishing sensitivity compresses the cliff penalty, making the gamble feel worth it.
+::: {layout-ncol=3}
+![REINFORCE](outputs/reinforce_exp3_lp_gains_seed1/eval_4ep.gif){group="exp2"}
 
-::: {layout-ncol=2}
-![REINFORCE](outputs/reinforce_exp3_lp_gains_seed1/eval.gif){group="exp2"}
+![CPT-PG](outputs/cpt-pg_exp3_lp_gains_seed1/eval_4ep.gif){group="exp2"}
 
-![CPT-PG](outputs/cpt-pg_exp3_lp_gains_seed1/eval.gif){group="exp2"}
+![LLM Agent](outputs/llm_exp3_lp_gains/eval.gif){group="exp2"}
 :::
 
 **Result**: REINFORCE never takes the risky path (Path 1 = 0%, Path 2 = 100%). CPT-PG gambles on the risky path 28% of the time (Path 1 = 28%, Path 2 = 72%), accepting a higher cliff rate in pursuit of the bigger payoff. *t*-test *p* = 0.000001, Cohen's *d* = 4.04.
 
 ![Path distribution for Experiment 2](images/exp3_path_distribution.png){#fig-exp2}
+
+With a per-step cost and strong wind, the risky path close to the cliff offers a much higher reward when it succeeds, but the high chance of falling makes the safer path the better bet in expectation. The rational agent correctly identifies this and always plays it safe.
+
+CPT-PG shows the *lottery ticket effect*: when gains are improbable, people become risk-seeking. CPT overweights the chance of the big payoff while diminishing sensitivity compresses the cliff penalty, making the gamble feel worth it --- just as humans buy lottery tickets despite negative expected value.
 
 
 ## Experiment 3: The Insurance Policy
@@ -73,21 +77,27 @@ In this 7x7 grid with a per-step cost of $-1$, the risky path (row 5, closest to
 <!-- Config: exp5_loss_aversion | 4x8, step=-1, goal=-1, cliff=-30, wind=0.10, gamma=0.98, ref=-20 -->
 <!-- Comparison: REINFORCE vs CPT-PG(lambda=1.0) to isolate probability overweighting -->
 
-Now imagine a different scenario. You are navigating a cost-minimizing route. Every step costs you, and falling off the cliff incurs a heavy penalty. The shortest path is riskiest but minimizes step costs. A rational agent weighs the savings against the cliff risk and picks the path with the lowest expected total cost.
+**Environment**: 4x8 grid. Each step costs -1. Reaching the goal: -1. Falling off the cliff: -30. Wind pushes you down with 10% probability each step.
 
-But humans buy insurance. We pay a premium to avoid catastrophic outcomes, even when the expected value of the insurance is negative. We overweight the small probability of disaster --- a 10% chance of falling *feels* like more than 10%.
+![Initial environment](images/env_exp3.png)
 
-To isolate this effect, we compare REINFORCE against a CPT-PG agent with $\lambda = 1.0$ (no loss aversion), so the only active CPT mechanism is probability weighting. CPT's weighting function $w(p) = p^\gamma / (p^\gamma + (1-p)^\gamma)^{1/\gamma}$ inflates small probabilities: a 10% cliff risk on the moderate path gets overweighted, making it feel substantially more dangerous than it actually is.
+Every path costs you. The shorter path minimizes step costs but the wind can push you off the cliff for a heavy penalty. The longer path adds more step costs but keeps you far from the edge. **Which path would you take?**
 
-::: {layout-ncol=2}
-![REINFORCE](outputs/reinforce_exp5_loss_aversion_seed1/eval.gif){group="exp3"}
+::: {layout-ncol=3}
+![REINFORCE](outputs/reinforce_exp5_loss_aversion_seed1/eval_4ep.gif){group="exp3"}
 
-![CPT-PG ($\lambda$=1.0)](outputs/cpt-pg_lambda_1.0_exp5_loss_aversion_seed1/eval.gif){group="exp3"}
+![CPT-PG ($\lambda$=1.0)](outputs/cpt-pg_lambda_1.0_exp5_loss_aversion_seed1/eval_4ep.gif){group="exp3"}
+
+![LLM Agent](outputs/llm_exp5_loss_aversion/eval.gif){group="exp3"}
 :::
 
 **Result**: REINFORCE favors the moderately risky path (Path2 = 57%). CPT-PG with $\lambda = 1.0$ shifts toward the safest path (Path3 = 58%). Mann-Whitney *p* = 0.009, Cohen's *d* = 1.07.
 
 ![Path distribution for Experiment 3](images/exp4_path_distribution.png){#fig-exp3}
+
+In this cost-minimizing environment, the moderately risky path balances step costs against cliff risk and comes out ahead in expected value. The rational REINFORCE agent finds this tradeoff and favors it.
+
+To isolate the *insurance effect*, we compare REINFORCE against CPT-PG with $\lambda = 1.0$ (no loss aversion), so the only active CPT mechanism is probability weighting. CPT's weighting function inflates small probabilities: the cliff risk *feels* more dangerous than it actually is, pushing the agent toward the safest path --- just as humans buy insurance to avoid rare catastrophes, even when the expected value of the insurance is negative.
 
 
 ## Experiment 4: Losses Loom Larger
@@ -95,21 +105,27 @@ To isolate this effect, we compare REINFORCE against a CPT-PG agent with $\lambd
 <!-- Config: exp5_loss_aversion (same environment as Exp 3) -->
 <!-- Comparison: CPT-PG(lambda=1.0) vs CPT-PG(lambda=2.25) to isolate loss aversion -->
 
-Experiments 3 and 4 use the same environment but decompose two different CPT mechanisms. Here we test Kahneman and Tversky's most famous finding: **losses hurt roughly twice as much as equivalent gains feel good**.
+**Environment**: Same 4x8 grid as Experiment 3. Step: -1. Goal: -1. Cliff: -30. Wind: 10%.
 
-With the reference point set at $-20$, outcomes split into gains and losses. Success returns (around $-10$ to $-12$) land above the reference and are perceived as gains. Cliff returns (around $-32$) fall below and are perceived as losses. With $\lambda = 1.0$, gains and losses are weighted equally. With $\lambda = 2.25$ (Tversky and Kahneman's empirical estimate), the cliff penalty is amplified --- a loss of $12$ below the reference *feels* like a loss of $27$.
+This is the same environment as Experiment 3. **Does making losses feel worse push the agent even further toward safety?**
 
-::: {layout-ncol=3}
-![REINFORCE](outputs/reinforce_exp5_loss_aversion_seed1/eval.gif){group="exp4"}
+::: {layout-ncol=4}
+![REINFORCE](outputs/reinforce_exp5_loss_aversion_seed1/eval_4ep.gif){group="exp4"}
 
-![CPT-PG ($\lambda$=1.0)](outputs/cpt-pg_lambda_1.0_exp5_loss_aversion_seed1/eval.gif){group="exp4"}
+![CPT-PG ($\lambda$=1.0)](outputs/cpt-pg_lambda_1.0_exp5_loss_aversion_seed1/eval_4ep.gif){group="exp4"}
 
-![CPT-PG ($\lambda$=2.25)](outputs/cpt-pg_exp5_loss_aversion_seed1/eval.gif){group="exp4"}
+![CPT-PG ($\lambda$=2.25)](outputs/cpt-pg_exp5_loss_aversion_seed1/eval_4ep.gif){group="exp4"}
+
+![LLM Agent](outputs/llm_exp5_loss_aversion/eval.gif){group="exp4"}
 :::
 
 **Result**: CPT-PG with $\lambda = 1.0$ already shifts toward safety due to probability overweighting (Path3 = 58%). Adding loss aversion with $\lambda = 2.25$ amplifies the shift dramatically (Path3 = 79%). CPT($\lambda$=1.0) vs CPT($\lambda$=2.25): *p* = 0.005, *d* = 1.18. Full CPT vs REINFORCE: *p* = 7.4 $\times$ 10^-6^, *d* = 2.38.
 
 ![Path distribution for Experiment 4](images/exp5_path_distribution.png){#fig-exp4}
+
+Experiments 3 and 4 decompose two CPT mechanisms in the same environment. With a reference point at $-20$, success returns land above it (perceived as gains) while cliff returns fall below (perceived as losses). The rational REINFORCE agent sees no difference --- outcomes are the same regardless of framing.
+
+This tests Kahneman and Tversky's most famous finding: **losses hurt roughly twice as much as equivalent gains feel good**. With $\lambda = 2.25$, the cliff penalty is amplified --- a loss of $12$ below the reference *feels* like a loss of $27$. The result is a dramatic further shift toward safety, on top of the probability overweighting already seen in Experiment 3.
 
 
 ## How It Works
