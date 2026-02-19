@@ -9,8 +9,279 @@
 <link>https://santiagomvc.github.io/</link>
 <atom:link href="https://santiagomvc.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Notes from building Machine Learning solutions in the wild</description>
-<generator>quarto-1.6.32</generator>
-<lastBuildDate>Wed, 23 Jul 2025 05:00:00 GMT</lastBuildDate>
+<generator>quarto-1.8.27</generator>
+<lastBuildDate>Wed, 18 Feb 2026 05:00:00 GMT</lastBuildDate>
+<item>
+  <title>Human and AI differences in decision making under risk</title>
+  <dc:creator>Santiago Velez</dc:creator>
+  <link>https://santiagomvc.github.io/posts/rl_cpt/rl_cpt.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>Current AI systems are undoubtedly making decisions and performing actions that humans usually do. How those decisions are made is likely to be pretty different though. Reinforcement Learning models are usually trained to maximize an expected return, while Language Models are trained with large amounts of digital data and then aligned to perform as useful assistants with methods like SFT, RLHF, and RLVR. The result is an assistant that is indeed useful and rational, in most cases. Human decision making on the other hand, while still largely a black box, has common demonstrations of irrationality and biases, with experiments replicating the results for multiple populations and decision making scenarios.</p>
+<p>In this post we compare the decision making of raw AI agents (REINFORCE, LLM), with an agent aligned to average expected human behavior under risk (CPT-PG). We will talk about the technical details in the next section, for now just try to put yourself in the position of the agent and imagine how you would make the decision.</p>
+<section id="the-setup" class="level2">
+<h2 class="anchored" data-anchor-id="the-setup">The Setup</h2>
+<p>You are controlling an agent in a grid world. Your goal is to reach the target position on the other side. The bottom edge of the grid is a cliff, falling off ends the episode. At each step, a random wind may push you one row downward toward the cliff. Higher rows are safer (farther from the edge) but require more steps, which can be penalized. The central question: <strong>which path do you choose?</strong></p>
+</section>
+<section id="experiment-1-the-insurance-policy" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-1-the-insurance-policy">Experiment 1: The Insurance Policy</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/env_exp3.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+<p>4x8 grid. Everything costs you: each step −1, reaching the goal −1, falling off the cliff −30, and moderate wind (10% chance each step). <strong>Which path would you take?</strong></p>
+<div class="quarto-layout-panel" data-layout-ncol="3">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp3_reinforce.gif" class="img-fluid figure-img" data-group="exp3"></p>
+<figcaption>REINFORCE</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp3_cpt-pg_lambda2.25.gif" class="img-fluid figure-img" data-group="exp3"></p>
+<figcaption>CPT-PG (<img src="https://latex.codecogs.com/png.latex?%5Clambda">=2.25)</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp3_llm.gif" class="img-fluid figure-img" data-group="exp3"></p>
+<figcaption>LLM Agent</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>REINFORCE finds the middle ground, a moderate path balances step costs against cliff risk. CPT-PG with no risk aversion overweights the small cliff probability: the <em>insurance effect</em>: the rare catastrophe <em>feels</em> more dangerous than it is, pushing the agent to safety. Turn up loss aversion (<img src="https://latex.codecogs.com/png.latex?%5Clambda%20=%202.25">) and the shift grows: a loss now <em>feels</em> more than twice as bad as an equivalent gain feels good, making even small risks intolerable. The LLM lands between the two CPT variants, taking the safest path 70% of the time.</p>
+</section>
+<section id="experiment-2-the-certainty-effect" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-2-the-certainty-effect">Experiment 2: The Certainty Effect</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/env_exp1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+<p>5x5 grid. Reaching the goal pays +100, falling off the cliff gives only +5. Light wind (5% chance each step). Each extra step reduces your final reward by 10% through discounting (γ = 0.90). <strong>Which path would you take?</strong></p>
+<div class="quarto-layout-panel" data-layout-ncol="3">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp1_reinforce.gif" class="img-fluid figure-img" data-group="exp1"></p>
+<figcaption>REINFORCE</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp1_cpt-pg.gif" class="img-fluid figure-img" data-group="exp1"></p>
+<figcaption>CPT-PG</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp1_llm.gif" class="img-fluid figure-img" data-group="exp1"></p>
+<figcaption>LLM Agent</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>REINFORCE takes the risky shortcut every time, it’s the highest expected reward. CPT-PG plays it safe. The reference point turns the small cliff consolation prize into a perceived loss. This, in addition to the overweighting of the fall probability, makes cliff outcomes feel devastating in CPT terms, pushing the agent away from the riskier path where cliff falls are more frequent.</p>
+</section>
+<section id="experiment-3-the-gamble" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-3-the-gamble">Experiment 3: The Gamble</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/env_exp2.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+<p>7x7 grid. Each step costs −1 and future rewards are discounted by 10% per step (γ = 0.90), reaching the goal pays +100, falling gives only +3 (forfeiting the much larger goal reward). Strong wind (11%). <strong>Which path would you take?</strong></p>
+<div class="quarto-layout-panel" data-layout-ncol="3">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp2_reinforce.gif" class="img-fluid figure-img" data-group="exp2"></p>
+<figcaption>REINFORCE</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp2_cpt-pg.gif" class="img-fluid figure-img" data-group="exp2"></p>
+<figcaption>CPT-PG</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp2_llm.gif" class="img-fluid figure-img" data-group="exp2"></p>
+<figcaption>LLM Agent</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>REINFORCE always plays safe, the expected value says don’t gamble. CPT-PG takes the risky path 28% of the time. In CPT, outcomes aren’t evaluated in absolute terms, they’re measured against a reference point. When the reference point is set near the risky path’s best-case return, the safe path’s guaranteed reward feels like accepting a moderate loss rather than locking in a win. The risky path offers a shot at breaking even. This is reference dependence: the same objective payoff feels very different depending on what you compare it to. With the reference point selected, the agent takes more risks on average.</p>
+</section>
+<section id="how-it-works" class="level2">
+<h2 class="anchored" data-anchor-id="how-it-works">How It Works</h2>
+<section id="the-grid-world" class="level3">
+<h3 class="anchored" data-anchor-id="the-grid-world">The Grid World</h3>
+<p>Our environment is a resizable grid world built on top of Gymnasium’s CliffWalking. The agent starts at the bottom-left and must reach the bottom-right (the goal). The bottom row is the cliff: falling off ends the episode with a configurable penalty. Wind is a stochastic perturbation — at each step, with probability <code>wind_prob</code>, the agent’s action is replaced with a downward push toward the cliff. Higher rows are safer but require more steps to traverse. Rewards for stepping, reaching the goal, and falling off the cliff are all independently configurable, letting us construct pure gains domains (positive goal, zero step cost), pure losses domains (negative step cost, negative cliff penalty), and mixed domains.</p>
+</section>
+<section id="reinforce-the-rational-agent" class="level3">
+<h3 class="anchored" data-anchor-id="reinforce-the-rational-agent">REINFORCE: The Rational Agent</h3>
+<p>REINFORCE is a Monte Carlo policy gradient algorithm. The agent runs complete episodes, computes discounted returns <img src="https://latex.codecogs.com/png.latex?G_t%20=%20%5Csum_%7Bk=0%7D%5E%7BT-t%7D%20%5Cgamma%5Ek%20r_%7Bt+k%7D">, and updates its policy by ascending the gradient <img src="https://latex.codecogs.com/png.latex?%5Cnabla_%5Ctheta%20J%20=%20%5Cmathbb%7BE%7D%5Cleft%5B%5Csum_t%20(G_t%20-%20b)%20%5Cnabla_%5Ctheta%20%5Clog%20%5Cpi_%5Ctheta(a_t%7Cs_t)%5Cright%5D">. An exponential moving average baseline <img src="https://latex.codecogs.com/png.latex?b"> reduces variance. Entropy regularization encourages exploration early and is annealed down during training. The policy network is a two-layer MLP mapping one-hot state encodings to action probabilities. This is the “rational” agent: it converges to the policy that maximizes expected discounted return.</p>
+</section>
+<section id="cumulative-prospect-theory" class="level3">
+<h3 class="anchored" data-anchor-id="cumulative-prospect-theory">Cumulative Prospect Theory</h3>
+<p>Cumulative Prospect Theory models four systematic deviations from rational choice:</p>
+<ol type="1">
+<li><strong>Diminishing sensitivity</strong>: The value function is concave for gains and convex for losses (<img src="https://latex.codecogs.com/png.latex?v(x)%20=%20x%5E%5Calpha"> for <img src="https://latex.codecogs.com/png.latex?x%20%5Cgeq%200">, <img src="https://latex.codecogs.com/png.latex?v(x)%20=%20-%5Clambda%7Cx%7C%5E%5Cbeta"> for <img src="https://latex.codecogs.com/png.latex?x%20%3C%200">), so each additional dollar matters less.</li>
+<li><strong>Loss aversion</strong>: Losses are amplified by <img src="https://latex.codecogs.com/png.latex?%5Clambda%20%5Capprox%202.25">, so losing $100 feels as painful as gaining roughly $260 feels good.</li>
+<li><strong>Probability weighting</strong>: Small probabilities are overweighted and large probabilities are underweighted via <img src="https://latex.codecogs.com/png.latex?w(p)%20=%20p%5E%5Cdelta%20/%20(p%5E%5Cdelta%20+%20(1-p)%5E%5Cdelta)%5E%7B1/%5Cdelta%7D"> (where <img src="https://latex.codecogs.com/png.latex?%5Cdelta"> is distinct from the RL discount factor <img src="https://latex.codecogs.com/png.latex?%5Cgamma">).</li>
+<li><strong>Reference dependence</strong>: Outcomes are evaluated as gains or losses relative to a reference point, not in absolute terms.</li>
+</ol>
+<div class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-cpt-value" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cpt-value-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://santiagomvc.github.io/posts/rl_cpt/images/cpt_value_function.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cpt-value-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: CPT value function
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-cpt-prob" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cpt-prob-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://santiagomvc.github.io/posts/rl_cpt/images/cpt_probability_weighting.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cpt-prob-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: CPT probability weighting
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>These four components predict a specific pattern of risk attitudes: risk-averse for likely gains, risk-seeking for likely losses, and risk-averse for unlikely losses, amplified further by loss aversion. Though individual behavior may vary, the patterns are consistent across populations and have replicated in experiments over the years.</p>
+</section>
+<section id="cpt-pg-combining-cumulative-prospect-theory-ideas-with-policy-gradient-learning-methods" class="level3">
+<h3 class="anchored" data-anchor-id="cpt-pg-combining-cumulative-prospect-theory-ideas-with-policy-gradient-learning-methods">CPT-PG: Combining Cumulative Prospect Theory ideas with Policy Gradient learning methods</h3>
+<p>CPT-PG (<a href="https://arxiv.org/abs/2410.02605">Lepel &amp; Barakat, 2024</a>) replaces REINFORCE’s raw returns with CPT-distorted weights <img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Cvarphi%7D"> computed from the batch of trajectories. For each episode <img src="https://latex.codecogs.com/png.latex?i">, the algorithm computes the discounted return <img src="https://latex.codecogs.com/png.latex?R_i">, applies the CPT value function to split it into gains <img src="https://latex.codecogs.com/png.latex?u%5E+"> and losses <img src="https://latex.codecogs.com/png.latex?u%5E-"> relative to the reference point, then integrates against the probability-weighted empirical survival function to obtain <img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Cvarphi%7D(R_i)">. This scalar replaces <img src="https://latex.codecogs.com/png.latex?G_t%20-%20b"> in the policy gradient. Our experiments use Tversky and Kahneman’s original parameter estimates: <img src="https://latex.codecogs.com/png.latex?%5Calpha%20=%20%5Cbeta%20=%200.88">, <img src="https://latex.codecogs.com/png.latex?%5Clambda%20=%202.25">, <img src="https://latex.codecogs.com/png.latex?%5Cdelta%5E+%20=%200.61">, <img src="https://latex.codecogs.com/png.latex?%5Cdelta%5E-%20=%200.69">.</p>
+</section>
+<section id="technical-challenges" class="level3">
+<h3 class="anchored" data-anchor-id="technical-challenges">Technical challenges</h3>
+<p>Adapting the CPT risk framework to Reinforcement Learning remains challenging, despite progress by Lepel &amp; Barakat (2024) and others, mainly because the original CPT theory was developed for evaluation of complete outcomes, while RL learns on a per-step basis. Some of the main challenges during the process were:</p>
+<ul>
+<li>The value function in CPT is not additive, which limits our ability to use the Bellman equation and other RL techniques.</li>
+<li>The probability distortions require us to know (or approximate) the explicit outcome distribution, which requires additional work and unstable approximations.</li>
+<li>In CPT-PG we broadcast the CPT-distorted return to all steps in the episode, making it harder to learn and blurring the credit assignment for important decisions.</li>
+<li>It’s not always clear how multiple factors in sequential decision making and learning scenarios interact and what the final risk attitude will be.</li>
+<li>Most of the experiments we wanted to run required changes to the original cliff walking environment, including adding wind, changing the reward structure, and the grid size. The discount factor was specially important in positive domains.</li>
+</ul>
+</section>
+<section id="results" class="level3">
+<h3 class="anchored" data-anchor-id="results">Results</h3>
+<p>The three experiments show significant behavioral shifts in the directions predicted by CPT. Each agent was trained across 4–16 seeds and evaluated over 20 episodes per seed. All pairwise comparisons between REINFORCE and CPT-PG were statistically significant (p &lt; 0.05, with most at p &lt; 0.005) with large effect sizes (Cohen’s d &gt; 1.1).</p>
+<p><strong>Experiment 1 - The Insurance Policy</strong>: REINFORCE favors the moderate path (Path 2 = 57%). CPT-PG with <img src="https://latex.codecogs.com/png.latex?%5Clambda%20=%201.0"> shifts toward the safest path (Path 3 = 58%). Adding loss aversion (<img src="https://latex.codecogs.com/png.latex?%5Clambda%20=%202.25">) amplifies the shift dramatically (Path 3 = 79%).</p>
+<div id="fig-exp1a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-exp1a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp4_path_distribution.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exp1a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Path distribution without loss aversion (<img src="https://latex.codecogs.com/png.latex?%5Clambda">=1.0)
+</figcaption>
+</figure>
+</div>
+<div id="fig-exp1b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-exp1b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp5_path_distribution.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exp1b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Path distribution with loss aversion (<img src="https://latex.codecogs.com/png.latex?%5Clambda">=2.25)
+</figcaption>
+</figure>
+</div>
+<p><strong>Experiment 2 - The Certainty Effect</strong>: REINFORCE locks onto the riskiest path (Path 1 = 100%). CPT-PG shifts toward safety (Path 2 = 89%).</p>
+<div id="fig-exp2" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-exp2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp1_path_distribution.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exp2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Path distribution for Experiment 2
+</figcaption>
+</figure>
+</div>
+<p><strong>Experiment 3 - The Gamble</strong>: REINFORCE always plays safe (Path 2 = 100%). CPT-PG gambles on the risky path 28% of the time (Path 1 = 28%, Path 2 = 72%).</p>
+<div id="fig-exp3" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-exp3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="https://santiagomvc.github.io/posts/rl_cpt/images/exp3_path_distribution.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exp3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Path distribution for Experiment 3
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="conclusions" class="level2">
+<h2 class="anchored" data-anchor-id="conclusions">Conclusions</h2>
+<p>AI agents learn and behave in a different way than humans, which is likely to generate divergences in some of the decisions they make. Even large post-trained language models are aligned to be useful assistants, which differs from humans’ expected behavior and goals. In these experiments we can see a few examples of how those differences manifest themselves in toy risk environments. It’s pretty plausible that these are also manifesting in more diffuse and important decisions every day, which is why this is an important topic to explore.</p>
+<p>However, the limited scope of Cumulative Prospect Theory, and the challenges of adapting it to Reinforcement Learning, may not make it the best fit at the moment to map AI decision making to human expected behavior. Other interesting work like <a href="https://arxiv.org/abs/2602.03545">Persona Generators (Paglieri et al., 2026)</a> and <a href="https://arxiv.org/abs/2602.13949">Experiential Reinforcement Learning (Shi et al., 2026)</a> is definitely worth exploring.</p>
+<p>The code for all experiments is available at <a href="https://github.com/santiagomvc/ai-behavior-under-risk">ai-behavior-under-risk</a>.</p>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<ul>
+<li>Tversky, A., &amp; Kahneman, D. (1992). Advances in prospect theory: Cumulative representation of uncertainty. <em>Journal of Risk and Uncertainty</em>, 5(4), 297-323.</li>
+<li>Kahneman, D., &amp; Tversky, A. (1979). Prospect theory: An analysis of decision under risk. <em>Econometrica</em>, 47(2), 263-292.</li>
+<li>Lepel, T., &amp; Barakat, A. (2024). CPT-PG: Cumulative Prospect Theory in Policy Gradient. <em>arXiv:2410.02605</em>.</li>
+<li>Williams, R. J. (1992). Simple statistical gradient-following algorithms for connectionist reinforcement learning. <em>Machine Learning</em>, 8(3), 229-256.</li>
+</ul>
+
+
+</section>
+
+ ]]></description>
+  <category>reinforcement-learning</category>
+  <category>behavioral-economics</category>
+  <category>prospect-theory</category>
+  <category>llm</category>
+  <category>ai</category>
+  <category>reinforce</category>
+  <guid>https://santiagomvc.github.io/posts/rl_cpt/rl_cpt.html</guid>
+  <pubDate>Wed, 18 Feb 2026 05:00:00 GMT</pubDate>
+  <media:content url="https://santiagomvc.github.io/posts/rl_cpt/thumbnail.png" medium="image" type="image/png" height="144" width="144"/>
+</item>
 <item>
   <title>Claude Code Intro</title>
   <dc:creator>Santiago Velez</dc:creator>
@@ -21,11 +292,12 @@
 
 
 
-<p>I’ve been recommending Claude Code to friends so much that it was time to write something up. If you are curious about coding agents, here are my two cents on why you should care and how to start with Claude Code.</p>
-<hr>
+<section id="ive-been-recommending-claude-code-to-friends-so-much-that-it-was-time-to-write-something-up.-if-you-are-curious-about-coding-agents-here-are-my-two-cents-on-why-you-should-care-and-how-to-start-with-claude-code." class="level2">
+
 <iframe src="intro_to_claude_code.pdf" width="100%" height="600px"></iframe>
 
 
+</section>
 
  ]]></description>
   <category>ai</category>
@@ -523,27 +795,27 @@
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
 <div id="cell-4" class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Downloading required libraries and packages</span></span>
 <span id="cb1-2"><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">!</span>pip install transformers spacy numpy scipy py_entitymatching python<span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">-</span>dotenv openai</span></code></pre></div>
+font-style: inherit;">-</span>dotenv openai</span></code></pre></div></div>
 </div>
 <div id="cell-5" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Downloading spacy english package</span></span>
 <span id="cb2-2"><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">!</span>python <span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">-</span>m spacy download en_core_web_sm</span></code></pre></div>
+font-style: inherit;">-</span>m spacy download en_core_web_sm</span></code></pre></div></div>
 </div>
 <div id="cell-6" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Creating data for training/few-shot and evaluation</span></span>
 <span id="cb3-2">synt_data <span class="op" style="color: #5E5E5E;
@@ -869,7 +1141,7 @@ background-color: null;
 font-style: inherit;">"match"</span>: <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"yes"</span>},</span>
-<span id="cb3-21">]</span></code></pre></div>
+<span id="cb3-21">]</span></code></pre></div></div>
 </div>
 </section>
 <section id="language-models" class="level2">
@@ -901,7 +1173,7 @@ font-style: inherit;">"yes"</span>},</span>
 <li>Fine-tuning helps, especially smaller models, without losing generalization</li>
 </ul>
 <div id="cell-8" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Loading libraries</span></span>
 <span id="cb4-2"><span class="im" style="color: #00769E;
@@ -951,10 +1223,10 @@ font-style: inherit;">legislator_2: '</span><span class="sc" style="color: #5E5E
 background-color: null;
 font-style: inherit;">{entity_2}</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">'"</span></span></code></pre></div>
+font-style: inherit;">'"</span></span></code></pre></div></div>
 </div>
 <div id="cell-9" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Creating examples for few shot learning</span></span>
 <span id="cb5-2">few_shot_messages <span class="op" style="color: #5E5E5E;
@@ -1023,10 +1295,10 @@ font-style: inherit;">"assistant"</span>, <span class="st" style="color: #20794D
 background-color: null;
 font-style: inherit;">"content"</span>: example[<span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"match"</span>]})</span></code></pre></div>
+font-style: inherit;">"match"</span>]})</span></code></pre></div></div>
 </div>
 <div id="cell-10" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Running the model for each real example</span></span>
 <span id="cb6-2"><span class="cf" style="color: #003B4F;
@@ -1095,7 +1367,7 @@ font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Same Entity: "</span>, response.choices[<span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0</span>].message.content)</span></code></pre></div>
+font-style: inherit;">0</span>].message.content)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Entity 1:  Spann-Wilder, Tiffany
 Entity 2:  Tiffany Spann-Wilder
@@ -1145,7 +1417,7 @@ Same Entity:  yes</code></pre>
 <section id="facebook-genre-using-genre-default-trie" class="level3">
 <h3 class="anchored" data-anchor-id="facebook-genre-using-genre-default-trie">Facebook Genre (Using Genre default Trie)</h3>
 <div id="cell-13" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Loading libraries</span></span>
 <span id="cb8-2"><span class="im" style="color: #00769E;
@@ -1320,7 +1592,7 @@ font-style: inherit;">+</span>(num_beams<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">*</span><span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">2</span>)</span></code></pre></div>
+font-style: inherit;">2</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>/Users/santiagovelez/anaconda3/envs/exp/lib/python3.10/site-packages/transformers/generation/utils.py:1168: UserWarning: Using the model-agnostic default `max_length` (=20) to control the generation length. We recommend setting `max_new_tokens` to control the maximum length of the generation.
   warnings.warn(</code></pre>
@@ -1395,7 +1667,7 @@ Entity 2 KB Candidates:  ['Jabo Waggoner', 'Jabo Waggoner', 'Jambo Waggoner']
 <section id="py_entitymatching-random-forest" class="level3">
 <h3 class="anchored" data-anchor-id="py_entitymatching-random-forest">py_entitymatching + Random Forest</h3>
 <div id="cell-16" class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Loading libraries</span></span>
 <span id="cb11-2"><span class="im" style="color: #00769E;
@@ -1407,10 +1679,10 @@ font-style: inherit;">as</span> pd</span>
 background-color: null;
 font-style: inherit;">import</span> py_entitymatching <span class="im" style="color: #00769E;
 background-color: null;
-font-style: inherit;">as</span> em</span></code></pre></div>
+font-style: inherit;">as</span> em</span></code></pre></div></div>
 </div>
 <div id="cell-17" class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Formatting data in required library configuration </span></span>
 <span id="cb12-2"><span class="co" style="color: #5E5E5E;
@@ -1629,10 +1901,10 @@ font-style: inherit;">"ltable_id"</span>, <span class="st" style="color: #20794D
 background-color: null;
 font-style: inherit;">"rtable_id"</span>, <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"match"</span>]]</span></code></pre></div>
+font-style: inherit;">"match"</span>]]</span></code></pre></div></div>
 </div>
 <div id="cell-18" class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Registering tables metadata in the library</span></span>
 <span id="cb13-2">em.set_key(A, <span class="st" style="color: #20794D;
@@ -1657,13 +1929,13 @@ font-style: inherit;">'id'</span>)</span>
 background-color: null;
 font-style: inherit;">'id'</span>)</span>
 <span id="cb13-11">em.set_ltable(Z, X)</span>
-<span id="cb13-12">em.set_ltable(Z, Y)</span></code></pre></div>
+<span id="cb13-12">em.set_ltable(Z, Y)</span></code></pre></div></div>
 <div class="cell-output cell-output-display" data-execution_count="12">
 <pre><code>True</code></pre>
 </div>
 </div>
 <div id="cell-19" class="cell" data-execution_count="13">
-<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Creating and blocking candidate matches (just for display)</span></span>
 <span id="cb15-2">ob <span class="op" style="color: #5E5E5E;
@@ -1698,7 +1970,7 @@ font-style: inherit;">1</span>, show_progress<span class="op" style="color: #5E5
 background-color: null;
 font-style: inherit;">=</span><span class="va" style="color: #111111;
 background-color: null;
-font-style: inherit;">False</span>)</span></code></pre></div>
+font-style: inherit;">False</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>/Users/santiagovelez/anaconda3/envs/exp/lib/python3.10/site-packages/py_entitymatching/blocker/overlap_blocker.py:258: SettingWithCopyWarning: 
 A value is trying to be set on a copy of a slice from a DataFrame.
@@ -1721,7 +1993,7 @@ See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stab
 </div>
 </div>
 <div id="cell-20" class="cell" data-execution_count="14">
-<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Workaround - Saving labeled data so we are able to load it in the library with the right metadata</span></span>
 <span id="cb17-2">df <span class="op" style="color: #5E5E5E;
@@ -1793,10 +2065,10 @@ background-color: null;
 font-style: inherit;">1</span>)</span>
 <span id="cb17-7">test_df.to_csv(<span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"temp_test_df.csv"</span>)</span></code></pre></div>
+font-style: inherit;">"temp_test_df.csv"</span>)</span></code></pre></div></div>
 </div>
 <div id="cell-21" class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Load training data with metadata</span></span>
 <span id="cb18-2">G <span class="op" style="color: #5E5E5E;
@@ -1849,14 +2121,14 @@ font-style: inherit;">'ltable_id'</span>, fk_rtable<span class="op" style="color
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">'rtable_id'</span>)</span></code></pre></div>
+font-style: inherit;">'rtable_id'</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Metadata file is not present in the given path; proceeding to read the csv file.
 Metadata file is not present in the given path; proceeding to read the csv file.</code></pre>
 </div>
 </div>
 <div id="cell-22" class="cell" data-execution_count="16">
-<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Selecting features for Entity Matching Model</span></span>
 <span id="cb20-2">feature_table <span class="op" style="color: #5E5E5E;
@@ -1865,10 +2137,10 @@ font-style: inherit;">=</span> em.get_features_for_matching(A, B, validate_infer
 background-color: null;
 font-style: inherit;">=</span><span class="va" style="color: #111111;
 background-color: null;
-font-style: inherit;">False</span>)</span></code></pre></div>
+font-style: inherit;">False</span>)</span></code></pre></div></div>
 </div>
 <div id="cell-23" class="cell" data-execution_count="17">
-<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Building feature vectors for entity matching model</span></span>
 <span id="cb21-2"><span class="co" style="color: #5E5E5E;
@@ -1907,14 +2179,14 @@ font-style: inherit;">'gold'</span>,</span>
 background-color: null;
 font-style: inherit;">=</span><span class="va" style="color: #111111;
 background-color: null;
-font-style: inherit;">False</span>)</span></code></pre></div>
+font-style: inherit;">False</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>/Users/santiagovelez/anaconda3/envs/exp/lib/python3.10/site-packages/numpy/core/fromnumeric.py:59: FutureWarning: 'DataFrame.swapaxes' is deprecated and will be removed in a future version. Please use 'DataFrame.transpose' instead.
   return bound(*args, **kwds)</code></pre>
 </div>
 </div>
 <div id="cell-24" class="cell" data-execution_count="18">
-<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Training entity matching model with training data</span></span>
 <span id="cb23-2"><span class="co" style="color: #5E5E5E;
@@ -1950,10 +2222,10 @@ font-style: inherit;">=</span>attrs_to_be_excluded, target_attr<span class="op" 
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">'gold'</span>)</span></code></pre></div>
+font-style: inherit;">'gold'</span>)</span></code></pre></div></div>
 </div>
 <div id="cell-25" class="cell" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Prepare test data for inference</span></span>
 <span id="cb24-2"><span class="co" style="color: #5E5E5E;
@@ -2004,7 +2276,7 @@ background-color: null;
 font-style: inherit;">'ltable_id'</span>, <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'rtable_id'</span>])</span>
-<span id="cb24-12">attrs_to_be_excluded.extend(attrs_from_table)</span></code></pre></div>
+<span id="cb24-12">attrs_to_be_excluded.extend(attrs_from_table)</span></code></pre></div></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>/Users/santiagovelez/anaconda3/envs/exp/lib/python3.10/site-packages/numpy/core/fromnumeric.py:59: FutureWarning: 'DataFrame.swapaxes' is deprecated and will be removed in a future version. Please use 'DataFrame.transpose' instead.
   return bound(*args, **kwds)
@@ -2035,7 +2307,7 @@ To disable this warning, you can either:
 </div>
 </div>
 <div id="cell-26" class="cell" data-execution_count="20">
-<div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Predict the matches on inference data</span></span>
 <span id="cb26-2">predictions <span class="op" style="color: #5E5E5E;
@@ -2058,12 +2330,12 @@ background-color: null;
 font-style: inherit;">=</span><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">False</span>)</span>
-<span id="cb26-4">predictions.head()</span></code></pre></div>
+<span id="cb26-4">predictions.head()</span></code></pre></div></div>
 <div class="cell-output cell-output-display" data-execution_count="20">
 <div>
 
 
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
@@ -2092,7 +2364,7 @@ font-style: inherit;">False</span>)</span>
 </thead>
 <tbody>
 <tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
+<th data-quarto-table-cell-role="th">0</th>
 <td>0</td>
 <td>0</td>
 <td>0</td>
@@ -2116,7 +2388,7 @@ font-style: inherit;">False</span>)</span>
 <td>1</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
+<th data-quarto-table-cell-role="th">1</th>
 <td>1</td>
 <td>1</td>
 <td>1</td>
@@ -2140,7 +2412,7 @@ font-style: inherit;">False</span>)</span>
 <td>0</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
+<th data-quarto-table-cell-role="th">2</th>
 <td>2</td>
 <td>2</td>
 <td>2</td>
@@ -2164,7 +2436,7 @@ font-style: inherit;">False</span>)</span>
 <td>1</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th">3</td>
+<th data-quarto-table-cell-role="th">3</th>
 <td>3</td>
 <td>3</td>
 <td>3</td>
@@ -2188,7 +2460,7 @@ font-style: inherit;">False</span>)</span>
 <td>0</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th">4</td>
+<th data-quarto-table-cell-role="th">4</th>
 <td>4</td>
 <td>4</td>
 <td>4</td>
@@ -2292,7 +2564,7 @@ font-style: inherit;">False</span>)</span>
 <h3 class="anchored" data-anchor-id="install-required-libraries">Install required libraries</h3>
 <p>Tested with python 3.10.1</p>
 <div id="cell-4" class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">!</span>pip install numpy panda torch langchain<span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -2312,13 +2584,13 @@ font-style: inherit;">-</span>index<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">==</span><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.9.48</span></span></code></pre></div>
+font-style: inherit;">0.9.48</span></span></code></pre></div></div>
 </div>
 </section>
 <section id="import-libraries" class="level3">
 <h3 class="anchored" data-anchor-id="import-libraries">Import libraries</h3>
 <div id="cell-6" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
 background-color: null;
 font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
 background-color: null;
@@ -2350,7 +2622,7 @@ font-style: inherit;">import</span> BM25Okapi</span>
 background-color: null;
 font-style: inherit;">from</span> ranx <span class="im" style="color: #00769E;
 background-color: null;
-font-style: inherit;">import</span> Qrels, Run, fuse, evaluate</span></code></pre></div>
+font-style: inherit;">import</span> Qrels, Run, fuse, evaluate</span></code></pre></div></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/threadpoolctl.py:1214: RuntimeWarning: 
 Found Intel OpenMP ('libiomp') and LLVM OpenMP ('libomp') loaded at
@@ -2369,7 +2641,7 @@ information and possible workarounds, please see
 <h3 class="anchored" data-anchor-id="define-utility-functions">Define utility functions</h3>
 <p>We define a simple text processing function. Possible improvements include tokenization, stemming, stopword removal, etc.</p>
 <div id="cell-8" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> text_preprocess(text):</span>
@@ -2379,10 +2651,10 @@ font-style: inherit;">=</span> text.lower()</span>
 <span id="cb4-3">    <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">return</span> text</span></code></pre></div>
+font-style: inherit;">return</span> text</span></code></pre></div></div>
 </div>
 <div id="cell-9" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> build_run(results_df, doc_id_col<span class="op" style="color: #5E5E5E;
@@ -2416,7 +2688,7 @@ font-style: inherit;">"score"</span>,</span>
 <span id="cb5-9">    <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">return</span> run</span></code></pre></div>
+font-style: inherit;">return</span> run</span></code></pre></div></div>
 </div>
 </section>
 <section id="prepare-data" class="level3">
@@ -2424,7 +2696,7 @@ font-style: inherit;">return</span> run</span></code></pre></div>
 <section id="load-data" class="level4">
 <h4 class="anchored" data-anchor-id="load-data">Load data</h4>
 <div id="cell-12" class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">texts_df <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">texts_df <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> pd.read_csv(<span class="st" style="color: #20794D;
 background-color: null;
@@ -2433,14 +2705,14 @@ font-style: inherit;">"https://raw.githubusercontent.com/santiagomvc/search_meth
 background-color: null;
 font-style: inherit;">=</span> pd.read_csv(<span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"https://raw.githubusercontent.com/santiagomvc/search_methods_intro/main/data/queries.csv"</span>)</span></code></pre></div>
+font-style: inherit;">"https://raw.githubusercontent.com/santiagomvc/search_methods_intro/main/data/queries.csv"</span>)</span></code></pre></div></div>
 </div>
 </section>
 <section id="chunking-configuration" class="level4">
 <h4 class="anchored" data-anchor-id="chunking-configuration">Chunking configuration</h4>
 <p>Splits text into smaller chunks for more detailed representations of the text.</p>
 <div id="cell-15" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">text_splitter <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">text_splitter <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> RecursiveCharacterTextSplitter(</span>
 <span id="cb7-2">    chunk_size<span class="op" style="color: #5E5E5E;
@@ -2463,13 +2735,13 @@ background-color: null;
 font-style: inherit;">=</span><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">False</span>,</span>
-<span id="cb7-6">)</span></code></pre></div>
+<span id="cb7-6">)</span></code></pre></div></div>
 </div>
 </section>
 <section id="split-data-and-process-chunks" class="level4">
 <h4 class="anchored" data-anchor-id="split-data-and-process-chunks">Split data and process chunks</h4>
 <div id="cell-17" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">doc_ids <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">doc_ids <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> []</span>
 <span id="cb8-2">chunk_ids <span class="op" style="color: #5E5E5E;
@@ -2548,13 +2820,13 @@ font-style: inherit;"># save results</span></span>
 background-color: null;
 font-style: inherit;">*</span> n_chunk_texts)</span>
 <span id="cb8-13">    chunk_ids.extend(doc_chunk_ids)</span>
-<span id="cb8-14">    chunk_texts.extend(doc_chunk_texts)</span></code></pre></div>
+<span id="cb8-14">    chunk_texts.extend(doc_chunk_texts)</span></code></pre></div></div>
 </div>
 </section>
 <section id="save-results-as-df" class="level4">
 <h4 class="anchored" data-anchor-id="save-results-as-df">Save results as df</h4>
 <div id="cell-19" class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1">chunks_df <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1">chunks_df <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> pd.DataFrame({</span>
 <span id="cb9-2">    <span class="st" style="color: #20794D;
@@ -2566,7 +2838,7 @@ font-style: inherit;">"chunk_id"</span>: chunk_ids,</span>
 <span id="cb9-4">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"chunk_text"</span>: chunk_texts,</span>
-<span id="cb9-5">})</span></code></pre></div>
+<span id="cb9-5">})</span></code></pre></div></div>
 </div>
 </section>
 </section>
@@ -2576,7 +2848,7 @@ font-style: inherit;">"chunk_text"</span>: chunk_texts,</span>
 <h4 class="anchored" data-anchor-id="sparse-representations-bm25">Sparse Representations: BM25</h4>
 <p>BM25 is a ranking algorithm based on multiple statistics calculated using the terms in the Query and Documents, including term frequency in the document, document length, term frequency in all documents, etc.</p>
 <div id="cell-22" class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1">bm_25_tokenized_corpus <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1">bm_25_tokenized_corpus <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> [chunk.split(<span class="st" style="color: #20794D;
 background-color: null;
@@ -2589,14 +2861,14 @@ font-weight: bold;
 font-style: inherit;">in</span> chunk_texts]</span>
 <span id="cb10-2">bm25_index <span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">=</span> BM25Okapi(bm_25_tokenized_corpus)</span></code></pre></div>
+font-style: inherit;">=</span> BM25Okapi(bm_25_tokenized_corpus)</span></code></pre></div></div>
 </div>
 </section>
 <section id="basic-semantic-similarity-sentence-transformers-faiss-index" class="level4">
 <h4 class="anchored" data-anchor-id="basic-semantic-similarity-sentence-transformers-faiss-index">Basic Semantic Similarity: Sentence Transformers + Faiss Index</h4>
 <p>Semantic Similarity is the task of determining how similar is the meaning of two or more texts. It uses ML models to convert text into a single dense vector that captures semantic information. Semantic similarity can be used as a ranking function by calculating the similarity between the Query and each Document, retrieving those with the higher similarity.</p>
 <div id="cell-24" class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">sentsim_model <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">sentsim_model <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> SentenceTransformer(<span class="st" style="color: #20794D;
 background-color: null;
@@ -2612,14 +2884,14 @@ font-style: inherit;">1</span>]</span>
 <span id="cb11-4">sentsim_index <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> faiss.IndexFlatL2(sentsim_embedding_size)</span>
-<span id="cb11-5">sentsim_index.add(sentsim_embeddings)</span></code></pre></div>
+<span id="cb11-5">sentsim_index.add(sentsim_embeddings)</span></code></pre></div></div>
 </div>
 </section>
 <section id="advanced-semantic-similarity-colbert-ragatuille" class="level4">
 <h4 class="anchored" data-anchor-id="advanced-semantic-similarity-colbert-ragatuille">Advanced Semantic Similarity: Colbert + RAGatuille</h4>
 <p>Colbert is a retrieval model built on top of BERT-like Language Models. Colbert uses multiple token-level dense embeddings to calculate the relevance between the Query and Documents, while traditional sentence embeddings collapse query and document information into single embeddings. Take a look at this <a href="https://colbert.aiserv.cloud">Vespa Demo</a> for a very interesting visual aid.</p>
 <div id="cell-26" class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="cf" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">if</span> <span class="va" style="color: #111111;
@@ -2676,7 +2948,7 @@ background-color: null;
 font-style: inherit;">=</span><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">False</span>,</span>
-<span id="cb12-13">        )</span></code></pre></div>
+<span id="cb12-13">        )</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[Jul 02, 18:29:22] Loading segmented_maxsim_cpp extension (set COLBERT_LOAD_TORCH_EXTENSION_VERBOSE=True for more info)...</code></pre>
 </div>
@@ -2692,7 +2964,7 @@ font-style: inherit;">False</span>,</span>
 <section id="bm25" class="level4">
 <h4 class="anchored" data-anchor-id="bm25">BM25</h4>
 <div id="cell-29" class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> bm25_search(query_text, bm25_index<span class="op" style="color: #5E5E5E;
@@ -2769,13 +3041,13 @@ font-style: inherit;"># Return results</span></span>
 <span id="cb15-16">    <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">return</span> bm25_df</span></code></pre></div>
+font-style: inherit;">return</span> bm25_df</span></code></pre></div></div>
 </div>
 </section>
 <section id="sentece-similarity" class="level4">
 <h4 class="anchored" data-anchor-id="sentece-similarity">Sentece Similarity</h4>
 <div id="cell-31" class="cell" data-execution_count="13">
-<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> sentsim_search(query_text, sentsim_model<span class="op" style="color: #5E5E5E;
@@ -2859,13 +3131,13 @@ font-style: inherit;">"first"</span>)</span>
 <span id="cb16-15">    <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">return</span> sentsim_df</span></code></pre></div>
+font-style: inherit;">return</span> sentsim_df</span></code></pre></div></div>
 </div>
 </section>
 <section id="colbert" class="level4">
 <h4 class="anchored" data-anchor-id="colbert">Colbert</h4>
 <div id="cell-33" class="cell" data-execution_count="14">
-<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> colbert_search(query_text, colbert_index<span class="op" style="color: #5E5E5E;
@@ -2956,7 +3228,7 @@ font-style: inherit;">"first"</span>)</span>
 <span id="cb17-14">    <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">return</span> colbert_df</span></code></pre></div>
+font-style: inherit;">return</span> colbert_df</span></code></pre></div></div>
 </div>
 </section>
 <section id="rank-fusion-min-max-norm-combmax-fusion" class="level4">
@@ -2967,7 +3239,7 @@ font-style: inherit;">return</span> colbert_df</span></code></pre></div>
 <li>CombMax fusion: Combines scores from different sources by taking the maximum score for each item.</li>
 </ul>
 <div id="cell-35" class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> combined_search(query_text, fusion_norm<span class="op" style="color: #5E5E5E;
@@ -3106,13 +3378,13 @@ font-style: inherit;">## Return similar format to other responses</span></span>
 <span id="cb18-26">    <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">return</span> combined_df</span></code></pre></div>
+font-style: inherit;">return</span> combined_df</span></code></pre></div></div>
 </div>
 </section>
 <section id="global-search-function" class="level4">
 <h4 class="anchored" data-anchor-id="global-search-function">Global Search Function</h4>
 <div id="cell-37" class="cell" data-execution_count="16">
-<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> search(query_text, mode<span class="op" style="color: #5E5E5E;
@@ -3167,7 +3439,7 @@ font-style: inherit;">"combined"</span>:</span>
 <span id="cb19-9">        <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">return</span> combined_search(query_text)</span></code></pre></div>
+font-style: inherit;">return</span> combined_search(query_text)</span></code></pre></div></div>
 </div>
 </section>
 </section>
@@ -3181,7 +3453,7 @@ font-style: inherit;">return</span> combined_search(query_text)</span></code></p
 <li>MRR: Average multiplicative inverse of the rank of the first retrieved relevant document</li>
 </ul>
 <div id="cell-40" class="cell" data-execution_count="17">
-<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> evaluate_search(mode<span class="op" style="color: #5E5E5E;
@@ -3323,17 +3595,17 @@ background-color: null;
 font-style: inherit;">"mrr"</span>])</span>
 <span id="cb20-30">    <span class="bu" style="color: null;
 background-color: null;
-font-style: inherit;">print</span>(mode, metrics)</span></code></pre></div>
+font-style: inherit;">print</span>(mode, metrics)</span></code></pre></div></div>
 </div>
 </section>
 <section id="evaluate-bm25" class="level4">
 <h4 class="anchored" data-anchor-id="evaluate-bm25">Evaluate BM25</h4>
 <div id="cell-42" class="cell" data-execution_count="18">
-<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"bm25"</span>)</span></code></pre></div>
+font-style: inherit;">"bm25"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>bm25 {'f1': 0.6981481481481481, 'mrr': 0.9166666666666666}</code></pre>
 </div>
@@ -3342,11 +3614,11 @@ font-style: inherit;">"bm25"</span>)</span></code></pre></div>
 <section id="evaluate-single-vector-sentence-similarity" class="level4">
 <h4 class="anchored" data-anchor-id="evaluate-single-vector-sentence-similarity">Evaluate Single Vector Sentence Similarity</h4>
 <div id="cell-44" class="cell" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"sentsim"</span>)</span></code></pre></div>
+font-style: inherit;">"sentsim"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>sentsim {'f1': 0.6555555555555556, 'mrr': 0.8888888888888888}</code></pre>
 </div>
@@ -3355,11 +3627,11 @@ font-style: inherit;">"sentsim"</span>)</span></code></pre></div>
 <section id="evaluate-colbert" class="level4">
 <h4 class="anchored" data-anchor-id="evaluate-colbert">Evaluate Colbert</h4>
 <div id="cell-46" class="cell" data-execution_count="20">
-<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"colbert"</span>)</span></code></pre></div>
+font-style: inherit;">"colbert"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Loading searcher for index index for the first time... This may take a few seconds
 [Jul 02, 18:29:35] #&gt; Loading codec...
@@ -3427,11 +3699,11 @@ Searcher loaded!
 <section id="evaluate-rank-fusion-min-max-norm-combmax-fusion" class="level4">
 <h4 class="anchored" data-anchor-id="evaluate-rank-fusion-min-max-norm-combmax-fusion">Evaluate Rank Fusion (Min-Max Norm, CombMAX fusion)</h4>
 <div id="cell-48" class="cell" data-execution_count="21">
-<div class="sourceCode cell-code" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1">evaluate_search(mode<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"combined"</span>)</span></code></pre></div>
+font-style: inherit;">"combined"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>/Users/santiagovelez/anaconda3/envs/temp2/lib/python3.10/site-packages/torch/amp/autocast_mode.py:250: UserWarning: User provided device_type of 'cuda', but CUDA is not available. Disabling
   warnings.warn(
@@ -3455,7 +3727,7 @@ font-style: inherit;">"combined"</span>)</span></code></pre></div>
 <section id="try-it-yourself-only-on-interactive-mode" class="level3">
 <h3 class="anchored" data-anchor-id="try-it-yourself-only-on-interactive-mode">Try it yourself! (Only on interactive mode)</h3>
 <div id="cell-50" class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1">query_text <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1">query_text <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> <span class="bu" style="color: null;
 background-color: null;
@@ -3473,7 +3745,7 @@ font-style: inherit;">"Enter the search mode (bm25, sentsim, colbert, combined):
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"records"</span>)</span></code></pre></div>
+font-style: inherit;">"records"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Enter your query: health
 Enter the search mode (bm25, sentsim, colbert, combined): combined</code></pre>
@@ -3554,7 +3826,7 @@ Enter the search mode (bm25, sentsim, colbert, combined): combined</code></pre>
 
 <p>Having a working poetry environment that installs only cpu supported versions of torch is a good way to reduce the size of your docker container and speed up deployments. The following is a rough solution that seems to work (locally on Mac and Docker container) and could be used while torch and poetry solve their compatibility issues.</p>
 <p>Inside your regular <code>pyproject.toml</code> file, include in <code>[tool.poetry.dependencies]</code> the following <code>torch</code> definition:</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1">torch <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1">torch <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> [</span>
 <span id="cb1-2">     {url<span class="op" style="color: #5E5E5E;
@@ -3624,7 +3896,7 @@ background-color: null;
 font-style: inherit;">\"</span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"</span>}</span>
-<span id="cb1-5"> ]</span></code></pre></div>
+<span id="cb1-5"> ]</span></code></pre></div></div>
 <p>Why is such an ugly solution required? Here are some apparent torch-poetry compatibility issues:</p>
 <ul>
 <li><code>poetry install torch==2.0.1</code> omits required gpu drivers for linux, which makes the container small but unusable <a href="https://github.com/pytorch/pytorch/issues/100974">Pytorch 2.0.1 pypi wheel does not install dependent cuda libraries pytorch/pytorch#100974</a>.</li>
@@ -3633,7 +3905,7 @@ font-style: inherit;">"</span>}</span>
 </ul>
 <p>Here are some (so far) unsuccessful attempts to find a more elegant solution:</p>
 <p>Attempt 1:</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">[tool.poetry.dependencies]</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">[tool.poetry.dependencies]</span>
 <span id="cb2-2">torch <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> { version <span class="op" style="color: #5E5E5E;
@@ -3666,9 +3938,9 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">or</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"suplemental"</span></span></code></pre></div>
+font-style: inherit;">"suplemental"</span></span></code></pre></div></div>
 <p>Attempt 2:</p>
-<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">[tool.poetry.dependencies]</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">[tool.poetry.dependencies]</span>
 <span id="cb3-2">torch <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> [</span>
@@ -3724,9 +3996,9 @@ font-style: inherit;">"https://download.pytorch.org/whl/cpu"</span></span>
 background-color: null;
 font-style: inherit;">=</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"explicit"</span></span></code></pre></div>
+font-style: inherit;">"explicit"</span></span></code></pre></div></div>
 <p>Attempt 3:</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">[[tool.poetry.source]]</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">[[tool.poetry.source]]</span>
 <span id="cb4-2">name <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> <span class="st" style="color: #20794D;
@@ -3766,9 +4038,9 @@ font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>, source<span class="op" style
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"torch_cpu"</span> }</span></code></pre></div>
+font-style: inherit;">"torch_cpu"</span> }</span></code></pre></div></div>
 <p>Attempt 4:</p>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1">[[tool.poetry.source]]</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1">[[tool.poetry.source]]</span>
 <span id="cb5-2">name <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> <span class="st" style="color: #20794D;
@@ -3827,7 +4099,7 @@ font-style: inherit;">=</span> { version <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div>
+font-style: inherit;">"&gt;=2.0.0, !=2.0.1"</span>}</span></code></pre></div></div>
 <p>In most attempts, the error was around the inability to find a torch-cpu-mac version to install when the <a href="https://download.pytorch.org/whl/cpu">https://download.pytorch.org/whl/cpu</a> repo was included.</p>
 
 

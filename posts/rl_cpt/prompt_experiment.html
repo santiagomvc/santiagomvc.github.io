@@ -1,0 +1,2958 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>prompt_experiment – SMVC Notes</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-5b4ad623e5705c0698d39aec6f10cf02.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">SMVC Notes</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/santiagomvc/"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/santiago-velez/"> <i class="bi bi-linkedin" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block"></header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    <div class="quarto-margin-footer"><div class="margin-footer-item">
+<style type="text/css">@import url("https://assets.mlcdn.com/fonts.css?version=1721302");</style>
+    <style type="text/css">
+    /* LOADER */
+    .ml-form-embedSubmitLoad {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+    }
+
+    .g-recaptcha {
+    transform: scale(1);
+    -webkit-transform: scale(1);
+    transform-origin: 0 0;
+    -webkit-transform-origin: 0 0;
+    height: ;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      border: 0;
+    }
+
+    .ml-form-embedSubmitLoad:after {
+      content: " ";
+      display: block;
+      width: 11px;
+      height: 11px;
+      margin: 1px;
+      border-radius: 50%;
+      border: 4px solid #fff;
+    border-color: #ffffff #ffffff #ffffff transparent;
+    animation: ml-form-embedSubmitLoad 1.2s linear infinite;
+    }
+    @keyframes ml-form-embedSubmitLoad {
+      0% {
+      transform: rotate(0deg);
+      }
+      100% {
+      transform: rotate(360deg);
+      }
+    }
+      #mlb2-16411706.ml-form-embedContainer {
+        box-sizing: border-box;
+        display: table;
+        margin: 0 auto;
+        position: static;
+        width: 100% !important;
+      }
+      #mlb2-16411706.ml-form-embedContainer h4,
+      #mlb2-16411706.ml-form-embedContainer p,
+      #mlb2-16411706.ml-form-embedContainer span,
+      #mlb2-16411706.ml-form-embedContainer button {
+        text-transform: none !important;
+        letter-spacing: normal !important;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper {
+        background-color: #ffffff;
+        
+        border-width: 0px;
+        border-color: transparent;
+        border-radius: 4px;
+        border-style: solid;
+        box-sizing: border-box;
+        display: inline-block !important;
+        margin: 0;
+        padding: 0;
+        position: relative;
+              }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper.embedPopup,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper.embedDefault { width: 400px; }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper.embedForm { max-width: 400px; width: 100%; }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-align-left { text-align: left; }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-align-center { text-align: center; }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-align-default { display: table-cell !important; vertical-align: middle !important; text-align: center !important; }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-align-right { text-align: right; }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedHeader img {
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+        height: auto;
+        margin: 0 auto !important;
+        max-width: 100%;
+        width: undefinedpx;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-successBody {
+        padding: 20px 20px 0 20px;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody.ml-form-embedBodyHorizontal {
+        padding-bottom: 0;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedContent,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-successBody .ml-form-successContent {
+        text-align: left;
+        margin: 0 0 20px 0;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedContent h4,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-successBody .ml-form-successContent h4 {
+        color: #000000;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+        font-size: 30px;
+        font-weight: 400;
+        margin: 0 0 10px 0;
+        text-align: left;
+        word-break: break-word;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedContent p,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-successBody .ml-form-successContent p {
+        color: #000000;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        margin: 0 0 10px 0;
+        text-align: left;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedContent ul,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedContent ol,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-successBody .ml-form-successContent ul,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-successBody .ml-form-successContent ol {
+        color: #000000;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+        font-size: 14px;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedContent ol ol,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-successBody .ml-form-successContent ol ol {
+        list-style-type: lower-alpha;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedContent ol ol ol,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-successBody .ml-form-successContent ol ol ol {
+        list-style-type: lower-roman;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedContent p a,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-successBody .ml-form-successContent p a {
+        color: #000000;
+        text-decoration: underline;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-block-form .ml-field-group {
+        text-align: left!important;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-block-form .ml-field-group label {
+        margin-bottom: 5px;
+        color: #333333;
+        font-size: 14px;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+        font-weight: bold; font-style: normal; text-decoration: none;;
+        display: inline-block;
+        line-height: 20px;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedContent p:last-child,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-successBody .ml-form-successContent p:last-child {
+        margin: 0;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody form {
+        margin: 0;
+        width: 100%;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-formContent,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow {
+        margin: 0 0 20px 0;
+        width: 100%;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow {
+        float: left;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-formContent.horozintalForm {
+        margin: 0;
+        padding: 0 0 20px 0;
+        width: 100%;
+        height: auto;
+        float: left;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow {
+        margin: 0 0 10px 0;
+        width: 100%;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow.ml-last-item {
+        margin: 0;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow.ml-formfieldHorizintal {
+        margin: 0;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow input {
+        background-color: #ffffff !important;
+        color: #333333 !important;
+        border-color: #cccccc;
+        border-radius: 4px !important;
+        border-style: solid !important;
+        border-width: 1px !important;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+        font-size: 14px !important;
+        height: auto;
+        line-height: 21px !important;
+        margin-bottom: 0;
+        margin-top: 0;
+        margin-left: 0;
+        margin-right: 0;
+        padding: 10px 10px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        max-width: 100% !important;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow input::-webkit-input-placeholder,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow input::-webkit-input-placeholder { color: #333333; }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow input::-moz-placeholder,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow input::-moz-placeholder { color: #333333; }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow input:-ms-input-placeholder,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow input:-ms-input-placeholder { color: #333333; }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow input:-moz-placeholder,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow input:-moz-placeholder { color: #333333; }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow textarea, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow textarea {
+        background-color: #ffffff !important;
+        color: #333333 !important;
+        border-color: #cccccc;
+        border-radius: 4px !important;
+        border-style: solid !important;
+        border-width: 1px !important;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+        font-size: 14px !important;
+        height: auto;
+        line-height: 21px !important;
+        margin-bottom: 0;
+        margin-top: 0;
+        padding: 10px 10px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        max-width: 100% !important;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-radio .custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-radio .custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-checkbox .custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-checkbox .custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedPermissions .ml-form-embedPermissionsOptionsCheckbox .label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-interestGroupsRow .ml-form-interestGroupsRowCheckbox .label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow .label-description::before {
+          border-color: #cccccc!important;
+          background-color: #ffffff!important;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow input.custom-control-input[type="checkbox"]{
+        box-sizing: border-box;
+        padding: 0;
+        position: absolute;
+        z-index: -1;
+        opacity: 0;
+        margin-top: 5px;
+        margin-left: -1.5rem;
+        overflow: visible;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-checkbox .custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-checkbox .custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedPermissions .ml-form-embedPermissionsOptionsCheckbox .label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-interestGroupsRow .ml-form-interestGroupsRowCheckbox .label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow .label-description::before {
+        border-radius: 4px!important;
+      }
+
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow input[type=checkbox]:checked~.label-description::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedPermissions .ml-form-embedPermissionsOptionsCheckbox input[type=checkbox]:checked~.label-description::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-checkbox .custom-control-input:checked~.custom-control-label::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-checkbox .custom-control-input:checked~.custom-control-label::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-interestGroupsRow .ml-form-interestGroupsRowCheckbox input[type=checkbox]:checked~.label-description::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3e%3c/svg%3e");
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-radio .custom-control-input:checked~.custom-control-label::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-radio .custom-control-input:checked~.custom-control-label::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-radio .custom-control-input:checked~.custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-radio .custom-control-input:checked~.custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-checkbox .custom-control-input:checked~.custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-checkbox .custom-control-input:checked~.custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedPermissions .ml-form-embedPermissionsOptionsCheckbox input[type=checkbox]:checked~.label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-interestGroupsRow .ml-form-interestGroupsRowCheckbox input[type=checkbox]:checked~.label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow input[type=checkbox]:checked~.label-description::before  {
+          border-color: #000000!important;
+          background-color: #000000!important;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-radio .custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-radio .custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-radio .custom-control-label::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-radio .custom-control-label::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-checkbox .custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-checkbox .custom-control-label::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-checkbox .custom-control-label::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-checkbox .custom-control-label::after {
+           top: 2px;
+           box-sizing: border-box;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedPermissions .ml-form-embedPermissionsOptionsCheckbox .label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedPermissions .ml-form-embedPermissionsOptionsCheckbox .label-description::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow .label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow .label-description::after {
+           top: 0px!important;
+           box-sizing: border-box!important;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow .label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow .label-description::after {
+        top: 0px!important;
+           box-sizing: border-box!important;
+      }
+
+       #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-interestGroupsRow .ml-form-interestGroupsRowCheckbox .label-description::after {
+            top: 0px!important;
+            box-sizing: border-box!important;
+            position: absolute;
+            left: -1.5rem;
+            display: block;
+            width: 1rem;
+            height: 1rem;
+            content: "";
+       }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-interestGroupsRow .ml-form-interestGroupsRowCheckbox .label-description::before {
+        top: 0px!important;
+        box-sizing: border-box!important;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .custom-control-label::before {
+          position: absolute;
+          top: 4px;
+          left: -1.5rem;
+          display: block;
+          width: 16px;
+          height: 16px;
+          pointer-events: none;
+          content: "";
+          background-color: #ffffff;
+          border: #adb5bd solid 1px;
+          border-radius: 50%;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .custom-control-label::after {
+          position: absolute;
+          top: 2px!important;
+          left: -1.5rem;
+          display: block;
+          width: 1rem;
+          height: 1rem;
+          content: "";
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedPermissions .ml-form-embedPermissionsOptionsCheckbox .label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-interestGroupsRow .ml-form-interestGroupsRowCheckbox .label-description::before, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow .label-description::before {
+          position: absolute;
+          top: 4px;
+          left: -1.5rem;
+          display: block;
+          width: 16px;
+          height: 16px;
+          pointer-events: none;
+          content: "";
+          background-color: #ffffff;
+          border: #adb5bd solid 1px;
+          border-radius: 50%;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedPermissions .ml-form-embedPermissionsOptionsCheckbox .label-description::after {
+          position: absolute;
+          top: 0px!important;
+          left: -1.5rem;
+          display: block;
+          width: 1rem;
+          height: 1rem;
+          content: "";
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow .label-description::after {
+          position: absolute;
+          top: 0px!important;
+          left: -1.5rem;
+          display: block;
+          width: 1rem;
+          height: 1rem;
+          content: "";
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .custom-radio .custom-control-label::after {
+          background: no-repeat 50%/50% 50%;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .custom-checkbox .custom-control-label::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedPermissions .ml-form-embedPermissionsOptionsCheckbox .label-description::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-interestGroupsRow .ml-form-interestGroupsRowCheckbox .label-description::after, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow .label-description::after {
+          background: no-repeat 50%/50% 50%;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-control, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-control {
+        position: relative;
+        display: block;
+        min-height: 1.5rem;
+        padding-left: 1.5rem;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-radio .custom-control-input, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-radio .custom-control-input, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-checkbox .custom-control-input, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-checkbox .custom-control-input {
+          position: absolute;
+          z-index: -1;
+          opacity: 0;
+          box-sizing: border-box;
+          padding: 0;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-radio .custom-control-label, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-radio .custom-control-label, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-checkbox .custom-control-label, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-checkbox .custom-control-label {
+          color: #000000;
+          font-size: 12px!important;
+          font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+          line-height: 22px;
+          margin-bottom: 0;
+          position: relative;
+          vertical-align: top;
+          font-style: normal;
+          font-weight: 700;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-fieldRow .custom-select, #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow .custom-select {
+        background-color: #ffffff !important;
+        color: #333333 !important;
+        border-color: #cccccc;
+        border-radius: 4px !important;
+        border-style: solid !important;
+        border-width: 1px !important;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+        font-size: 14px !important;
+        line-height: 20px !important;
+        margin-bottom: 0;
+        margin-top: 0;
+        padding: 10px 28px 10px 12px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        max-width: 100% !important;
+        height: auto;
+        display: inline-block;
+        vertical-align: middle;
+        background: url('https://assets.mlcdn.com/ml/images/default/dropdown.svg') no-repeat right .75rem center/8px 10px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+      }
+
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow {
+        height: auto;
+        width: 100%;
+        float: left;
+      }
+      .ml-form-formContent.horozintalForm .ml-form-horizontalRow .ml-input-horizontal { width: 70%; float: left; }
+      .ml-form-formContent.horozintalForm .ml-form-horizontalRow .ml-button-horizontal { width: 30%; float: left; }
+      .ml-form-formContent.horozintalForm .ml-form-horizontalRow .ml-button-horizontal.labelsOn { padding-top: 25px;  }
+      .ml-form-formContent.horozintalForm .ml-form-horizontalRow .horizontal-fields { box-sizing: border-box; float: left; padding-right: 10px;  }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow input {
+        background-color: #ffffff;
+        color: #333333;
+        border-color: #cccccc;
+        border-radius: 4px;
+        border-style: solid;
+        border-width: 1px;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        margin-bottom: 0;
+        margin-top: 0;
+        padding: 10px 10px;
+        width: 100%;
+        box-sizing: border-box;
+        overflow-y: initial;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow button {
+        background-color: #000000 !important;
+        border-color: #000000;
+        border-style: solid;
+        border-width: 1px;
+        border-radius: 4px;
+        box-shadow: none;
+        color: #ffffff !important;
+        cursor: pointer;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+        font-size: 14px !important;
+        font-weight: 700;
+        line-height: 20px;
+        margin: 0 !important;
+        padding: 10px !important;
+        width: 100%;
+        height: auto;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-horizontalRow button:hover {
+        background-color: #333333 !important;
+        border-color: #333333 !important;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow input[type="checkbox"] {
+        box-sizing: border-box;
+        padding: 0;
+        position: absolute;
+        z-index: -1;
+        opacity: 0;
+        margin-top: 5px;
+        margin-left: -1.5rem;
+        overflow: visible;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow .label-description {
+        color: #000000;
+        display: block;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        text-align: left;
+        margin-bottom: 0;
+        position: relative;
+        vertical-align: top;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow label {
+        font-weight: normal;
+        margin: 0;
+        padding: 0;
+        position: relative;
+        display: block;
+        min-height: 24px;
+        padding-left: 24px;
+
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow label a {
+        color: #000000;
+        text-decoration: underline;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow label p {
+        color: #000000 !important;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif !important;
+        font-size: 12px !important;
+        font-weight: normal !important;
+        line-height: 18px !important;
+        padding: 0 !important;
+        margin: 0 5px 0 0 !important;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow label p:last-child {
+        margin: 0;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedSubmit {
+        margin: 0 0 20px 0;
+        float: left;
+        width: 100%;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedSubmit button {
+        background-color: #000000 !important;
+        border: none !important;
+        border-radius: 4px !important;
+        box-shadow: none !important;
+        color: #ffffff !important;
+        cursor: pointer;
+        font-family: 'Open Sans', Arial, Helvetica, sans-serif !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        line-height: 21px !important;
+        height: auto;
+        padding: 10px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedSubmit button.loading {
+        display: none;
+      }
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-embedSubmit button:hover {
+        background-color: #333333 !important;
+      }
+      .ml-subscribe-close {
+        width: 30px;
+        height: 30px;
+        background: url('https://assets.mlcdn.com/ml/images/default/modal_close.png') no-repeat;
+        background-size: 30px;
+        cursor: pointer;
+        margin-top: -10px;
+        margin-right: -10px;
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+      .ml-error input, .ml-error textarea, .ml-error select {
+        border-color: red!important;
+      }
+
+      .ml-error .custom-checkbox-radio-list {
+        border: 1px solid red !important;
+        border-radius: 4px;
+        padding: 10px;
+      }
+
+      .ml-error .label-description,
+      .ml-error .label-description p,
+      .ml-error .label-description p a,
+      .ml-error label:first-child {
+        color: #ff0000 !important;
+      }
+
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow.ml-error .label-description p,
+      #mlb2-16411706.ml-form-embedContainer .ml-form-embedWrapper .ml-form-embedBody .ml-form-checkboxRow.ml-error .label-description p:first-letter {
+        color: #ff0000 !important;
+      }
+            @media only screen and (max-width: 400px){
+
+        .ml-form-embedWrapper.embedDefault, .ml-form-embedWrapper.embedPopup { width: 100%!important; }
+        .ml-form-formContent.horozintalForm { float: left!important; }
+        .ml-form-formContent.horozintalForm .ml-form-horizontalRow { height: auto!important; width: 100%!important; float: left!important; }
+        .ml-form-formContent.horozintalForm .ml-form-horizontalRow .ml-input-horizontal { width: 100%!important; }
+        .ml-form-formContent.horozintalForm .ml-form-horizontalRow .ml-input-horizontal > div { padding-right: 0px!important; padding-bottom: 10px; }
+        .ml-form-formContent.horozintalForm .ml-button-horizontal { width: 100%!important; }
+        .ml-form-formContent.horozintalForm .ml-button-horizontal.labelsOn { padding-top: 0px!important; }
+
+      }
+    </style>
+
+    
+  
+    
+    
+
+    
+    
+
+    
+    
+
+    
+
+      
+        
+        
+      
+
+      
+        
+        
+      
+
+      
+
+            
+            
+            
+            
+            
+            
+      
+
+      
+
+      
+        
+        
+         
+        
+        
+      
+
+        
+        
+        
+        
+        
+        
+      
+
+       
+
+        
+        
+        
+        
+        
+        
+        
+       
+
+
+      
+        
+        
+        
+        
+  
+
+
+
+  
+        
+        
+        
+      
+
+
+      
+    
+    
+    
+    
+    
+    
+    
+  
+
+  
+        
+        
+        
+        
+        
+      
+
+      
+        
+        
+        
+        
+        
+      
+
+      
+        
+        
+        
+        
+        
+      
+
+       
+
+        
+        
+        
+        
+       
+
+       
+        
+        
+        
+        
+      
+
+      
+        
+        
+        
+        
+        
+        
+        
+       
+
+    
+
+    
+
+
+      
+
+
+      
+
+      
+      
+
+      
+
+      
+
+
+
+
+
+    
+
+      
+    <div id="mlb2-16411706" class="ml-form-embedContainer ml-subscribe-form ml-subscribe-form-16411706">
+      <div class="ml-form-align-left ">
+        <div class="ml-form-embedWrapper embedForm">
+
+          
+          
+
+          <div class="ml-form-embedBody ml-form-embedBodyDefault row-form">
+
+            <div class="ml-form-embedContent" style=" ">
+              
+                <h4></h4>
+                <p>Keep up to date.</p>
+              
+            </div>
+
+            <form class="ml-block-form" action="https://assets.mailerlite.com/jsonp/1024514/forms/126854641177593419/subscribe" data-code="" method="post" target="_blank">
+              <div class="ml-form-formContent">
+                
+
+                  
+                  <div class="ml-form-fieldRow ml-last-item">
+                    <div class="ml-field-group ml-field-email ml-validate-email ml-validate-required">
+
+                      
+
+
+                      <!-- input -->
+                      <input aria-label="email" aria-required="true" type="email" class="form-control" data-inputmask="" name="fields[email]" placeholder="Email" autocomplete="email">
+                      <!-- /input -->
+
+                      <!-- textarea -->
+                      
+                      <!-- /textarea -->
+
+                      <!-- select -->
+                      
+                      <!-- /select -->
+
+                      <!-- checkboxes -->
+            
+            <!-- /checkboxes -->
+
+                      <!-- radio -->
+                      
+                      <!-- /radio -->
+
+                      <!-- countries -->
+                      
+                      <!-- /countries -->
+
+
+
+
+
+                    </div>
+                  </div>
+                
+              </div>
+
+              
+
+              <!-- Privacy policy -->
+              
+              <!-- /Privacy policy -->
+
+              
+
+              
+
+              
+
+
+
+
+
+
+              
+              <input type="hidden" name="ml-submit" value="1">
+
+              <div class="ml-form-embedSubmit">
+                
+                  <button type="submit" class="primary">Subscribe</button>
+                
+                <button disabled="disabled" style="display: none;" type="button" class="loading">
+                  <div class="ml-form-embedSubmitLoad"></div>
+                  <span class="sr-only">Loading...</span>
+                </button>
+              </div>
+
+              
+              <input type="hidden" name="anticsrf" value="true">
+            </form>
+          </div>
+
+          <div class="ml-form-successBody row-success" style="display: none">
+
+            <div class="ml-form-successContent">
+              
+                <h4>Thank you!</h4>
+                
+                  <p>You have successfully joined our subscriber list.</p>
+                
+              
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  
+
+  
+  
+  <script>
+    function ml_webform_success_16411706() {
+      var $ = ml_jQuery || jQuery;
+      $('.ml-subscribe-form-16411706 .row-success').show();
+      $('.ml-subscribe-form-16411706 .row-form').hide();
+    }
+      </script>
+  
+  
+      <script src="https://groot.mailerlite.com/js/w/webforms.min.js?v2d8fb22bb5b3677f161552cd9e774127" type="text/javascript"></script>
+        <script>
+            fetch("https://assets.mailerlite.com/jsonp/1024514/forms/126854641177593419/takel")
+        </script>
+</div></div></div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<section id="cpt-vs-ev-experiment-execution-plan" class="level1">
+<h1>CPT vs EV Experiment Execution Plan</h1>
+<p>This document is the operating manual for a team of agents executing experiments that compare rational (Expected Value / REINFORCE) and descriptive (Cumulative Prospect Theory / CPT-PG) decision-making in a custom Cliff Walking environment.</p>
+<hr>
+<section id="project-goal" class="level2">
+<h2 class="anchored" data-anchor-id="project-goal">Project Goal</h2>
+<p>Find measurable behavioral differences between a rational REINFORCE agent and a human-like CPT-PG agent. The primary signal is <strong>which row (path) the agent chooses to traverse</strong> — some rows are riskier (closer to cliff), some rows are safer.</p>
+<p>We need <strong>at least 3 replicable differences found</strong>. Focus on finding at least three significant differences first, then focus on the rest of experiments.</p>
+<ul>
+<li>THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS. This should be visible in the gifs saved.</li>
+</ul>
+<hr>
+</section>
+<section id="team-structure" class="level2">
+<h2 class="anchored" data-anchor-id="team-structure">Team Structure</h2>
+<section id="overview" class="level3">
+<h3 class="anchored" data-anchor-id="overview">Overview</h3>
+<pre><code>lead (team lead, orchestrator)
+├── researcher-1 (experiment executor)
+├── researcher-2 (experiment executor)
+└── researcher-3 (experiment executor)</code></pre>
+<p>The team uses a <strong>pool-based experiment assignment</strong> model. The lead maintains the experiment queue and assigns work. Researcher agents pick up the next unfinished experiment when they complete their current one. The lead <strong>actively controls parallel execution</strong> to manage memory constraints — never let all three researchers run heavy training simultaneously. Keep agents busy with a mix of computation-heavy (training) and computation-light (analytical search, paper review, config design) tasks at all times.</p>
+</section>
+<section id="agent-roster" class="level3">
+<h3 class="anchored" data-anchor-id="agent-roster">Agent Roster</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Agent Name</th>
+<th>Role</th>
+<th>Subagent Type</th>
+<th>Key Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>lead</code></td>
+<td>Orchestrator, resource coordinator</td>
+<td>general-purpose</td>
+<td>Task management, messaging, resource monitoring</td>
+</tr>
+<tr class="even">
+<td><code>researcher-1</code></td>
+<td>Experiment executor</td>
+<td>general-purpose</td>
+<td>Bash (training runs), file read/write (configs), analytical scripts</td>
+</tr>
+<tr class="odd">
+<td><code>researcher-2</code></td>
+<td>Experiment executor</td>
+<td>general-purpose</td>
+<td>Bash (training runs), file read/write (configs), analytical scripts</td>
+</tr>
+<tr class="even">
+<td><code>researcher-3</code></td>
+<td>Experiment executor</td>
+<td>general-purpose</td>
+<td>Bash (training runs), file read/write (configs), analytical scripts</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="experiment-queue-priority-order" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-queue-priority-order">Experiment Queue (priority order)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Priority</th>
+<th>Experiment</th>
+<th>Status</th>
+<th>Assigned To</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Exp 1: Risk Aversion for High-Probability Gains</td>
+<td>Pending</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Exp 2: Risk Seeking for High-Probability Losses</td>
+<td>Pending</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Exp 3: Risk Seeking for Low-Probability Gains</td>
+<td>Pending</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Exp 4: Risk Aversion for Low-Probability Losses</td>
+<td>Pending</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Exp 5: Loss Aversion (mixed domain)</td>
+<td>Pending</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>Exp 6: Allais Paradox (optional)</td>
+<td>Pending</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>Exp 7: Status Quo Bias (optional)</td>
+<td>Pending</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>Exp 8: Endowment Effect (optional)</td>
+<td>Pending</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Experiments 1-5 are <strong>required</strong>. Experiments 6-8 are <strong>stretch goals</strong> — only start them after all required experiments have confirmed results.</p>
+<hr>
+</section>
+</section>
+<section id="agent-role-definitions" class="level2">
+<h2 class="anchored" data-anchor-id="agent-role-definitions">Agent Role Definitions</h2>
+<section id="lead-team-lead-and-orchestrator" class="level3">
+<h3 class="anchored" data-anchor-id="lead-team-lead-and-orchestrator"><code>lead</code> — Team Lead and Orchestrator</h3>
+<p><strong>Identity</strong>: You are the team lead. You coordinate all agents, manage compute resources, and ensure experiments run smoothly. You do NOT run experiments yourself.</p>
+<p><strong>Responsibilities</strong>:</p>
+<ol type="1">
+<li><strong>Startup verification</strong>: Before any experiments begin, verify codebase changes are applied (deep merge in <code>utils.py</code>, output directory naming in <code>main.py</code> — these should already be done).</li>
+<li><strong>Experiment assignment</strong>: Assign experiments from the queue to idle researchers. Use the task list to track assignments. When a researcher finishes an experiment (regardless of outcome), assign them the next unfinished experiment from the queue.</li>
+<li><strong>Resource coordination</strong>: Enforce the <strong>maximum 2 concurrent training runs</strong> constraint. Analytical config search scripts are lightweight and do NOT count toward this limit — they can always run alongside training.</li>
+<li><strong>Memory-aware scheduling</strong>: You have 3 researchers but must <strong>stagger their heavy work</strong> to avoid memory pressure. At any given time:
+<ul>
+<li>At most 2 researchers should be running training (heavy compute).</li>
+<li>The 3rd researcher should be doing lightweight work: analytical config search, reading papers/code, designing configs, reviewing results.</li>
+<li>Rotate who is doing heavy vs.&nbsp;light work as experiments progress.</li>
+<li><strong>Keep all agents busy at all times</strong> — if a researcher can’t train, assign them preparatory work (config search, paper review, result analysis) for their next experiment.</li>
+</ul></li>
+<li><strong>Initial scheduling</strong>:
+<ul>
+<li>Assign Exp 1 to <code>researcher-1</code> (training) and Exp 2 to <code>researcher-2</code> (training).</li>
+<li>Assign <code>researcher-3</code> to begin analytical config search and paper review for Exp 3 (lightweight prep).</li>
+<li>When a training slot opens, <code>researcher-3</code> can start training and the finished researcher moves to lightweight prep for their next experiment.</li>
+</ul></li>
+<li><strong>Monitoring</strong>: Periodically check on researcher progress. If a researcher is stuck (3+ failed config iterations with no behavioral difference), help them brainstorm alternative parameter ranges or escalate.</li>
+<li><strong>Result validation</strong>: Each researcher validates their own results — they run the confirmation (4-seed) run and statistical analysis themselves. If validation fails, they iterate immediately without waiting for reassignment.</li>
+<li><strong>Final report</strong>: After all required experiments are validated, aggregate results into a summary.</li>
+</ol>
+<p><strong>Communication protocol</strong>: - Researchers message you when: starting a run, completing a run, finding a promising result, or getting stuck. - You message researchers when: assigning new experiments, providing parameter suggestions, or flagging resource conflicts.</p>
+<p><strong>Decision authority</strong>: You approve or reject experiment reassignments, resolve resource conflicts between researchers, and decide when to move from required to stretch experiments.</p>
+<hr>
+</section>
+<section id="researcher-1-researcher-2-researcher-3-experiment-executors" class="level3">
+<h3 class="anchored" data-anchor-id="researcher-1-researcher-2-researcher-3-experiment-executors"><code>researcher-1</code> / <code>researcher-2</code> / <code>researcher-3</code> — Experiment Executors</h3>
+<p><strong>Identity</strong>: You are a researcher. You execute experiments end-to-end: analytical config search, config creation, training runs, and initial result assessment. You are also expected to <strong>deeply understand the theoretical foundations</strong> by reading the research papers and codebase. When you finish one experiment, you report results and pick up the next assignment from the lead.</p>
+<p><strong>Research foundation</strong>: Before and during experimentation, you should read and reference: - <code>research/reinforce.pdf</code> — REINFORCE algorithm foundations - <code>research/cpt-pg.pdf</code> — CPT-PG algorithm (the core paper for this project) - <code>research/prospect_theory.pdf</code> — Kahneman &amp; Tversky’s original prospect theory - <code>research/cumulative_prospect_theory.pdf</code> — Tversky &amp; Kahneman’s cumulative prospect theory extension</p>
+<p>Use these papers to guide your experimentation. Understand <em>why</em> certain parameter choices should produce specific behaviors. When iterating on configs, reason from the theory — don’t just grid-search blindly. Your goal is to find configs that produce the behavioral differences predicted by CPT. If results don’t align with theory and research, investigate why before moving on.</p>
+<p>Also read the codebase (<code>agents.py</code>, <code>utils.py</code>, <code>custom_cliff_walking.py</code>, <code>path_likelihood.py</code>) to understand how the theory is implemented in practice.</p>
+<p><strong>Responsibilities</strong>:</p>
+<ol type="1">
+<li><strong>Analytical divergence search</strong> (Phase 1): Adapt <code>scripts/find_divergent_config.py</code> for your assigned experiment. Use <code>path_likelihood.py</code> to find configs where EV and CPT analytically prefer different paths in the direction predicted by the experiment hypothesis. This is lightweight and can always run.</li>
+<li><strong>Tipping point search</strong> (Phase 2a): Starting from the Phase 1 config, binary-search the primary parameter (gamma for gains domain, reward_step/wind_prob for losses domain) to find where REINFORCE is near-indifferent between the risky and safe paths (EV margin &lt; 5% between top-2 rows). See the “Tipping Point Search Reference” section.</li>
+<li><strong>REINFORCE-only validation</strong> (Phase 2b): Run REINFORCE alone (<code>agents: [reinforce]</code>, 2 seeds) to confirm the tipping point — look for slow convergence, reward oscillation, and path distribution spread. <strong>Message the lead before starting.</strong> If not at tipping point, adjust and repeat Phase 2a.</li>
+<li><strong>CPT-PG training</strong> (Phase 3): Run both agents on the tipping-point config (<code>agents: [reinforce, cpt-pg]</code>, 2 seeds). Since REINFORCE is near the decision boundary, CPT’s distortions should push CPT-PG to the other side. <strong>Message the lead before starting.</strong></li>
+<li><strong>Theory-guided diagnosis</strong> (Phase 4): If no behavioral divergence, use the diagnostic checklist in the “Tipping Point Search Reference” section to identify which CPT mechanism is inactive or misdirected. Adjust parameters and loop back to Phase 2 or 3. If stuck after 3+ iterations, message the lead.</li>
+<li><strong>Self-validation</strong> (Phase 5): When you find a promising 2-seed divergence, validate it yourself — update to <code>n_seeds: 4</code>, re-run, pool eval episodes (4 seeds x 20 episodes = 80 datapoints), and compute statistical analysis (mean row, path distribution, Mann-Whitney U test). If validation fails, <strong>iterate immediately</strong> — go back to Phase 3 or 2.</li>
+<li><strong>Statistical analysis and report</strong> (Phase 6): Once validation succeeds, produce a structured report (hypothesis confirmed/rejected/inconclusive, effect size, statistical significance) and message the lead with the final results.</li>
+<li><strong>Next experiment</strong>: After completing a validated experiment, message the lead to request your next assignment.</li>
+</ol>
+<p><strong>Communication protocol</strong>: - Message <code>lead</code> when: requesting a training slot, reporting final validated results (success or failure), getting stuck, or requesting next assignment. - Message other researchers when: you discover parameter insights that may help their experiment (e.g., “gamma=0.87 worked well for gains domain”).</p>
+<p><strong>What you do NOT do</strong>: - Do not start a new experiment without the lead’s assignment. - Do not run training without notifying the lead first (resource coordination).</p>
+<hr>
+</section>
+</section>
+<section id="environment-overview" class="level2">
+<h2 class="anchored" data-anchor-id="environment-overview">Environment Overview</h2>
+<p>The Cliff Walking grid has <code>nrows</code> rows (0=top, nrows-1=bottom). The cliff occupies the bottom row between start (bottom-left) and goal (bottom-right).</p>
+<pre><code>Row 0 (safest)    [  ] [  ] [  ] [  ] [  ]
+Row 1              [  ] [  ] [  ] [  ] [  ]
+Row 2 (risky)      [  ] [  ] [  ] [  ] [  ]
+Row 3 (cliff row)  [S ] [XX] [XX] [XX] [G ]
+                   start  cliff  cliff  goal</code></pre>
+<p><strong>Path choice = risk level</strong>: Agent goes UP to chosen row, RIGHT across, then DOWN to goal. Higher rows = fewer steps but closer to cliff.</p>
+<p><strong>Wind</strong> (<code>wind_prob</code>): Each step, the action becomes DOWN with probability <code>wind_prob</code>. This is the randomness that creates cliff-fall risk.</p>
+<p><strong>Key probability formulas</strong>: - Row d=1 (adjacent to cliff): P(cliff) = 1 - (1-wind)^(ncols-1) - Row d=2: P(cliff) ≈ (ncols-2) * wind^2 - Row d=3: P(cliff) ≈ (ncols-3) * wind^3</p>
+<hr>
+</section>
+<section id="how-to-run-experiments" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-run-experiments">How to Run Experiments</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From the project root: posts/rl_cpt/</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> main.py <span class="at">-c</span> config_name</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This trains all agents listed in <code>configs/config_name.yaml</code>, evaluates them, and outputs: - <code>outputs/{agent_name}_{config_name}_{seed}/eval.gif</code> — evaluation episode visualization - <code>outputs/{agent_name}_{config_name}_{seed}/training_curves.png</code> — training plots - <code>outputs/{agent_name}_{config_name}_{seed}/history.npz</code> — raw training data - Path analysis printed to stdout (row percentages, success rate, cliff rate)</p>
+<hr>
+</section>
+<section id="configuration-reference" class="level2">
+<h2 class="anchored" data-anchor-id="configuration-reference">Configuration Reference</h2>
+<section id="critical-stochasticity-must-be-windy-for-wind_prob-to-take-effect" class="level3">
+<h3 class="anchored" data-anchor-id="critical-stochasticity-must-be-windy-for-wind_prob-to-take-effect">CRITICAL: <code>stochasticity</code> must be <code>"windy"</code> for wind_prob to take effect!</h3>
+<p>The <code>make_env()</code> function in <code>custom_cliff_walking.py</code> only applies wind when <code>stochasticity == "windy"</code>. If you forget this, wind_prob will be ignored and all paths become deterministic.</p>
+</section>
+<section id="parameter-reference" class="level3">
+<h3 class="anchored" data-anchor-id="parameter-reference">Parameter Reference</h3>
+<section id="environment-parameters" class="level4">
+<h4 class="anchored" data-anchor-id="environment-parameters">Environment Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Controls</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>shape: [nrows, ncols]</code></td>
+<td>Grid dimensions</td>
+<td>4-5 rows, 5-8 cols recommended</td>
+</tr>
+<tr class="even">
+<td><code>reward_step</code></td>
+<td>Per-step reward</td>
+<td>0 for positive domain, -1 to -3 for negative domain</td>
+</tr>
+<tr class="odd">
+<td><code>reward_cliff</code></td>
+<td>Cliff fall reward</td>
+<td>Negative for loss domain, small positive for gain domain</td>
+</tr>
+<tr class="even">
+<td><code>reward_goal</code></td>
+<td>Goal arrival reward</td>
+<td>Large positive for gain domain, -1 for loss domain</td>
+</tr>
+<tr class="odd">
+<td><code>wind_prob</code></td>
+<td>P(action→DOWN)</td>
+<td>0.03-0.10 = high prob outcomes; 0.20-0.35 = low prob outcomes</td>
+</tr>
+<tr class="even">
+<td><code>stochasticity</code></td>
+<td>Wind enabler</td>
+<td><strong>Must be <code>"windy"</code></strong> for wind to work</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="training-parameters" class="level4">
+<h4 class="anchored" data-anchor-id="training-parameters">Training Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Controls</th>
+<th>Guidance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>timesteps</code></td>
+<td>Total env steps</td>
+<td>350k small grids, 500k+ larger/harder</td>
+</tr>
+<tr class="even">
+<td><code>batch_size</code></td>
+<td>Episodes per update</td>
+<td>8 default, 16-32 for high variance</td>
+</tr>
+<tr class="odd">
+<td><code>entropy_coef</code> / <code>entropy_coef_final</code></td>
+<td>Exploration</td>
+<td>0.5→0.01 default</td>
+</tr>
+<tr class="even">
+<td><code>n_seeds</code></td>
+<td>Reproducibility</td>
+<td><strong>2 for exploration, 4 for confirmation</strong></td>
+</tr>
+<tr class="odd">
+<td><code>n_eval_episodes</code></td>
+<td>Eval episodes</td>
+<td><strong>20 for all experiments</strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="agent-parameters" class="level4">
+<h4 class="anchored" data-anchor-id="agent-parameters">Agent Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Controls</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>lr</code></td>
+<td>Learning rate</td>
+<td>0.0001 default, 0.0005-0.001 for small grids</td>
+</tr>
+<tr class="even">
+<td><code>gamma</code></td>
+<td>Discount factor</td>
+<td><strong>Critical in positive domain</strong>. Lower = penalizes longer paths more. 0.80-0.99.</td>
+</tr>
+<tr class="odd">
+<td><code>baseline_type</code></td>
+<td>Variance reduction</td>
+<td><code>ema</code> for REINFORCE. CPT-PG uses zero internally.</td>
+</tr>
+<tr class="even">
+<td><code>alpha</code></td>
+<td>CPT gains exponent</td>
+<td>0.88 (x^0.88, concave for gains)</td>
+</tr>
+<tr class="odd">
+<td><code>beta</code></td>
+<td>CPT losses exponent</td>
+<td>0.88 (-λ</td>
+</tr>
+<tr class="even">
+<td><code>lambda_</code></td>
+<td>Loss aversion</td>
+<td>2.25 (losses feel 2.25x worse). Key for Exp 5.</td>
+</tr>
+<tr class="odd">
+<td><code>reference_point</code></td>
+<td>Gain/loss boundary</td>
+<td>0.0 default. Key for Exp 5 (mixed domain).</td>
+</tr>
+<tr class="even">
+<td><code>w_plus_gamma</code></td>
+<td>Prob weighting (gains)</td>
+<td>0.61 (overweights small p, underweights large p)</td>
+</tr>
+<tr class="odd">
+<td><code>w_minus_gamma</code></td>
+<td>Prob weighting (losses)</td>
+<td>0.69 (same inverse-S for losses)</td>
+</tr>
+<tr class="even">
+<td><code>center_phi</code></td>
+<td>Center phi-hat values</td>
+<td><strong>Must be <code>true</code> for pure-domain experiments (Exp 1-4)</strong>. Subtracts mean phi so CPT creates relative positive/negative weights.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="tipping-point-search-reference" class="level2">
+<h2 class="anchored" data-anchor-id="tipping-point-search-reference">Tipping Point Search Reference</h2>
+<section id="core-idea" class="level3">
+<h3 class="anchored" data-anchor-id="core-idea">Core Idea</h3>
+<p>Instead of searching for configs where EV and CPT diverge widely and hoping the RL agents reproduce the divergence, we find REINFORCE’s <strong>decision boundary</strong> — the configuration where REINFORCE is nearly indifferent between the risky and safe paths — then train CPT-PG on that borderline config. Since REINFORCE is barely favoring one path, CPT’s probability weighting and value distortions only need a small push to flip CPT-PG’s preference to the other side.</p>
+</section>
+<section id="tipping-point-search-algorithm" class="level3">
+<h3 class="anchored" data-anchor-id="tipping-point-search-algorithm">Tipping Point Search Algorithm</h3>
+<p><strong>For gains domain (Exp 1, 3):</strong> 1. Fix shape, wind_prob, goal_reward, cliff_reward from the Phase 1 config 2. Sweep gamma in [0.80, 0.95] at 0.01 increments 3. For each gamma, compute discounted EV per row using <code>discounted_ev()</code> from <code>scripts/find_divergent_config.py</code> 4. Record which row EV prefers and the margin: <code>(EV_best - EV_second) / |EV_best|</code> 5. Find <code>gamma_tipping</code> where the margin is minimized (or where preferred row flips) 6. Set gamma slightly toward the EV-optimal side: target EV margin of 1-5%</p>
+<p><strong>For losses domain (Exp 2, 4):</strong> 1. Fix shape, gamma=0.98, reward_cliff from the Phase 1 config 2. Sweep reward_step in [-0.5, -3.0] and wind_prob in [0.03, 0.10] 3. For each (reward_step, wind_prob), compute EV per row 4. Pick the combination where EV margin is 1-5% between top-2 rows</p>
+<p><strong>For mixed domain (Exp 5):</strong> 1. Keep all rewards in losses domain (step&lt;0, goal&lt;0, cliff&lt;0) for training stability 2. Sweep reference_point to find where some returns fall above and some below the reference 3. Lambda=2.25 amplifies losses relative to gains around the reference point, creating CPT divergence</p>
+</section>
+<section id="how-to-recognize-the-tipping-point-training-signatures" class="level3">
+<h3 class="anchored" data-anchor-id="how-to-recognize-the-tipping-point-training-signatures">How to Recognize the Tipping Point (Training Signatures)</h3>
+<p>When validating the tipping point with a REINFORCE-only run (Phase 2b), look for these signatures:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Signature</th>
+<th>What to Look For</th>
+<th>Too Far from Tipping Point</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Slow convergence</strong></td>
+<td>Reward doesn’t stabilize until 50-80% of timesteps</td>
+<td>Converges before 40% of timesteps</td>
+</tr>
+<tr class="even">
+<td><strong>Reward oscillation</strong></td>
+<td>Smoothed reward curve (in <code>rewards.png</code>) shows up-down swings before settling</td>
+<td>Monotonic climb to plateau</td>
+</tr>
+<tr class="odd">
+<td><strong>Path distribution spread</strong></td>
+<td>eval shows 60-70% on preferred row, 20-30% on alternative</td>
+<td>95%+ on one row</td>
+</tr>
+<tr class="even">
+<td><strong>Seed sensitivity</strong></td>
+<td>At least 1 of 2 seeds shows meaningful exploration of alternative path</td>
+<td>Both seeds converge instantly to same row</td>
+</tr>
+</tbody>
+</table>
+<p>If REINFORCE converges too quickly or too strongly to one path, the EV advantage is too large — adjust the primary search variable to bring it closer to indifference.</p>
+</section>
+<section id="probability-weighting-reference-table" class="level3">
+<h3 class="anchored" data-anchor-id="probability-weighting-reference-table">Probability Weighting Reference Table</h3>
+<p>Pre-computed values from <code>CPTWeightingFunction</code> (<code>utils.py</code>). Use this to quickly check whether your experiment’s cliff probability falls in the overweighting or underweighting zone.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>p (actual)</th>
+<th>w+(p)</th>
+<th>ratio w+/p</th>
+<th>w-(p)</th>
+<th>ratio w-/p</th>
+<th>Zone</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.01</td>
+<td>0.034</td>
+<td>3.4x</td>
+<td>0.021</td>
+<td>2.1x</td>
+<td>Strong overweight</td>
+</tr>
+<tr class="even">
+<td>0.05</td>
+<td>0.103</td>
+<td>2.1x</td>
+<td>0.079</td>
+<td>1.6x</td>
+<td>Strong overweight</td>
+</tr>
+<tr class="odd">
+<td>0.10</td>
+<td>0.166</td>
+<td>1.7x</td>
+<td>0.135</td>
+<td>1.4x</td>
+<td>Moderate overweight</td>
+</tr>
+<tr class="even">
+<td>0.30</td>
+<td>0.348</td>
+<td>1.2x</td>
+<td>0.312</td>
+<td>1.0x</td>
+<td>Near neutral</td>
+</tr>
+<tr class="odd">
+<td>0.50</td>
+<td>0.421</td>
+<td>0.84x</td>
+<td>0.435</td>
+<td>0.87x</td>
+<td>Moderate underweight</td>
+</tr>
+<tr class="even">
+<td>0.70</td>
+<td>0.534</td>
+<td>0.76x</td>
+<td>—</td>
+<td>—</td>
+<td>Strong underweight</td>
+</tr>
+<tr class="odd">
+<td>0.90</td>
+<td>0.742</td>
+<td>0.82x</td>
+<td>0.790</td>
+<td>0.88x</td>
+<td>Strong underweight</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="theory-guided-diagnostic-checklist-phase-4" class="level3">
+<h3 class="anchored" data-anchor-id="theory-guided-diagnostic-checklist-phase-4">Theory-Guided Diagnostic Checklist (Phase 4)</h3>
+<p>When CPT-PG and REINFORCE do NOT diverge, systematically check each CPT mechanism:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>CPT Mechanism</th>
+<th>When Active</th>
+<th>How to Check</th>
+<th>Fix if Inactive</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Value compression</strong> (α=0.88)</td>
+<td>Gains &gt; 10</td>
+<td>Is <code>v(G_risky)/v(G_safe)</code> significantly different from <code>G_risky/G_safe</code>?</td>
+<td>Increase goal_reward or cliff_reward to get larger absolute returns</td>
+</tr>
+<tr class="even">
+<td><strong>Loss convexity</strong> (β=0.88)</td>
+<td>Losses &lt; -10</td>
+<td>Same check for losses</td>
+<td>Increase |step| or |cliff|</td>
+</tr>
+<tr class="odd">
+<td><strong>Prob overweighting</strong></td>
+<td>p &lt; 0.15</td>
+<td>Check <code>w(p_cliff)/p_cliff</code> in table above — is ratio &gt; 1.5?</td>
+<td>Adjust wind_prob to put cliff probability in the overweighting zone</td>
+</tr>
+<tr class="even">
+<td><strong>Prob underweighting</strong></td>
+<td>p &gt; 0.40</td>
+<td>Check <code>w(p)/p</code> in table — is ratio &lt; 0.95?</td>
+<td>Adjust wind_prob</td>
+</tr>
+<tr class="odd">
+<td><strong>Loss aversion</strong> (λ=2.25)</td>
+<td>Mixed domain (gains AND losses)</td>
+<td>Are returns BOTH above AND below reference_point?</td>
+<td>Adjust reference_point to straddle returns. Lambda cancels in pure domains!</td>
+</tr>
+<tr class="even">
+<td><strong>center_phi</strong></td>
+<td>Pure domains (all gains or all losses)</td>
+<td>Are phi values near-uniform before centering?</td>
+<td>Set <code>center_phi: true</code> — <strong>required for Exp 1-4</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>Tipping point shifted</strong></td>
+<td>After any parameter change</td>
+<td>Is REINFORCE still borderline?</td>
+<td>Re-run Phase 2a/2b after adjustments</td>
+</tr>
+<tr class="even">
+<td><strong>Training failure</strong></td>
+<td>CPT-PG reward curve is flat</td>
+<td>Check training curves, compare to REINFORCE</td>
+<td>Adjust lr, entropy_coef, batch_size</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="metrics-framework" class="level2">
+<h2 class="anchored" data-anchor-id="metrics-framework">Metrics Framework</h2>
+<section id="primary-row-traversal-preference" class="level3">
+<h3 class="anchored" data-anchor-id="primary-row-traversal-preference">Primary: Row Traversal Preference</h3>
+<p>Measured by <code>evaluate_paths()</code> in <code>utils.py</code>. For each eval episode, tracks the minimum row reached (the “path” chosen).</p>
+<ul>
+<li><strong>Mean traversal row</strong>: Lower = safer. Higher = riskier.</li>
+<li><strong>Path distribution</strong>: % of episodes at each row.</li>
+<li><strong>Row preference divergence</strong>: Difference in mean traversal row between REINFORCE and CPT-PG.</li>
+</ul>
+<p>THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS.</p>
+</section>
+<section id="secondary-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="secondary-metrics">Secondary Metrics</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>How to Measure</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Success rate</td>
+<td>Episodes reaching goal / total</td>
+<td>Performance</td>
+</tr>
+<tr class="even">
+<td>Cliff fall rate</td>
+<td>Episodes falling / total</td>
+<td>Direct risk</td>
+</tr>
+<tr class="odd">
+<td>Path consistency</td>
+<td>Std dev of min_row</td>
+<td>Policy commitment</td>
+</tr>
+<tr class="even">
+<td>Average episode reward</td>
+<td>Mean undiscounted reward</td>
+<td>Outcome quality</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="what-counts-as-a-successful-experiment" class="level3">
+<h3 class="anchored" data-anchor-id="what-counts-as-a-successful-experiment">What Counts as a Successful Experiment</h3>
+<ol type="1">
+<li><strong>Direction matches hypothesis</strong>: CPT prefers safer/riskier paths as predicted</li>
+<li><strong>Magnitude</strong>: &gt;0.5 row difference in mean traversal row, or &gt;15% shift in path distribution</li>
+<li><strong>Consistency across seeds</strong>: All seeds show same direction</li>
+<li><strong>Statistical power</strong>: 2 seeds × 20 episodes = 40 datapoints per agent minimum</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="experiment-lifecycle" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-lifecycle">Experiment Lifecycle</h2>
+<p>Each experiment is owned end-to-end by a single researcher. The core strategy is the <strong>tipping-point approach</strong>: find the configuration where REINFORCE is nearly indifferent between paths, then exploit that indifference with CPT-PG. If validation fails, the researcher iterates immediately. The starting configs in each experiment section are initial guesses — researchers WILL need to explore and adjust parameters.</p>
+<p>We need <strong>at least 3 replicable differences found</strong>. Focus on finding at least three significant differences first, then focus on the rest of experiments.</p>
+<section id="researcher-phases" class="level3">
+<h3 class="anchored" data-anchor-id="researcher-phases">Researcher Phases</h3>
+<section id="phase-1-analytical-divergence-search-low-resource-always-allowed" class="level4">
+<h4 class="anchored" data-anchor-id="phase-1-analytical-divergence-search-low-resource-always-allowed">Phase 1: Analytical Divergence Search (low resource, always allowed)</h4>
+<p>Adapt <code>scripts/find_divergent_config.py</code> to your experiment. Use <code>path_likelihood.py</code> functions: - <code>cliff_fall_probability(row, nrows, ncols, wind_prob)</code> — P(cliff) for a row - <code>calculate_path_cpt_value(outcomes, value_func, weighting_func)</code> — CPT value with proper decision weights - <code>calculate_path_expected_value(outcomes)</code> — EV value - <code>build_path_outcome_distributions(env_config)</code> — outcome distributions for each row - <code>compare_value_frameworks(env_config, cpt_params)</code> — compare EV vs CPT preferences (<strong>always pass <code>use_probability_weighting: True</code> in cpt_params</strong>)</p>
+<p>Search the parameter space listed in your experiment section. Find configs where EV and CPT <strong>diverge in the predicted direction</strong>. The acceptance criterion is: <code>ev_preferred_row != cpt_preferred_row</code>, matching the experiment’s hypothesis.</p>
+</section>
+<section id="phase-2a-tipping-point-search-analytical-low-resource" class="level4">
+<h4 class="anchored" data-anchor-id="phase-2a-tipping-point-search-analytical-low-resource">Phase 2a: Tipping Point Search (analytical, low resource)</h4>
+<p>Starting from the Phase 1 config, find where REINFORCE is nearly indifferent between the risky and safe paths:</p>
+<ol type="1">
+<li>Identify the <strong>primary search variable</strong> for your experiment (see per-experiment sections below — typically gamma for gains domain, reward_step/wind_prob for losses domain)</li>
+<li>Binary-search that variable to find where EV margin between the top-2 rows is &lt; 5%</li>
+<li>See the <strong>Tipping Point Search Reference</strong> section for the algorithm and domain-specific guidance</li>
+<li>Create config YAML in <code>configs/</code> with <code>n_seeds: 2</code> and <code>agents: [reinforce]</code> (REINFORCE only for Phase 2b)</li>
+</ol>
+</section>
+<section id="phase-2b-validate-the-tipping-point-reinforce-only-training" class="level4">
+<h4 class="anchored" data-anchor-id="phase-2b-validate-the-tipping-point-reinforce-only-training">Phase 2b: Validate the Tipping Point (REINFORCE-only training)</h4>
+<ol type="1">
+<li><strong>Message the lead</strong> to request a training slot</li>
+<li>Run: <code>python main.py -c your_config_name</code> (REINFORCE only)</li>
+<li>Check training signatures against the tipping-point criteria (see reference section):
+<ul>
+<li>Slow convergence (settles at 50-80% of timesteps, not before 40%)</li>
+<li>Reward oscillation in <code>rewards.png</code> before stabilizing</li>
+<li>Path distribution spread: 60-70% on preferred row, not 95%+ on one row</li>
+<li>Seed sensitivity: at least 1 of 2 seeds shows exploration of alternative path</li>
+</ul></li>
+<li><strong>If NOT at tipping point</strong>: adjust the primary search variable and repeat Phase 2a</li>
+<li><strong>If at tipping point</strong>: proceed to Phase 3</li>
+</ol>
+</section>
+<section id="phase-3-cpt-pg-training-2-seeds-resource-constrained" class="level4">
+<h4 class="anchored" data-anchor-id="phase-3-cpt-pg-training-2-seeds-resource-constrained">Phase 3: CPT-PG Training (2 seeds, resource-constrained)</h4>
+<ol type="1">
+<li>Update config to include both agents: <code>agents: [reinforce, cpt-pg]</code></li>
+<li>Ensure <code>center_phi: true</code> is set for pure-domain experiments (Exp 1-4)</li>
+<li><strong>Message the lead</strong> to request a training slot</li>
+<li>Run: <code>python main.py -c your_config_name</code></li>
+<li>Check stdout for path analysis, training curves, and eval GIFs</li>
+<li>Assess: do the agents converge to <strong>different preferred rows</strong> in the direction predicted by CPT theory?</li>
+</ol>
+<p>THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS.</p>
+</section>
+<section id="phase-4-theory-guided-diagnosis-if-no-divergence" class="level4">
+<h4 class="anchored" data-anchor-id="phase-4-theory-guided-diagnosis-if-no-divergence">Phase 4: Theory-Guided Diagnosis (if no divergence)</h4>
+<p>If CPT-PG and REINFORCE choose the same path, use the <strong>diagnostic checklist</strong> in the Tipping Point Search Reference section. Systematically check:</p>
+<ol type="1">
+<li><strong>phi-hat uniformity</strong> — need <code>center_phi: true</code> in pure domains?</li>
+<li><strong>Probability weighting direction</strong> — is w(p)/p pushing in the expected direction for this wind_prob? Check the reference table.</li>
+<li><strong>Value compression magnitude</strong> — are absolute returns large enough (&gt; 50) for meaningful compression?</li>
+<li><strong>Domain compatibility</strong> — mixed gains domain (cliff&lt;0, goal&gt;0, step=0) fails with CPT-PG. Avoid it.</li>
+<li><strong>Tipping point shifted</strong> — did parameter adjustments move the tipping point? Re-verify REINFORCE is still borderline.</li>
+<li><strong>Training convergence</strong> — if CPT-PG reward curve is flat, the issue is training not CPT theory. Adjust lr, entropy, batch_size.</li>
+</ol>
+<p>After diagnosis, loop back to Phase 2 or 3 with adjusted parameters. After 3+ failed iterations, message the lead for guidance.</p>
+<p><strong>If promising divergence found</strong> — proceed to Phase 5.</p>
+</section>
+</section>
+<section id="self-validation-phases-same-researcher" class="level3">
+<h3 class="anchored" data-anchor-id="self-validation-phases-same-researcher">Self-Validation Phases (same researcher)</h3>
+<section id="phase-5-validation-and-confirmation-4-seeds" class="level4">
+<h4 class="anchored" data-anchor-id="phase-5-validation-and-confirmation-4-seeds">Phase 5: Validation and Confirmation (4 seeds)</h4>
+<ol type="1">
+<li>Review your own 2-seed results critically (path analysis, training curves, eval GIFs)</li>
+<li>If results look weak or inconsistent, go back to Phase 3 immediately — adjust parameters and re-run</li>
+<li>If results look promising:
+<ol type="a">
+<li>Update the config: <code>n_seeds: 4</code></li>
+<li><strong>Message the lead</strong> to request a training slot</li>
+<li>Run: <code>python main.py -c config_name</code></li>
+<li>Pool all eval episodes across seeds (4 seeds x 20 episodes = 80 datapoints per agent)</li>
+</ol></li>
+<li><strong>If validation fails</strong> (4-seed results are weaker, inconsistent, or don’t match hypothesis): go back to Phase 3 and iterate. Do NOT report a failed validation as final — fix it first.</li>
+</ol>
+</section>
+<section id="phase-6-statistical-analysis-and-report" class="level4">
+<h4 class="anchored" data-anchor-id="phase-6-statistical-analysis-and-report">Phase 6: Statistical Analysis and Report</h4>
+<p>Once 4-seed validation succeeds, produce: 1. Final config (YAML) 2. Path distribution comparison (table with % at each row per agent) 3. All metrics with standard errors (mean row, success rate, cliff rate, episode reward) 4. Statistical significance test (Mann-Whitney U or similar) 5. Hypothesis confirmed / rejected / inconclusive + reasoning 6. Effect size and practical significance 7. Any surprises or insights</p>
+</section>
+</section>
+<section id="experiment-flow-diagram" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-flow-diagram">Experiment Flow Diagram</h3>
+<pre><code>Researcher                              Lead
+    |                                     |
+    |-- Phase 1: Analytical Divergence    |
+    |   (use path_likelihood.py)          |
+    |   Output: config where EV!=CPT      |
+    |                                     |
+    |-- Phase 2a: Tipping Point Search    |
+    |   (binary search on gamma/step/wind)|
+    |   Output: config where EV margin&lt;5% |
+    |                                     |
+    |-- "need train slot (REINFORCE only)"|
+    |   --------------------------------&gt; |
+    |                                     |-- "slot approved"
+    |-- Phase 2b: Validate Tipping Point  |
+    |   (2-seed REINFORCE-only run)       |
+    |   Check: slow convergence?          |
+    |   Check: path distribution spread?  |
+    |   Check: seed sensitivity?          |
+    |                                     |
+    |   [If NOT at tipping point:         |
+    |    adjust, loop to Phase 2a]        |
+    |                                     |
+    |-- "need train slot (both agents)"   |
+    |   --------------------------------&gt; |
+    |                                     |-- "slot approved"
+    |-- Phase 3: CPT-PG Training          |
+    |   (2-seed, both agents)             |
+    |   Check: different row preferences? |
+    |   Check: matches CPT theory?        |
+    |                                     |
+    |   [If no divergence: Phase 4        |
+    |    diagnosis, loop to Phase 2 or 3] |
+    |                                     |
+    |-- Phase 5: Validation (4 seeds)     |
+    |   [If fails: loop to Phase 3]       |
+    |                                     |
+    |-- Phase 6: Stats &amp; Report           |
+    |-- "final report" -----------------&gt; |
+    |-- "request next exp" -------------&gt; |
+    |                                     |</code></pre>
+<hr>
+</section>
+</section>
+<section id="experiment-1-risk-aversion-for-high-probability-gains-required" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-1-risk-aversion-for-high-probability-gains-required">Experiment 1: Risk Aversion for High-Probability Gains (REQUIRED)</h2>
+<p><strong>Assigned to</strong>: Next available researcher (initially <code>researcher-1</code>) <strong>Priority</strong>: 1</p>
+<section id="theory" class="level3">
+<h3 class="anchored" data-anchor-id="theory">Theory</h3>
+<p>CPT’s fourfold pattern predicts risk aversion when gains are probable: - Value function concavity (<code>x^0.88</code>) compresses large gains - Probability weighting underweights high probabilities: <code>w+(0.85) ≈ 0.74 &lt; 0.85</code> - Combined: the “sure thing” (safe path) becomes relatively more attractive</p>
+</section>
+<section id="hypothesis" class="level3">
+<h3 class="anchored" data-anchor-id="hypothesis">Hypothesis</h3>
+<p>In a positive-reward domain with low wind, CPT should prefer safer paths than REINFORCE.</p>
+</section>
+<section id="starting-config-configsexp1_hp_gains.yaml" class="level3">
+<h3 class="anchored" data-anchor-id="starting-config-configsexp1_hp_gains.yaml">Starting Config (<code>configs/exp1_hp_gains.yaml</code>)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">shape</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">4</span><span class="kw">,</span><span class="at"> </span><span class="dv">5</span><span class="kw">]</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">stochasticity</span><span class="kw">:</span><span class="at"> windy</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_cliff</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_step</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_goal</span><span class="kw">:</span><span class="at"> </span><span class="dv">100</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">wind_prob</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.05</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">training</span><span class="kw">:</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">timesteps</span><span class="kw">:</span><span class="at"> </span><span class="dv">350000</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_eval_episodes</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">batch_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">8</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_coef</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.5</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_coef_final</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.01</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_seeds</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="fu">agent_config</span><span class="kw">:</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lr</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.001</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.90</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">baseline_type</span><span class="kw">:</span><span class="at"> ema</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">alpha</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.88</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">beta</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.88</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lambda_</span><span class="kw">:</span><span class="at"> </span><span class="fl">2.25</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reference_point</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.0</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">w_plus_gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.61</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">w_minus_gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.69</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sliding_window_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sliding_window_decay</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.8</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="fu">agents</span><span class="kw">:</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> reinforce</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> cpt-pg</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Key design decisions</strong>: - <code>reward_step=0</code> + positive <code>reward_goal</code> → gains domain (all returns positive) - <code>wind_prob=0.05</code> → row 2 (d=1) has P(success)=81.5% (HIGH probability) - <code>gamma=0.90</code> → safe path (10 steps): G=38.7, risky path (6 steps): G=59.0. Gamma creates the differentiation.</p>
+</section>
+<section id="parameters-you-can-modify" class="level3">
+<h3 class="anchored" data-anchor-id="parameters-you-can-modify">Parameters You Can Modify</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Range</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>gamma</code></td>
+<td>[0.80, 0.82, 0.85, 0.87, 0.90, 0.92, 0.95]</td>
+<td><strong>Critical lever</strong>. Lower gamma penalizes safe path more (more discounting).</td>
+</tr>
+<tr class="even">
+<td><code>goal_reward</code></td>
+<td>[50, 100, 150, 200, 500]</td>
+<td>Affects the magnitude of the gain. Larger may increase CPT compression effect.</td>
+</tr>
+<tr class="odd">
+<td><code>cliff_reward</code></td>
+<td>[1, 2, 5, 10]</td>
+<td>Small positive. Must stay in gains domain.</td>
+</tr>
+<tr class="even">
+<td><code>wind_prob</code></td>
+<td>[0.03, 0.05, 0.07, 0.10]</td>
+<td>Keep ≤0.10 for high-probability regime.</td>
+</tr>
+<tr class="odd">
+<td><code>shape</code></td>
+<td>[4,5], [4,6], [4,7], [5,5], [5,6]</td>
+<td>Larger = more path differentiation but harder to train.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tipping-point-strategy" class="level3">
+<h3 class="anchored" data-anchor-id="tipping-point-strategy">Tipping Point Strategy</h3>
+<p><strong>Primary search variable</strong>: <code>gamma</code> <strong>Tipping range</strong>: [0.85, 0.92] <strong>How it works</strong>: At low gamma (0.80-0.85), REINFORCE strongly prefers risky path (short path is less discounted). At high gamma (0.93+), REINFORCE prefers safe path (risk of cliff outweighs discount advantage). The tipping point is in between.</p>
+<ol type="1">
+<li><strong>Phase 1</strong>: Find a gamma where EV prefers risky but CPT prefers safe (use <code>compare_value_frameworks</code> with <code>use_probability_weighting: True</code>)</li>
+<li><strong>Phase 2a</strong>: Binary-search gamma to find where REINFORCE’s EV margin between risky and safe is &lt; 5%</li>
+<li><strong>Phase 2b</strong>: Run REINFORCE-only. Look for oscillation between rows and slow convergence</li>
+<li><strong>Phase 3</strong>: Add CPT-PG. CPT’s value compression (<code>v(G_risky)^0.88</code> compresses large risky gains more than safe gains) + probability underweighting of high success probability should tip CPT toward the safer path</li>
+</ol>
+<p><strong>CPT mechanism active here</strong>: Value compression (α=0.88, concave) + probability underweighting of high-p success (w+(0.82) ≈ 0.71 &lt; 0.82)</p>
+</section>
+<section id="expected-outcome" class="level3">
+<h3 class="anchored" data-anchor-id="expected-outcome">Expected Outcome</h3>
+<ul>
+<li><strong>REINFORCE</strong>: Barely prefers risky path (row 2) at the tipping point — slow to converge, oscillates</li>
+<li><strong>CPT-PG</strong>: Prefers safe path (row 0 or 1) — value compression + probability underweighting makes safe more attractive</li>
+<li>Mean traversal row: CPT &lt; REINFORCE</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="experiment-2-risk-seeking-for-high-probability-losses-required" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-2-risk-seeking-for-high-probability-losses-required">Experiment 2: Risk Seeking for High-Probability Losses (REQUIRED)</h2>
+<p><strong>Assigned to</strong>: Next available researcher (initially <code>researcher-2</code>) <strong>Priority</strong>: 2</p>
+<section id="theory-1" class="level3">
+<h3 class="anchored" data-anchor-id="theory-1">Theory</h3>
+<p>CPT predicts risk seeking when losses are probable: - Value function convexity for losses: a certain loss feels worse than a gamble with the same EV - Probability underweighting: <code>w-(0.85) &lt; 0.85</code> reduces perceived likelihood of bad outcome</p>
+</section>
+<section id="hypothesis-1" class="level3">
+<h3 class="anchored" data-anchor-id="hypothesis-1">Hypothesis</h3>
+<p>In an all-negative domain with low wind, CPT should prefer riskier paths than REINFORCE.</p>
+</section>
+<section id="starting-config-configsexp2_hp_losses.yaml" class="level3">
+<h3 class="anchored" data-anchor-id="starting-config-configsexp2_hp_losses.yaml">Starting Config (<code>configs/exp2_hp_losses.yaml</code>)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">shape</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">4</span><span class="kw">,</span><span class="at"> </span><span class="dv">6</span><span class="kw">]</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">stochasticity</span><span class="kw">:</span><span class="at"> windy</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_cliff</span><span class="kw">:</span><span class="at"> </span><span class="dv">-100</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_step</span><span class="kw">:</span><span class="at"> </span><span class="dv">-1</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_goal</span><span class="kw">:</span><span class="at"> </span><span class="dv">-1</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">wind_prob</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.08</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">training</span><span class="kw">:</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">timesteps</span><span class="kw">:</span><span class="at"> </span><span class="dv">350000</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_eval_episodes</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">batch_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">8</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_coef</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.5</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_coef_final</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.01</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_seeds</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="fu">agent_config</span><span class="kw">:</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lr</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.0005</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.99</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">baseline_type</span><span class="kw">:</span><span class="at"> ema</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">alpha</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.88</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">beta</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.88</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lambda_</span><span class="kw">:</span><span class="at"> </span><span class="fl">2.25</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reference_point</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.0</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">w_plus_gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.61</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">w_minus_gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.69</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sliding_window_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sliding_window_decay</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.8</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="fu">agents</span><span class="kw">:</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> reinforce</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> cpt-pg</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Key design decisions</strong>: - All rewards negative → everything is a “loss” relative to reference_point=0 - <code>gamma=0.99</code> → accumulates step losses (safe path cost compounds) - <code>wind_prob=0.08</code> → row 2 (d=1): P(fall)=34.1%, P(success)=65.9% (high probability regime) - Safe path (~12 steps): G≈-12. Risky success (~8 steps): G≈-8. Risky cliff: G≈-104.</p>
+</section>
+<section id="parameters-you-can-modify-1" class="level3">
+<h3 class="anchored" data-anchor-id="parameters-you-can-modify-1">Parameters You Can Modify</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Range</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>reward_cliff</code></td>
+<td>[-50, -80, -100, -150]</td>
+<td>Cliff severity. More negative = bigger gamble.</td>
+</tr>
+<tr class="even">
+<td><code>reward_step</code></td>
+<td>[-0.5, -1, -1.5, -2, -3]</td>
+<td>Higher cost makes safe path’s “certain loss” worse.</td>
+</tr>
+<tr class="odd">
+<td><code>wind_prob</code></td>
+<td>[0.05, 0.07, 0.08, 0.10]</td>
+<td>Keep in high-probability regime.</td>
+</tr>
+<tr class="even">
+<td><code>shape</code></td>
+<td>[4,5], [4,6], [4,7]</td>
+<td>Affects step count differences between paths.</td>
+</tr>
+<tr class="odd">
+<td><code>gamma</code></td>
+<td>[0.95, 0.97, 0.99]</td>
+<td>Higher accumulates more step losses.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tipping-point-strategy-1" class="level3">
+<h3 class="anchored" data-anchor-id="tipping-point-strategy-1">Tipping Point Strategy</h3>
+<p><strong>Primary search variable</strong>: <code>reward_step</code> (secondary: <code>wind_prob</code>) <strong>Tipping range</strong>: reward_step in [-1.0, -2.5], wind_prob in [0.05, 0.10] <strong>How it works</strong>: At high |step| (e.g., -2.5), REINFORCE prefers risky path (safe path’s many steps are very costly). At low |step| (e.g., -0.5), REINFORCE prefers safe (cliff risk dominates over step cost). The tipping point is in between.</p>
+<ol type="1">
+<li><strong>Phase 1</strong>: Find a reward_step where EV prefers safe but CPT prefers risky</li>
+<li><strong>Phase 2a</strong>: Sweep reward_step to find where REINFORCE’s EV margin is &lt; 5%</li>
+<li><strong>Phase 2b</strong>: Run REINFORCE-only. Look for oscillation and slow convergence</li>
+<li><strong>Phase 3</strong>: Add CPT-PG. CPT’s loss convexity (−λ|x|^0.88 is convex, making certain losses feel disproportionately bad) + probability underweighting (w−(0.66) &lt; 0.66, reduces perceived high success probability) should push CPT toward the riskier path</li>
+</ol>
+<p><strong>CPT mechanism active here</strong>: Loss convexity (β=0.88) + probability underweighting of high p_success. Use <code>center_phi: true</code> since all returns are negative.</p>
+</section>
+<section id="expected-outcome-1" class="level3">
+<h3 class="anchored" data-anchor-id="expected-outcome-1">Expected Outcome</h3>
+<ul>
+<li><strong>REINFORCE</strong>: Barely prefers safe path at the tipping point — slow to converge</li>
+<li><strong>CPT-PG</strong>: Prefers risky path (gambles to escape certain loss)</li>
+<li>Mean traversal row: CPT &gt; REINFORCE</li>
+<li>CPT may have higher cliff fall rate (confirms risk-seeking)</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="experiment-3-risk-seeking-for-low-probability-gains-required" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-3-risk-seeking-for-low-probability-gains-required">Experiment 3: Risk Seeking for Low-Probability Gains (REQUIRED)</h2>
+<p><strong>Assigned to</strong>: Next available researcher <strong>Priority</strong>: 3</p>
+<section id="theory-2" class="level3">
+<h3 class="anchored" data-anchor-id="theory-2">Theory</h3>
+<p>“Lottery ticket” behavior: CPT overweights small probabilities of large gains. - <code>w+(0.10) ≈ 0.18</code> — nearly doubles the perceived probability - Despite value compression (x^0.88), the probability overweighting can dominate</p>
+</section>
+<section id="hypothesis-2" class="level3">
+<h3 class="anchored" data-anchor-id="hypothesis-2">Hypothesis</h3>
+<p>With high wind and positive rewards, CPT should pursue the risky path more than REINFORCE.</p>
+</section>
+<section id="starting-config-configsexp3_lp_gains.yaml" class="level3">
+<h3 class="anchored" data-anchor-id="starting-config-configsexp3_lp_gains.yaml">Starting Config (<code>configs/exp3_lp_gains.yaml</code>)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">shape</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">4</span><span class="kw">,</span><span class="at"> </span><span class="dv">8</span><span class="kw">]</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">stochasticity</span><span class="kw">:</span><span class="at"> windy</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_cliff</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_step</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_goal</span><span class="kw">:</span><span class="at"> </span><span class="dv">500</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">wind_prob</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.25</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">training</span><span class="kw">:</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">timesteps</span><span class="kw">:</span><span class="at"> </span><span class="dv">500000</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_eval_episodes</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">batch_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">16</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_coef</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.5</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_coef_final</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.01</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_seeds</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="fu">agent_config</span><span class="kw">:</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lr</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.0005</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.92</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">baseline_type</span><span class="kw">:</span><span class="at"> ema</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">alpha</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.88</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">beta</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.88</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lambda_</span><span class="kw">:</span><span class="at"> </span><span class="fl">2.25</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reference_point</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.0</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">w_plus_gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.61</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">w_minus_gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.69</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sliding_window_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sliding_window_decay</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.8</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="fu">agents</span><span class="kw">:</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> reinforce</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> cpt-pg</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Key design decisions</strong>: - <code>wind_prob=0.25</code> → row 2 (d=1): P(fall)=86.7%, P(success)=13.3% (LOW probability) - <code>reward_goal=500</code> → large “lottery prize” - <code>reward_step=0</code> → gains domain only - <code>batch_size=16</code> → more samples per update for high-variance environment - <code>timesteps=500000</code> → more training for harder environment</p>
+</section>
+<section id="parameters-you-can-modify-2" class="level3">
+<h3 class="anchored" data-anchor-id="parameters-you-can-modify-2">Parameters You Can Modify</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Range</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>goal_reward</code></td>
+<td>[200, 500, 1000, 2000, 5000]</td>
+<td><strong>Must be large enough</strong> for probability overweighting to overcome value compression.</td>
+</tr>
+<tr class="even">
+<td><code>cliff_reward</code></td>
+<td>[1, 2, 5]</td>
+<td>Keep small positive.</td>
+</tr>
+<tr class="odd">
+<td><code>wind_prob</code></td>
+<td>[0.20, 0.25, 0.30, 0.35]</td>
+<td>Low-probability regime.</td>
+</tr>
+<tr class="even">
+<td><code>gamma</code></td>
+<td>[0.85, 0.88, 0.90, 0.92, 0.95]</td>
+<td>Balances path length discount.</td>
+</tr>
+<tr class="odd">
+<td><code>shape</code></td>
+<td>[4,7], [4,8], [4,10], [5,7]</td>
+<td>Wider = more wind exposure.</td>
+</tr>
+<tr class="even">
+<td><code>batch_size</code></td>
+<td>[16, 32]</td>
+<td>Larger batches stabilize high-variance training.</td>
+</tr>
+<tr class="odd">
+<td><code>timesteps</code></td>
+<td>[500000, 750000]</td>
+<td>May need more training for convergence.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>This is the hardest experiment.</strong> The probability overweighting effect is strong theoretically but may be hard to learn. If the risky path almost never succeeds during training, the agent may never explore it enough.</p>
+</section>
+<section id="tipping-point-strategy-2" class="level3">
+<h3 class="anchored" data-anchor-id="tipping-point-strategy-2">Tipping Point Strategy</h3>
+<p><strong>Primary search variable</strong>: <code>gamma</code> (secondary: <code>wind_prob</code>) <strong>Tipping range</strong>: gamma in [0.85, 0.92], wind_prob in [0.20, 0.35] <strong>How it works</strong>: At low gamma, REINFORCE prefers risky (short path barely discounted, lottery worth trying). At high gamma, REINFORCE prefers safe (risk-adjusted EV of long safe path dominates). The tipping point is where REINFORCE barely prefers safe.</p>
+<ol type="1">
+<li><strong>Phase 1</strong>: Find a gamma/wind_prob where EV prefers safe but CPT prefers risky (probability overweighting flips CPT’s preference)</li>
+<li><strong>Phase 2a</strong>: Binary-search gamma to find where REINFORCE barely prefers safe (EV margin &lt; 5%)</li>
+<li><strong>Phase 2b</strong>: Run REINFORCE-only. Since success is rare, look for: mostly safe path but occasional risky exploration, seed disagreement on preferred row</li>
+<li><strong>Phase 3</strong>: Add CPT-PG. CPT overweights the small probability of the big gain: <code>w+(0.10) ≈ 0.17</code> (1.7x overweight). This should be enough to flip CPT-PG toward the risky path at the tipping point.</li>
+</ol>
+<p><strong>CPT mechanism active here</strong>: Probability overweighting of small p_success (w+(p) &gt;&gt; p for p &lt; 0.15). Check the probability weighting table for your specific wind_prob.</p>
+<p><strong>Practical tips for this hard experiment:</strong> - Consider row 1 (d=2) instead of row 2 (d=1) for intermediate risk levels with higher success rates - Use very large goal rewards (1000+) to amplify the lottery signal - Use <code>batch_size: 32</code> to stabilize the high-variance environment - May need <code>timesteps: 500000-750000</code> for convergence</p>
+</section>
+<section id="expected-outcome-2" class="level3">
+<h3 class="anchored" data-anchor-id="expected-outcome-2">Expected Outcome</h3>
+<ul>
+<li><strong>REINFORCE</strong>: Barely prefers safe path at the tipping point — slow convergence, explores risky path occasionally</li>
+<li><strong>CPT-PG</strong>: Weaker safe preference or risky preference (overweights small p of big gain)</li>
+<li>Mean traversal row: CPT &gt; REINFORCE</li>
+<li>CPT likely has higher cliff fall rate (the “lottery” usually loses)</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="experiment-4-risk-aversion-for-low-probability-losses-required" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-4-risk-aversion-for-low-probability-losses-required">Experiment 4: Risk Aversion for Low-Probability Losses (REQUIRED)</h2>
+<p><strong>Assigned to</strong>: Next available researcher <strong>Priority</strong>: 4</p>
+<section id="theory-3" class="level3">
+<h3 class="anchored" data-anchor-id="theory-3">Theory</h3>
+<p>“Insurance” behavior: CPT overweights small probabilities of catastrophic losses. - <code>w-(0.014) ≈ 0.035</code> — 2.5x overweighting - Combined with <code>lambda_=2.25</code> loss aversion: perceived risk ≈ 5.6x worse than EV</p>
+</section>
+<section id="hypothesis-3" class="level3">
+<h3 class="anchored" data-anchor-id="hypothesis-3">Hypothesis</h3>
+<p>With low wind and negative rewards, the risky path has a tiny cliff probability that EV ignores but CPT heavily overweights. CPT should be more cautious.</p>
+</section>
+<section id="starting-config-configsexp4_lp_losses.yaml" class="level3">
+<h3 class="anchored" data-anchor-id="starting-config-configsexp4_lp_losses.yaml">Starting Config (<code>configs/exp4_lp_losses.yaml</code>)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">shape</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">5</span><span class="kw">,</span><span class="at"> </span><span class="dv">6</span><span class="kw">]</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">stochasticity</span><span class="kw">:</span><span class="at"> windy</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_cliff</span><span class="kw">:</span><span class="at"> </span><span class="dv">-100</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_step</span><span class="kw">:</span><span class="at"> </span><span class="dv">-1</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_goal</span><span class="kw">:</span><span class="at"> </span><span class="dv">-1</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">wind_prob</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.06</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">training</span><span class="kw">:</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">timesteps</span><span class="kw">:</span><span class="at"> </span><span class="dv">400000</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_eval_episodes</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">batch_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">8</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_coef</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.5</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_coef_final</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.01</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_seeds</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="fu">agent_config</span><span class="kw">:</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lr</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.0005</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.99</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">baseline_type</span><span class="kw">:</span><span class="at"> ema</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">alpha</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.88</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">beta</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.88</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lambda_</span><span class="kw">:</span><span class="at"> </span><span class="fl">2.25</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reference_point</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.0</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">w_plus_gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.61</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">w_minus_gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.69</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sliding_window_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sliding_window_decay</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.8</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="fu">agents</span><span class="kw">:</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> reinforce</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> cpt-pg</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Key design decisions</strong>: - 5 rows → 4 path options (rows 0-3) with nuanced cliff probabilities - <code>wind_prob=0.06</code> → row 3 (d=1): P(fall)=26.6%; row 2 (d=2): P(fall)≈1.4% (LOW); row 1 (d=3): P(fall)≈0.065% (negligible) - The key comparison is row 2: EV sees 1.4% cliff as trivial; CPT sees it as ~5.6x worse</p>
+</section>
+<section id="parameters-you-can-modify-3" class="level3">
+<h3 class="anchored" data-anchor-id="parameters-you-can-modify-3">Parameters You Can Modify</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Range</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>wind_prob</code></td>
+<td>[0.04, 0.05, 0.06, 0.07, 0.08]</td>
+<td>Keep row 2 cliff probability ~1-3%.</td>
+</tr>
+<tr class="even">
+<td><code>reward_cliff</code></td>
+<td>[-50, -80, -100, -150, -200]</td>
+<td>Amplifies the rare loss.</td>
+</tr>
+<tr class="odd">
+<td><code>reward_step</code></td>
+<td>[-0.5, -1, -1.5, -2]</td>
+<td>Step penalty differentiates paths.</td>
+</tr>
+<tr class="even">
+<td><code>shape</code></td>
+<td>[5,5], [5,6], [5,7], [5,8]</td>
+<td>5 rows for more path granularity.</td>
+</tr>
+<tr class="odd">
+<td><code>gamma</code></td>
+<td>[0.97, 0.98, 0.99]</td>
+<td>High gamma in loss domain.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tipping-point-strategy-3" class="level3">
+<h3 class="anchored" data-anchor-id="tipping-point-strategy-3">Tipping Point Strategy</h3>
+<p><strong>Primary search variable</strong>: <code>wind_prob</code> (secondary: <code>reward_step</code>) <strong>Tipping range</strong>: wind_prob in [0.04, 0.08], targeting row 2 cliff probability ~1-3% <strong>How it works</strong>: At low wind_prob, REINFORCE prefers row 2 (tiny risk, shorter path). At higher wind_prob, REINFORCE shifts to row 1 (risk becomes non-negligible). The tipping point is where REINFORCE barely prefers row 2.</p>
+<ol type="1">
+<li><strong>Phase 1</strong>: Find a wind_prob where EV prefers row 2 but CPT prefers row 1 (CPT overweights the small cliff probability at row 2)</li>
+<li><strong>Phase 2a</strong>: Sweep wind_prob to find where REINFORCE’s EV margin between row 2 and row 1 is &lt; 5%</li>
+<li><strong>Phase 2b</strong>: Run REINFORCE-only. Look for: some seeds choosing row 2, others choosing row 1</li>
+<li><strong>Phase 3</strong>: Add CPT-PG. CPT overweights the small cliff probability: <code>w-(0.014) ≈ 0.035</code> (2.5x overweight). This should tip CPT-PG away from row 2 toward the safer row 1 or 0.</li>
+</ol>
+<p><strong>CPT mechanism active here</strong>: Probability overweighting of small p_cliff (w-(p) &gt;&gt; p for p &lt; 0.05). Use <code>center_phi: true</code> since all returns are negative.</p>
+</section>
+<section id="expected-outcome-3" class="level3">
+<h3 class="anchored" data-anchor-id="expected-outcome-3">Expected Outcome</h3>
+<ul>
+<li><strong>REINFORCE</strong>: Barely accepts row 2 at the tipping point (tiny risk, shorter path, fewer step losses)</li>
+<li><strong>CPT-PG</strong>: Avoids row 2, prefers row 0 or 1 (overweights the tiny cliff probability)</li>
+<li>Mean traversal row: CPT &lt; REINFORCE</li>
+<li>CPT should have near-0% cliff falls</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="experiment-5-loss-aversion-required" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-5-loss-aversion-required">Experiment 5: Loss Aversion (REQUIRED)</h2>
+<p><strong>Assigned to</strong>: Next available researcher <strong>Priority</strong>: 5</p>
+<section id="theory-4" class="level3">
+<h3 class="anchored" data-anchor-id="theory-4">Theory</h3>
+<p>Loss aversion (<code>lambda_=2.25</code>): losses loom 2.25x larger than equivalent gains. In a mixed prospect where the risky path can produce gains OR losses relative to the reference point, the loss side is amplified.</p>
+</section>
+<section id="hypothesis-4" class="level3">
+<h3 class="anchored" data-anchor-id="hypothesis-4">Hypothesis</h3>
+<p>With a reference point creating a mixed gains/losses prospect, CPT should strongly avoid the risky path’s potential loss.</p>
+</section>
+<section id="starting-config-configsexp5_loss_aversion.yaml" class="level3">
+<h3 class="anchored" data-anchor-id="starting-config-configsexp5_loss_aversion.yaml">Starting Config (<code>configs/exp5_loss_aversion.yaml</code>)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">shape</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">4</span><span class="kw">,</span><span class="at"> </span><span class="dv">6</span><span class="kw">]</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">stochasticity</span><span class="kw">:</span><span class="at"> windy</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_cliff</span><span class="kw">:</span><span class="at"> </span><span class="dv">-50</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_step</span><span class="kw">:</span><span class="at"> </span><span class="dv">-1</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reward_goal</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">wind_prob</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.10</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">training</span><span class="kw">:</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">timesteps</span><span class="kw">:</span><span class="at"> </span><span class="dv">400000</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_eval_episodes</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">batch_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">8</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_coef</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.5</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_coef_final</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.01</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_seeds</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="fu">agent_config</span><span class="kw">:</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lr</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.0005</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.99</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">baseline_type</span><span class="kw">:</span><span class="at"> ema</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">alpha</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.88</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">beta</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.88</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lambda_</span><span class="kw">:</span><span class="at"> </span><span class="fl">2.25</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reference_point</span><span class="kw">:</span><span class="at"> </span><span class="fl">-5.0</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">w_plus_gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.61</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">w_minus_gamma</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.69</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sliding_window_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sliding_window_decay</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.8</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="fu">agents</span><span class="kw">:</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> reinforce</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> cpt-pg</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Key design decisions</strong>: - Mixed domain: <code>reward_goal=10</code> (positive) + <code>reward_cliff=-50</code> (negative) + <code>reward_step=-1</code> - <code>reference_point=-5.0</code> → safe path return (~-12) is a small loss (-7 relative), risky success (~+2) is a gain (+7), risky cliff (~-54) is a large loss (-49 relative) - <code>lambda_=2.25</code> amplifies the -49 by 2.25x in CPT value function</p>
+</section>
+<section id="parameters-you-can-modify-4" class="level3">
+<h3 class="anchored" data-anchor-id="parameters-you-can-modify-4">Parameters You Can Modify</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Range</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>reference_point</code></td>
+<td>[-3, -5, -7, -10, -15]</td>
+<td>Must straddle risky path outcomes.</td>
+</tr>
+<tr class="even">
+<td><code>reward_goal</code></td>
+<td>[5, 10, 15, 20, 30]</td>
+<td>Controls gain magnitude.</td>
+</tr>
+<tr class="odd">
+<td><code>reward_cliff</code></td>
+<td>[-30, -50, -80, -100]</td>
+<td>Controls loss magnitude.</td>
+</tr>
+<tr class="even">
+<td><code>reward_step</code></td>
+<td>[-0.5, -1, -1.5]</td>
+<td>Background cost.</td>
+</tr>
+<tr class="odd">
+<td><code>wind_prob</code></td>
+<td>[0.08, 0.10, 0.12, 0.15]</td>
+<td>Moderate regime.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="control-experiment" class="level3">
+<h3 class="anchored" data-anchor-id="control-experiment">Control Experiment</h3>
+<p>Also run CPT-PG with <code>lambda_=1.0</code> (loss aversion disabled) to confirm the effect is driven by lambda_:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">agents</span><span class="kw">:</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> reinforce</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> cpt-pg</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">lambda_</span><span class="kw">:</span><span class="at"> </span><span class="fl">2.25</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> cpt-pg</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">lambda_</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The output directory fix ensures these don’t collide: <code>cpt-pg_lambda_2.25_{config}</code> vs <code>cpt-pg_lambda_1.0_{config}</code>.</p>
+</section>
+<section id="tipping-point-strategy-4" class="level3">
+<h3 class="anchored" data-anchor-id="tipping-point-strategy-4">Tipping Point Strategy</h3>
+<p><strong>Primary search variable</strong>: <code>reference_point</code> <strong>How it works</strong>: This experiment requires a mixed domain where some returns are “gains” and some are “losses” relative to the reference point, so that lambda=2.25 can differentially amplify the loss side. However, mixed gains domain (cliff&lt;0, goal&gt;0, step=0) is known to FAIL with CPT-PG.</p>
+<p><strong>Critical design constraint</strong>: Keep all rewards in losses domain (step&lt;0, goal&lt;0, cliff&lt;0) for training stability. Use a shifted <code>reference_point</code> (e.g., -20) so that: - Safe path returns (e.g., -12) are ABOVE the reference → treated as “gains” by CPT - Cliff returns (e.g., -104) are BELOW the reference → treated as “losses” by CPT, amplified by λ=2.25</p>
+<ol type="1">
+<li><strong>Phase 1</strong>: Find a reference_point where EV is near-indifferent but CPT strongly prefers safe (lambda amplifies the loss side)</li>
+<li><strong>Phase 2a</strong>: Sweep reference_point to find where REINFORCE barely prefers risky (EV margin &lt; 5%)</li>
+<li><strong>Phase 2b</strong>: Run REINFORCE-only to validate the tipping point</li>
+<li><strong>Phase 3</strong>: Add CPT-PG with λ=2.25. The loss amplification should push CPT-PG firmly toward safe</li>
+</ol>
+</section>
+<section id="expected-outcome-4" class="level3">
+<h3 class="anchored" data-anchor-id="expected-outcome-4">Expected Outcome</h3>
+<ul>
+<li><strong>REINFORCE</strong>: Barely prefers risky path at the tipping point</li>
+<li><strong>CPT-PG (λ=2.25)</strong>: Strongly avoids risky path (loss amplified 2.25x)</li>
+<li><strong>CPT-PG (λ=1.0, control)</strong>: Behaves more like REINFORCE</li>
+<li>The λ=2.25 vs λ=1.0 comparison directly isolates loss aversion’s impact</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="experiment-6-allais-paradox-analog-optional-stretch-goal" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-6-allais-paradox-analog-optional-stretch-goal">Experiment 6: Allais Paradox Analog (OPTIONAL — Stretch Goal)</h2>
+<p><strong>Assigned to</strong>: Next available researcher (stretch goal) <strong>Priority</strong>: 6</p>
+<section id="theory-5" class="level3">
+<h3 class="anchored" data-anchor-id="theory-5">Theory</h3>
+<p>The certainty effect: difference between 100% and 99% has far more psychological impact than between 10% and 11%.</p>
+</section>
+<section id="design" class="level3">
+<h3 class="anchored" data-anchor-id="design">Design</h3>
+<p>Two sub-configs with the same ~1% probability gap at different base rates:</p>
+<p><strong>Sub-A</strong> (near certainty): <code>wind_prob=0.003</code>, shape [5,5] → row 3 has ~1.2% cliff risk. Compare row 0 (certain) vs row 3 (99% safe).</p>
+<p><strong>Sub-B</strong> (low base): <code>wind_prob=0.30</code>, shape [4,8] → row 2 has ~87% cliff risk vs row 1 with ~86% risk (~1% gap at low base).</p>
+<p>CPT should show a LARGER behavioral shift in Sub-A than Sub-B.</p>
+<p><strong>Note</strong>: This is conceptually interesting but the signal is subtle. Only attempt if experiments 1-5 produce clear results.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-7-status-quo-bias-optional-stretch-goal" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-7-status-quo-bias-optional-stretch-goal">Experiment 7: Status Quo Bias (OPTIONAL — Stretch Goal)</h2>
+<p><strong>Assigned to</strong>: Next available researcher (stretch goal) <strong>Priority</strong>: 7</p>
+<section id="theory-6" class="level3">
+<h3 class="anchored" data-anchor-id="theory-6">Theory</h3>
+<p>CPT predicts resistance to changing learned behavior because departures are evaluated asymmetrically.</p>
+</section>
+<section id="design-1" class="level3">
+<h3 class="anchored" data-anchor-id="design-1">Design</h3>
+<p>Two-phase training: 1. Train both agents on config A (moderate wind, balanced risk) 2. Switch to config B (high wind → risky path now much worse)</p>
+<p>Measure: episodes until agent shifts from learned path to new optimal.</p>
+<p><strong>Code change needed</strong>: Add save/load model weights to <code>agents.py</code> for continuity between phases. Implementation:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In BaseAgent or REINFORCEAgent:</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> save_weights(<span class="va">self</span>, path):</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    torch.save(<span class="va">self</span>.policy.state_dict(), path)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_weights(<span class="va">self</span>, path):</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.policy.load_state_dict(torch.load(path))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="experiment-8-endowment-effect-optional-stretch-goal" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-8-endowment-effect-optional-stretch-goal">Experiment 8: Endowment Effect (OPTIONAL — Stretch Goal)</h2>
+<p><strong>Assigned to</strong>: Next available researcher (stretch goal) <strong>Priority</strong>: 8</p>
+<section id="theory-7" class="level3">
+<h3 class="anchored" data-anchor-id="theory-7">Theory</h3>
+<p>As the agent performs better, its reference point rises, making any performance decline feel like a loss → increasingly conservative behavior.</p>
+</section>
+<section id="design-2" class="level3">
+<h3 class="anchored" data-anchor-id="design-2">Design</h3>
+<p>Modify CPT-PG to use adaptive reference point (EMA of recent returns):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In CPTPGAgent.learn(), after each batch:</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">self</span>.adaptive_reference:</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    batch_mean <span class="op">=</span> np.mean(batch_returns)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.reference_point <span class="op">=</span> <span class="fl">0.99</span> <span class="op">*</span> <span class="va">self</span>.reference_point <span class="op">+</span> <span class="fl">0.01</span> <span class="op">*</span> batch_mean</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.cpt_value.reference_point <span class="op">=</span> <span class="va">self</span>.reference_point</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compare CPT-PG (adaptive reference) vs CPT-PG (fixed reference=0) vs REINFORCE.</p>
+<p><strong>Code change needed</strong>: Add <code>adaptive</code> reference point mode to CPTPGAgent.</p>
+<hr>
+</section>
+</section>
+<section id="critical-files-reference" class="level2">
+<h2 class="anchored" data-anchor-id="critical-files-reference">Critical Files Reference</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Purpose</th>
+<th>When to Read</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>agents.py</code></td>
+<td>REINFORCEAgent, CPTPGAgent implementations</td>
+<td>Before any experiment</td>
+</tr>
+<tr class="even">
+<td><code>utils.py</code></td>
+<td><code>load_config()</code>, <code>evaluate_paths()</code>, CPT utility classes</td>
+<td>Before any experiment</td>
+</tr>
+<tr class="odd">
+<td><code>custom_cliff_walking.py</code></td>
+<td>Environment (wind, rewards, termination)</td>
+<td>Before any experiment</td>
+</tr>
+<tr class="even">
+<td><code>path_likelihood.py</code></td>
+<td>Analytical EV/CPT calculations, <code>cliff_fall_probability()</code></td>
+<td>During config search</td>
+</tr>
+<tr class="odd">
+<td><code>scripts/find_divergent_config.py</code></td>
+<td>Template for config search scripts</td>
+<td>During config search</td>
+</tr>
+<tr class="even">
+<td><code>main.py</code></td>
+<td>Training loop, evaluation, output directories</td>
+<td>When debugging runs</td>
+</tr>
+<tr class="odd">
+<td><code>configs/base.yaml</code></td>
+<td>Default config (all new configs inherit from this)</td>
+<td>Always</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="notes" class="level2">
+<h2 class="anchored" data-anchor-id="notes">Notes</h2>
+<ul>
+<li>Remember to use only <code>reinforce</code> and <code>cpt-pg</code> agents. The others are blocked for now.</li>
+<li>Large batch sizes is pretty important since some important estimators depend on the batch size. Don’t have it lower than 32.</li>
+<li>After the experiment is done, save a single gift with the expected behavior for each agent.</li>
+<li>Prepare a good strategy for learning when we need high wind probabilities for the experiment, which will make learning harder (example: taller grids, different reward values, etc.)</li>
+<li>THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS. This should be visible in the gifs saved.</li>
+</ul>
+</section>
+<section id="important-reminders" class="level2">
+<h2 class="anchored" data-anchor-id="important-reminders">Important Reminders</h2>
+<section id="technical" class="level3">
+<h3 class="anchored" data-anchor-id="technical">Technical</h3>
+<ol type="1">
+<li><strong><code>stochasticity: windy</code></strong> — ALWAYS set this in configs that use wind_prob. Without it, wind is disabled.</li>
+<li><strong>Positive domain requires <code>reward_step: 0</code></strong> — non-zero step rewards in positive domain cause unwanted behavior. Use gamma as the path-length penalty.</li>
+<li><strong>Deep merge is active</strong> — experiment configs only need to specify parameters that differ from base.yaml.</li>
+<li><strong><code>center_phi: true</code> is required</strong> for all pure-domain experiments (Exp 1-4). Without it, phi-hat values are near-uniform and CPT-PG behaves like REINFORCE.</li>
+<li><strong><code>compare_value_frameworks</code> must use probability weighting</strong> — always pass <code>use_probability_weighting: True</code> in cpt_params when calling this function.</li>
+<li><strong>REINFORCE-only training runs</strong> (Phase 2b) are half the compute of a full run and do NOT count against the 2-concurrent-run limit.</li>
+</ol>
+</section>
+<section id="resource-management" class="level3">
+<h3 class="anchored" data-anchor-id="resource-management">Resource Management</h3>
+<ol start="7" type="1">
+<li><strong>2 concurrent training runs maximum</strong> — researchers MUST message the lead before starting any training run. Analytical config search scripts and REINFORCE-only Phase 2b runs do NOT count (they are lightweight / half compute). The lead tracks active slots and approves/denies requests.</li>
+<li>The lead should <strong>actively monitor compute resources</strong> and preemptively manage the training queue to prevent crashes.</li>
+</ol>
+</section>
+<section id="experiment-execution" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-execution">Experiment Execution</h3>
+<ol start="9" type="1">
+<li><strong>Use the tipping-point strategy</strong> — the starting configs are educated guesses. Follow the lifecycle: analytical divergence search (Phase 1) → tipping point search (Phase 2a) → REINFORCE-only validation (Phase 2b) → CPT-PG training (Phase 3) → diagnosis if needed (Phase 4) → 4-seed validation (Phase 5). If validation fails, iterate immediately.</li>
+<li><strong>The main goal is behavioral differences</strong> — a “successful” experiment shows CPT and REINFORCE choosing different paths, in the direction predicted by CPT theory. THE SUCCESS CRITERIA IS THAT THE CPT-PG AND REINFORCE AGENT CONVERGE TO DIFFERENT MAX TRAVERSAL ROW IN THE AVERAGE SCENARIO, WHICH MUST BE CORRELATED WITH WHAT THE ACTUAL CPT THEORY EXPECTS.</li>
+<li><strong>Find REINFORCE’s indifference point first</strong> — the key insight is that CPT’s distortions are small relative to a strong EV preference. By finding where REINFORCE is barely choosing one path, even small CPT effects can flip the preference. Don’t skip Phase 2.</li>
+<li><strong>Use the diagnostic checklist when stuck</strong> — Phase 4 provides a structured theory-grounded approach to debugging. Check each CPT mechanism against the probability weighting table before making random parameter changes.</li>
+<li><strong>Document everything</strong> — record what configs you tried, what worked, what didn’t, and why.</li>
+<li>We need <strong>at least 3 replicable differences found</strong>. Focus on finding at least three significant differences first, then focus on the rest of experiments.</li>
+</ol>
+</section>
+<section id="team-coordination" class="level3">
+<h3 class="anchored" data-anchor-id="team-coordination">Team Coordination</h3>
+<ol start="15" type="1">
+<li><strong>Researchers own experiments end-to-end</strong> — each researcher explores, validates, and reports their own experiment. After completing a validated experiment, message the lead for your next assignment. Do not sit idle.</li>
+<li><strong>Self-validation keeps momentum</strong> — researchers validate their own results and iterate immediately on failure, avoiding handoff delays. The only resource constraint is the 2-concurrent-run limit.</li>
+<li><strong>Any code changes that can break the experiments flow must be coordinated and confirmed with the lead</strong> to avoid catastrophic changes.</li>
+<li><strong>Cross-agent communication is encouraged</strong> — share parameter insights, ask questions, and flag issues. Asking questions improves speed and success probability. Use direct messages for targeted info, not broadcasts.</li>
+<li>Feel free to <strong>read the research, review the codebase, or run calculations as needed</strong>.</li>
+</ol>
+<p><strong>Feel free to ask any questions</strong> you need to clarify or improve experimentation performance. This goes to the lead and all the other agents. Asking questions improves speed and success probability.</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/santiagomvc\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
