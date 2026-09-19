@@ -1,0 +1,35 @@
+---
+title: "AI Engineering needs experimentation"
+description: "Why building with Language Models is still an experimentation problem"
+categories: [ai, lm, engineering, experimentation]
+author: "Santiago Velez"
+date: "09/03/2026"
+date-modified: "09/03/2026"
+draft: true
+---
+
+A recent review of AI related job descriptions made me realize, though a bit unsurprisingly, that Data Science, Machine Learning and Applied Research engineering positions have mostly dissapeared, while the new and common AI Engineering roles swing significantly between backend and research. I also keep reading and hearing about customers actively disabling or avoiding AI features deployed in large traditional businesses. I think both ocurrences are related. 
+
+The current AI Engineering practice is split in two camps: people who come from data science and machine learning, and people who come from web, infrastructure and traditional software engineering.
+
+I come from the first background, and to me AI Engineering is, in large part, an experimentation problem. There is a business need that a fixed set of rules cannot solve, so we run an experiment. We propose a hypothesis: a technical solution to the business problem. We define a test for it: a technical metric for the solution, and ideally a business metric for the real-world result. We then start hill climbing, an iterative experimentation process where we develop our solutions, test them against our metrics, and update accordingly. It’s very common to find along the way that our hypothesis was wrong, our metrics need changes, and other new and exciting problems. However, if we are lucky, we find a good enough solution to our problem, at least for a limited time. Though this approach wasn’t usually up to the standards of academic and scientific research, the loop of hypothesis, metric and iteration remained, and it let us build useful products. CRISP-DM is the usual diagram for this loop.
+
+![CRISP-DM process diagram. Kenneth Jensen, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0), via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:CRISP-DM_Process_Diagram.png).](images/crisp_dm_process_diagram.png){fig-align="center" width="60%"}
+
+Language Models became more capable, more general, easier to use and harder to inspect. A second approach followed. The model is one component with a few settings, and the AI Engineer’s main job is to configure that component and integrate it into the rest of the system.
+
+::: {layout-ncol=2}
+![The architecture components of an agentic system. Source: [Google Cloud Architecture Center](https://docs.cloud.google.com/architecture/choose-agentic-ai-architecture-components), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).](images/gcp_agentic_ai_architecture_components.svg){group="architecture"}
+
+![AI architecture in healthcare. Source: [Santeware](https://santeware.com/ai-architecture-in-healthcare-vector-database-vs-sql-rest-vs-grpc-and-system-design-choices-that-scale/), 2026.](images/santeware_ai_architecture_healthcare.jpg){group="architecture"}
+:::
+
+Though both perspectives are partly true and the split has existed for a while, I have seen the component approach grow as the primary focus in multiple companies.
+
+That’s the wrong approach in my experience. Connecting a closed Language Model API to a chat UI template usually ends in unhappy customers. Making it useful starts with open questions: how do we include our own data, which parts of it do we need, why do customers not read our outputs.
+
+Let's create a simple policy analysis bot that track bills based on your feedback. The simple approach is to ask the customer a question, pass the user answer to the llm and ask him to a set of bills to track.
+
+These questions are open and specific to each business and its customers, so fixed rules are not enough. We are back to experimentation: error analysis over tool calls, metrics for unstructured outputs, A/B tests between approaches, and feedback loops for continued improvement and learning.
+
+A day may come when experimentation is not valuable to AI Engineering, but it’s not this day.
