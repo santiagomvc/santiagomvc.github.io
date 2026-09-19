@@ -5,6 +5,8 @@ website:
   title: "SMVC Notes"
   site-url: https://santiagomvc.github.io
   description: "Notes from building Machine Learning solutions in the wild"
+  # a draft post renders at its URL but stays out of the listing, feed, sitemap and search
+  draft-mode: unlinked
   margin-footer: subscribe.html
   navbar:
     right:

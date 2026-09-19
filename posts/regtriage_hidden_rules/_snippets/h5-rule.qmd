@@ -1,0 +1,21 @@
+````markdown
+## Step 8. Say what the company must do
+
+Write one sentence in `obligation`. The sentence must do all of this:
+
+- Name a duty that falls on Acme Pay. A duty the document puts on an agency, on
+  a court, or on a kind of firm the company is not does not belong here.
+- Name a duty the document imposes. Do not write a duty the document does not
+  state.
+- Say what Acme Pay must do, not what the document is. "The rule amends
+  Regulation E" describes the document. "Acme Pay must disclose the fee before
+  the customer confirms the transfer" states the duty.
+- Carry the condition or the threshold the document puts on the duty, when it
+  puts one there. If the duty applies only above a dollar amount, or only to one
+  kind of account, the sentence says so.
+- Claim no more than the document requires. A sentence that widens the duty to
+  transactions or to parties the document leaves out is wrong.
+
+Where the document creates no duty for Acme Pay, write one sentence that says
+there is nothing to do and why. A notice is the usual case.
+````

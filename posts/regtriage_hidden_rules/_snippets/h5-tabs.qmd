@@ -1,0 +1,79 @@
+::: {.panel-tabset}
+
+#### v0, Step 5
+
+````markdown
+## Step 5. Say what the company must do
+
+Write one sentence in `obligation` saying what Acme Pay must do about this
+document.
+````
+
+#### 04 learned v4, Step 5
+
+````markdown
+## Step 5. Say what the company must do
+
+Write one sentence in `obligation` saying what Acme Pay must do about
+this document. First work out which class of institution the document
+puts its requirement on -- read the class narrowly, as the document
+states it -- and check that class against the company profile. A
+charter, a supervising agency or a watched CFR part in common is not
+enough: only where the profile affirmatively shows Acme Pay doing the
+regulated activity the requirement covers may the sentence tell it to
+comply, change a process or meet a compliance date. Read the profile
+as widely as the document reads its class: where the profile shows
+Acme Pay in that class and carrying on the activity, do not deny a
+duty merely because the document names a product, transaction or form
+the profile does not list by name. Otherwise name the party the
+requirement falls on, give Acme Pay a watching action only -- track
+it, or note it and comment if it chooses -- and say the document
+places no new duty on Acme Pay.
+
+Keep the sentence inside what this document itself does: name the one
+change or event it makes, the action that follows, and its date or
+deadline if it gives one. Where the sentence tells Acme Pay to comply,
+name the concrete step the document requires -- the filing, notice,
+disclosure or process change -- rather than telling it to comply with
+the rule at large, and do not turn an option, an election or a relief
+the document offers into a required step. Do not reach into related
+rules or other
+documents, do not assume a charter, business line or affiliate the
+profile does not show, and give one action only -- no second step and
+no hedged trailing clause such as watching for any effect on the
+company or not changing a process beyond monitoring. End the sentence
+by saying plainly whether the document places a new duty on Acme Pay.
+Match the classification: `monitor` means watch or comment, and
+`correction` and `informational` normally mean note it and say that no
+new action follows. But where a document -- however routine, annual,
+technical or corrective -- changes a dollar threshold, a figure or
+wording the company must apply or reproduce in its own disclosures,
+notices or forms, say instead that it must update them by the stated
+effective date.
+````
+
+#### oracle, Step 8
+
+````markdown
+## Step 8. Say what the company must do
+
+Write one sentence in `obligation`. The sentence must do all of this:
+
+- Name a duty that falls on Acme Pay. A duty the document puts on an agency, on
+  a court, or on a kind of firm the company is not does not belong here.
+- Name a duty the document imposes. Do not write a duty the document does not
+  state.
+- Say what Acme Pay must do, not what the document is. "The rule amends
+  Regulation E" describes the document. "Acme Pay must disclose the fee before
+  the customer confirms the transfer" states the duty.
+- Carry the condition or the threshold the document puts on the duty, when it
+  puts one there. If the duty applies only above a dollar amount, or only to one
+  kind of account, the sentence says so.
+- Claim no more than the document requires. A sentence that widens the duty to
+  transactions or to parties the document leaves out is wrong.
+
+Where the document creates no duty for Acme Pay, write one sentence that says
+there is nothing to do and why. A notice is the usual case.
+````
+
+:::

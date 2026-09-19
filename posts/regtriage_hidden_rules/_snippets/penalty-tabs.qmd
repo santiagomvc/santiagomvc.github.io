@@ -1,0 +1,75 @@
+The `delete` edit, on v3 lines 91–93, reason as the learner gave it: “Drops a closing section that repeats the instruction already given with the tool list, shortening the procedure.” The lines it removed:
+
+````markdown
+## Submit
+
+Call `submit_triage` once with the complete record. That ends the task.
+````
+::: {.panel-tabset}
+
+#### 06 learned v4, Step 5 (k = 0.08)
+
+````markdown
+## Step 5. Say what the company must do
+
+Write one sentence in `obligation` naming what Acme Pay itself does
+about this document and nothing wider: no other regulations it
+mentions, no register IDs, no advice to file comments.
+
+First decide who the document binds, taking Acme Pay's own business
+from the company profile and assuming no charter, licence or status
+the profile does not state. Requirements resting on such a status --
+banking organization, insured depository institution, holding company,
+credit union -- or on a line of business Acme Pay does not run reach
+no further than those firms; never write that Acme Pay must do what
+they must do. If the duty does reach its business, name the concrete
+change and the date it takes effect; a proposal or text not yet in
+force is only tracked. Claim nothing the document does not require:
+where it changes nothing Acme Pay must do, say so and stop, rather
+than adding review, record-keeping or tracking tasks of your own.
+````
+
+#### 04 learned v4, Step 5 (k = 0)
+
+````markdown
+## Step 5. Say what the company must do
+
+Write one sentence in `obligation` saying what Acme Pay must do about
+this document. First work out which class of institution the document
+puts its requirement on -- read the class narrowly, as the document
+states it -- and check that class against the company profile. A
+charter, a supervising agency or a watched CFR part in common is not
+enough: only where the profile affirmatively shows Acme Pay doing the
+regulated activity the requirement covers may the sentence tell it to
+comply, change a process or meet a compliance date. Read the profile
+as widely as the document reads its class: where the profile shows
+Acme Pay in that class and carrying on the activity, do not deny a
+duty merely because the document names a product, transaction or form
+the profile does not list by name. Otherwise name the party the
+requirement falls on, give Acme Pay a watching action only -- track
+it, or note it and comment if it chooses -- and say the document
+places no new duty on Acme Pay.
+
+Keep the sentence inside what this document itself does: name the one
+change or event it makes, the action that follows, and its date or
+deadline if it gives one. Where the sentence tells Acme Pay to comply,
+name the concrete step the document requires -- the filing, notice,
+disclosure or process change -- rather than telling it to comply with
+the rule at large, and do not turn an option, an election or a relief
+the document offers into a required step. Do not reach into related
+rules or other
+documents, do not assume a charter, business line or affiliate the
+profile does not show, and give one action only -- no second step and
+no hedged trailing clause such as watching for any effect on the
+company or not changing a process beyond monitoring. End the sentence
+by saying plainly whether the document places a new duty on Acme Pay.
+Match the classification: `monitor` means watch or comment, and
+`correction` and `informational` normally mean note it and say that no
+new action follows. But where a document -- however routine, annual,
+technical or corrective -- changes a dollar threshold, a figure or
+wording the company must apply or reproduce in its own disclosures,
+notices or forms, say instead that it must update them by the stated
+effective date.
+````
+
+:::

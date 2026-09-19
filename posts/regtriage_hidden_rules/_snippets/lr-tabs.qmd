@@ -1,0 +1,36 @@
+::: {.panel-tabset}
+
+#### 05 learned v4, Step 4 (lr 0.5)
+
+````markdown
+## Step 4. Count the document text
+
+Report three counts for the document text you were given. Split the text on
+whitespace and strip leading and trailing punctuation from each token, then:
+
+- `word_count`: how many tokens contain at least one letter. Tokens that are
+  all digits or punctuation (numbers, dates, document numbers) are not words.
+- `unique_word_count`: how many different words there are, comparing them
+  lowercased.
+- `long_word_count`: how many words have eight or more letters, counting
+  letters only, so a token mixing digits and letters is rarely long.
+
+Use `run_python` to compute them. The working directory holds `document.txt`,
+which is the same text `get_document` returns.
+````
+
+#### 03 learned v1, Step 4 (lr 1.0)
+
+````markdown
+## Step 4. Count the document text
+
+Use `run_python` to count the text in `document.txt`, which is the same text
+`get_document` returns. A word is a run of letters only, as found by
+`re.findall(r"[A-Za-z]+", text)`; digits and punctuation are not words.
+
+- `word_count`: how many words it has.
+- `unique_word_count`: how many of them differ, ignoring case.
+- `long_word_count`: how many are longer than seven letters.
+````
+
+:::

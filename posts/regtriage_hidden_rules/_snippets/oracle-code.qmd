@@ -1,0 +1,49 @@
+::: {.callout-note collapse="true" title="oracle.py: the rules in the order they apply"}
+````python
+def run_oracle(doc: dict, register: Register, cfg: dict) -> TriageOutput:
+    # Rule 1. Absolute: no hidden rule runs on a document that is not ours.
+    if not is_relevant(doc, cfg):
+        return NOT_RELEVANT.model_copy()
+
+    classification = CLASSIFY_BY_TYPE[doc["type"]]                       # rule 2
+    out = TriageOutput(
+        relevant=True,
+        classification=classification,
+        register_action="create" if classification != "informational" else "none",  # rule 3
+        target_register_id=None,
+    )
+
+    hidden = cfg["rules"]["hidden"]
+    correction = hidden["h1_correction"] and is_correction(doc)
+
+    if correction:  # H1 — classification, action, target
+        entry = corrected_entry(doc, register)
+        out = out.model_copy(
+            update={
+                "classification": "correction",
+                "register_action": "link",
+                "target_register_id": entry.register_id if entry else None,
+            }
+        )
+
+    if hidden["h2_known_rulemaking"] and not correction:  # H2 — action, target
+        entry = known_rulemaking(doc, register)
+        if entry:
+            out = out.model_copy(
+                update={"register_action": "update", "target_register_id": entry.register_id}
+            )
+
+    if (  # H3 — classification. Gated on the classification H1 may have changed.
+        hidden["h3_open_for_comment"]
+        and out.classification == "new_obligation"
+        and is_open_for_comment(doc)
+    ):
+        out = out.model_copy(update={"classification": "monitor"})
+
+    if hidden["h4_text_stats"]:  # H4 — the three counts, on every relevant document
+        out = out.model_copy(update=text_stats(doc))
+
+    return out
+````
+
+:::

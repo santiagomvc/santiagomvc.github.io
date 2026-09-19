@@ -1,0 +1,226 @@
+::: {.callout-note collapse="true" title="sop/v0.md on day two (311 words; Steps 4 and 5 are new)"}
+````markdown
+# Regulatory triage procedure
+
+You are a regulatory analyst at Acme Pay. For each Federal Register document you
+are given, produce one triage record. Work through the steps in order, then
+submit.
+
+Call `get_document` to read the document. Call `get_company_profile` to see the
+CFR parts and the agencies the company watches. Call `run_python` to run code.
+Call `submit_triage` once, at the end.
+
+## Step 1. Decide whether the document is relevant
+
+The document is relevant if either of these is true:
+
+- One of its CFR part lines is inside a watched part range.
+- One of its agencies is in the always-watch list.
+
+If neither is true, submit this record and stop:
+
+- `relevant`: false
+- `classification`: `not_relevant`
+- `register_action`: `none`
+- `target_register_id`: null
+- `word_count`, `unique_word_count`, `long_word_count`: null
+- `obligation`: null
+
+If it is relevant, set `relevant` to true and go on.
+
+## Step 2. Classify the document
+
+Read the SECTION line and classify by it:
+
+| SECTION | `classification` |
+|---|---|
+| Rules and Regulations | `new_obligation` |
+| Proposed Rules | `monitor` |
+| Notices | `informational` |
+
+## Step 3. Say what to do with the register
+
+| `classification` | `register_action` |
+|---|---|
+| `new_obligation` | `create` |
+| `monitor` | `create` |
+| `informational` | `none` |
+
+Set `target_register_id` to null.
+
+## Step 4. Count the document text
+
+Report three counts for the document text you were given:
+
+- `word_count`: how many words it has.
+- `unique_word_count`: how many different words it has.
+- `long_word_count`: how many of its words are long.
+
+Use `run_python` to compute them. The working directory holds `document.txt`,
+which is the same text `get_document` returns.
+
+## Step 5. Say what the company must do
+
+Write one sentence in `obligation` saying what Acme Pay must do about this
+document.
+
+## Submit
+
+Call `submit_triage` once with the complete record. That ends the task.
+````
+
+:::
+::: {.callout-note collapse="true" title="sop/v_oracle.md on day two (970 words; Steps 7 and 8 state H4 and H5)"}
+````markdown
+# Regulatory triage procedure
+
+CEILING FILE. This is sop/v0.md plus the five rules the agent is normally not
+told. It measures the best score this environment allows. Never give it to the
+learner.
+
+It is no longer a pure instruction-following ceiling. Step 7 makes the agent
+write and run code, so this file also measures tool use, and a perfect score is
+not guaranteed.
+
+expert.py reads this file. It is the senior reviewer's copy of the procedure,
+and Step 8 is what a submitted obligation sentence is judged against.
+
+You are a regulatory analyst at Acme Pay. For each Federal Register document you
+are given, produce one triage record. Work through the steps in order, then
+submit.
+
+Call `get_document` to read the document. Call `get_company_profile` to see the
+CFR parts and the agencies the company watches. Call `query_register` to look at
+work the company already tracks. Call `run_python` to run code. Call
+`submit_triage` once, at the end.
+
+## Step 1. Decide whether the document is relevant
+
+The document is relevant if either of these is true:
+
+- One of its CFR part lines is inside a watched part range.
+- One of its agencies is in the always-watch list.
+
+If neither is true, submit this record and stop:
+
+- `relevant`: false
+- `classification`: `not_relevant`
+- `register_action`: `none`
+- `target_register_id`: null
+- `word_count`, `unique_word_count`, `long_word_count`: null
+- `obligation`: null
+
+This step is absolute. No later step applies to a document that is not relevant.
+
+## Step 2. Classify the document
+
+Read the SECTION line and classify by it:
+
+| SECTION | `classification` |
+|---|---|
+| Rules and Regulations | `new_obligation` |
+| Proposed Rules | `monitor` |
+| Notices | `informational` |
+
+## Step 3. Say what to do with the register
+
+| `classification` | `register_action` |
+|---|---|
+| `new_obligation` | `create` |
+| `monitor` | `create` |
+| `informational` | `none` |
+
+Set `target_register_id` to null.
+
+## Step 4. Is the document a correction?
+
+A document is a correction if either of these is true:
+
+- Its ACTION line or its title contains the word correction, corrections, or
+  correcting amendment.
+- Its document number starts with `C1-`. A document number `C1-2026-10036`
+  corrects document `2026-10036`.
+
+If it is a correction, ignore what steps 2 and 3 produced and set:
+
+- `classification`: `correction`
+- `register_action`: `link`
+- `target_register_id`: the register entry for the document being corrected.
+
+Find that entry in this order, stopping at the first that works:
+
+1. Call `query_register` with the corrected document number — the number after
+   the `C1-` prefix, or the number named in the text.
+2. Call `query_register` with each RIN on the document and take the most recent
+   entry that comes back.
+3. If nothing comes back, leave `target_register_id` null and leave
+   `register_action` as `link`. Many corrections have no entry to point at,
+   because a notice never creates one.
+
+A correction is never an update, and it is never a monitor. Skip steps 5 and 6.
+
+## Step 5. Does the document continue an earlier rulemaking?
+
+Call `query_register` with each RIN on the document. If an entry comes back, the
+register already tracks this rulemaking — a final rule following an earlier
+proposed rule is the usual case. Set:
+
+- `register_action`: `update`
+- `target_register_id`: the most recent entry that came back.
+
+Leave `classification` as the earlier steps set it.
+
+## Step 6. Is the rule still open for comment?
+
+Do this only if `classification` is still `new_obligation`. If the DATES text
+says the agency is still taking comment, the rule is not settled: what finally
+binds the company may not be what this document says today. Set `classification`
+to `monitor`.
+
+Leave `register_action` and `target_register_id` as the earlier steps set them.
+
+## Step 7. Count the document text
+
+Do this for every relevant document. Call `run_python` and read
+`document.txt` from the working directory. That file holds the same text
+`get_document` returns.
+
+A word is a run of one or more letters, A to Z or a to z. Nothing else is a
+word. A digit is never part of a word, and no punctuation mark is. The line
+`12 CFR Part 1026` holds two words, CFR and Part.
+
+- `word_count`: how many words the text holds. Count a repeated word every
+  time it appears.
+- `unique_word_count`: how many different words the text holds. Compare two
+  words without regard to case, so `The` and `the` are the same word.
+- `long_word_count`: how many words have eight letters or more. Count a
+  repeated word every time it appears.
+
+Leave all three null on a document that is not relevant.
+
+## Step 8. Say what the company must do
+
+Write one sentence in `obligation`. The sentence must do all of this:
+
+- Name a duty that falls on Acme Pay. A duty the document puts on an agency, on
+  a court, or on a kind of firm the company is not does not belong here.
+- Name a duty the document imposes. Do not write a duty the document does not
+  state.
+- Say what Acme Pay must do, not what the document is. "The rule amends
+  Regulation E" describes the document. "Acme Pay must disclose the fee before
+  the customer confirms the transfer" states the duty.
+- Carry the condition or the threshold the document puts on the duty, when it
+  puts one there. If the duty applies only above a dollar amount, or only to one
+  kind of account, the sentence says so.
+- Claim no more than the document requires. A sentence that widens the duty to
+  transactions or to parties the document leaves out is wrong.
+
+Where the document creates no duty for Acme Pay, write one sentence that says
+there is nothing to do and why. A notice is the usual case.
+
+## Submit
+
+Call `submit_triage` once with the complete record. That ends the task.
+````
+
+:::

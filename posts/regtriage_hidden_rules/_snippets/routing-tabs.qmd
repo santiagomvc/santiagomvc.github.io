@@ -1,0 +1,154 @@
+::: {.panel-tabset}
+
+#### v0, Steps 2–3
+
+````markdown
+## Step 2. Classify the document
+
+Read the SECTION line and classify by it:
+
+| SECTION | `classification` |
+|---|---|
+| Rules and Regulations | `new_obligation` |
+| Proposed Rules | `monitor` |
+| Notices | `informational` |
+
+## Step 3. Say what to do with the register
+
+| `classification` | `register_action` |
+|---|---|
+| `new_obligation` | `create` |
+| `monitor` | `create` |
+| `informational` | `none` |
+
+Set `target_register_id` to null.
+````
+
+#### learned v4, Steps 2–3
+
+````markdown
+## Step 2. Classify the document
+
+Start from the SECTION line, then check the ACTION line and summary, which
+override it:
+
+| SECTION | `classification` |
+|---|---|
+| Rules and Regulations | `new_obligation` |
+| Proposed Rules | `monitor` |
+| Notices | `informational` |
+
+Overrides, applied in this order:
+
+- A document whose only purpose is to announce, extend or reopen a comment
+  period on a rulemaking that is still open, or to correct a document that is
+  itself still open for comment, stays with the class of the underlying
+  rulemaking - normally `monitor` - rather than `correction`, unless the
+  document carries a correction prefix in its FR number.
+- A regulatory agenda, plan or similar forward-looking list of rulemakings an
+  agency expects to consider is `monitor`, whatever section it appears under,
+  and the rulemakings it lists are tracked, so open or update a register entry
+  for it rather than leaving it with no action.
+- Use `correction` only when the document's sole purpose is to fix or adjust
+  an earlier document - a typographical, clerical or scrivener's error, an
+  omitted or wrong amendatory instruction, an extension of a comment period,
+  or a similar technical fix - and it makes no substantive change of its own.
+  The title or ACTION line says correction, correcting amendment or technical
+  correction, or the FR number carries a correction prefix (for example a
+  leading `C1-`). If the document also does substantive work of its own -
+  adds or revises regulatory text or commentary, or otherwise stands on its
+  own - classify it on its substance instead, even when "correction" or
+  "correcting amendments" appears in the title or ACTION line.
+- If the rule is not yet settled - an interim final rule, a direct final rule,
+  a proposed or procedural rule open for comment, a policy statement,
+  interpretive rule or other pronouncement issued with a request for comment,
+  or any rule still open for comment - use `monitor`, even though it appears
+  under Rules and Regulations and even though it is already applicable or
+  effective. A final rule is settled when its comment period has closed, even
+  when it adopts a policy statement, confirms or changes an effective or
+  compliance date, or repeals a rule: classify it `new_obligation`.
+
+## Step 3. Say what to do with the register
+
+Call `query_register` to see whether the company already tracks this
+rulemaking. Treat it as the same rulemaking if the RIN matches, or if the
+document amends, extends, finalizes or corrects a document already tracked.
+An entry matches only when it covers the same rulemaking; an entry for a
+different rule under the same regulation or CFR part is not a match, and a
+recurring annual adjustment made under a standing requirement is a fresh
+rulemaking unless the register already holds an entry for that same annual
+cycle. When the RIN does not match, search again on the subject, the CFR
+parts and the agency before concluding it is not tracked: the entry may be
+filed under the RIN of another agency in the same interagency rulemaking, or
+under none.
+
+| situation | `register_action` | `target_register_id` |
+|---|---|---|
+| `classification` is `correction` | `link` | the entry for the corrected rulemaking |
+| already tracked, any other class | `update` | the existing entry |
+| not tracked, `informational` | `none` | null |
+| not tracked, any other class | `create` | null |
+
+`target_register_id` must be the register's own entry identifier exactly as
+`query_register` returns it. Never put an RIN, an FR document number, a rule
+title or a publication date in that field.
+
+A `correction` is always `link`, never `create` and never `none`, even when no
+matching entry can be found. Search on the RIN, then on the subject, the CFR
+parts and the agency; if a reasonable search turns up no entry identifier,
+leave `target_register_id` null rather than inventing one or substituting
+another identifier, and stop searching.
+````
+
+#### oracle, Steps 4–6
+
+````markdown
+## Step 4. Is the document a correction?
+
+A document is a correction if either of these is true:
+
+- Its ACTION line or its title contains the word correction, corrections, or
+  correcting amendment.
+- Its document number starts with `C1-`. A document number `C1-2026-10036`
+  corrects document `2026-10036`.
+
+If it is a correction, ignore what steps 2 and 3 produced and set:
+
+- `classification`: `correction`
+- `register_action`: `link`
+- `target_register_id`: the register entry for the document being corrected.
+
+Find that entry in this order, stopping at the first that works:
+
+1. Call `query_register` with the corrected document number — the number after
+   the `C1-` prefix, or the number named in the text.
+2. Call `query_register` with each RIN on the document and take the most recent
+   entry that comes back.
+3. If nothing comes back, leave `target_register_id` null and leave
+   `register_action` as `link`. Many corrections have no entry to point at,
+   because a notice never creates one.
+
+A correction is never an update, and it is never a monitor. Skip steps 5 and 6.
+
+## Step 5. Does the document continue an earlier rulemaking?
+
+Call `query_register` with each RIN on the document. If an entry comes back, the
+register already tracks this rulemaking — a final rule following an earlier
+proposed rule is the usual case. Set:
+
+- `register_action`: `update`
+- `target_register_id`: the most recent entry that came back.
+
+Leave `classification` as the earlier steps set it.
+
+## Step 6. Is the rule still open for comment?
+
+Do this only if `classification` is still `new_obligation`. If the DATES text
+says the agency is still taking comment, the rule is not settled: what finally
+binds the company may not be what this document says today. Set `classification`
+to `monitor`.
+
+Leave `register_action` and `target_register_id` as the earlier steps set them.
+````
+
+:::

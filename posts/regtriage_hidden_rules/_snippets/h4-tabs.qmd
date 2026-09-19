@@ -1,0 +1,82 @@
+::: {.panel-tabset}
+
+#### v0, Step 4
+
+````markdown
+## Step 4. Count the document text
+
+Report three counts for the document text you were given:
+
+- `word_count`: how many words it has.
+- `unique_word_count`: how many different words it has.
+- `long_word_count`: how many of its words are long.
+
+Use `run_python` to compute them. The working directory holds `document.txt`,
+which is the same text `get_document` returns.
+````
+
+#### 02 learned v4 (wrong)
+
+````markdown
+## Step 4. Count the document text
+
+Report three counts for the body of the document only. Skip the header lines
+that identify the document rather than state its content: the FR document
+number, SECTION, PUBLISHED, AGENCY, CFR part and RIN lines. Count the title
+and the ACTION, SUMMARY and DATES text, and drop the `ACTION:`, `SUMMARY:`
+and `DATES:` labels themselves.
+
+- `word_count`: tokens separated by whitespace.
+- `unique_word_count`: how many distinct tokens there are, compared
+  case-insensitively.
+- `long_word_count`: tokens of more than seven characters.
+
+Strip surrounding punctuation from a token before measuring its length,
+but keep internal hyphens and apostrophes; a token that is left with no
+letters or digits does not count. Apply the same stripping and the same
+dropping of tokens with no letters or digits before computing all three
+counts, including `word_count` and `unique_word_count`. Always use
+`run_python` to compute the three counts on the file itself; never retype or
+paste the text into the code, and never estimate the counts by hand. The
+working directory holds `document.txt`, which is the same text
+`get_document` returns.
+````
+
+#### 03 learned v1 (matches gold)
+
+````markdown
+## Step 4. Count the document text
+
+Use `run_python` to count the text in `document.txt`, which is the same text
+`get_document` returns. A word is a run of letters only, as found by
+`re.findall(r"[A-Za-z]+", text)`; digits and punctuation are not words.
+
+- `word_count`: how many words it has.
+- `unique_word_count`: how many of them differ, ignoring case.
+- `long_word_count`: how many are longer than seven letters.
+````
+
+#### oracle, Step 7
+
+````markdown
+## Step 7. Count the document text
+
+Do this for every relevant document. Call `run_python` and read
+`document.txt` from the working directory. That file holds the same text
+`get_document` returns.
+
+A word is a run of one or more letters, A to Z or a to z. Nothing else is a
+word. A digit is never part of a word, and no punctuation mark is. The line
+`12 CFR Part 1026` holds two words, CFR and Part.
+
+- `word_count`: how many words the text holds. Count a repeated word every
+  time it appears.
+- `unique_word_count`: how many different words the text holds. Compare two
+  words without regard to case, so `The` and `the` are the same word.
+- `long_word_count`: how many words have eight letters or more. Count a
+  repeated word every time it appears.
+
+Leave all three null on a document that is not relevant.
+````
+
+:::

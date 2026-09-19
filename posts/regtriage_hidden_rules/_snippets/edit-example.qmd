@@ -1,0 +1,24 @@
+One edit as the learner returned it (run 01, first rewrite): `replace` on lines 28–36 of v0, reason “Make the analyst classify by the nature of the action line (correction, interim/non-final rule) rather than only the SECTION line.”, text:
+
+````markdown
+## Step 2. Classify the document
+
+Start from the SECTION line, then check the ACTION line and summary, which
+override it:
+
+| SECTION | `classification` |
+|---|---|
+| Rules and Regulations | `new_obligation` |
+| Proposed Rules | `monitor` |
+| Notices | `informational` |
+
+Overrides, applied in this order:
+
+- If the document corrects, fixes a typographical or technical error in, or
+  makes a technical amendment to an earlier document (its title or ACTION line
+  says correction, correcting amendment, technical correction, or the FR number
+  carries a correction prefix), use `correction`.
+- If the rule is not yet settled - an interim final rule, a direct final rule,
+  a policy statement, or any rule still open for comment - use `monitor`, even
+  though it appears under Rules and Regulations.
+````

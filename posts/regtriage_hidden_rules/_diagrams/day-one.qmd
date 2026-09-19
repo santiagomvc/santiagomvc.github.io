@@ -1,0 +1,73 @@
+::: {#fig-loop-day-one}
+
+```{=html}
+<div class="scroller">
+<svg class="diagram" viewBox="0 0 720 620" role="img"
+     aria-label="The day-one loop: the procedure tells the agent three rules; the agent triages an episode and submits a four-field answer; the judge diffs it against the oracle, which applies three more hidden rules; the feedback goes to the learner, which writes the next procedure.">
+  <defs>
+    <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+    </marker>
+  </defs>
+
+  <rect class="box" x="30" y="40" width="200" height="82" rx="3"></rect>
+  <text class="name" x="46" y="66">SOP v0</text>
+  <text class="sub"  x="46" y="86">the 3 rules it is told</text>
+  <text class="mono" x="46" y="104">relevance · class · action</text>
+
+  <rect class="box" x="490" y="40" width="200" height="82" rx="3"></rect>
+  <text class="name" x="506" y="66">Agent</text>
+  <text class="sub"  x="506" y="86">4 read-only tools</text>
+  <text class="mono" x="506" y="104">answers in 4 fields</text>
+
+  <rect class="ghost" x="240" y="168" width="200" height="70" rx="3"></rect>
+  <text class="name" x="256" y="192" style="font-size:14px">Episode</text>
+  <text class="sub"  x="256" y="210">1 of 37,073 real documents</text>
+  <text class="sub"  x="256" y="227">+ the register as of that day</text>
+
+  <rect class="box" x="215" y="286" width="290" height="160" rx="3"></rect>
+  <text class="name" x="231" y="312">Oracle</text>
+  <text class="mono" x="231" y="330">deterministic · no model</text>
+  <line x1="231" y1="344" x2="489" y2="344" stroke="var(--rule-soft)" stroke-width="1"></line>
+  <text class="sub"  x="231" y="364">3 visible rules: the ones in the SOP</text>
+  <rect class="band" x="223" y="376" width="274" height="62" rx="2"></rect>
+  <text class="hotname" x="231" y="394">3 hidden rules</text>
+  <text class="hotmono" x="231" y="411">H1 correction · H2 same RIN</text>
+  <text class="hotmono" x="231" y="426">H3 open for comment</text>
+
+  <rect class="box" x="490" y="496" width="200" height="82" rx="3"></rect>
+  <text class="name" x="506" y="524">Judge</text>
+  <text class="sub"  x="506" y="544">diffs the two answers</text>
+  <text class="mono" x="506" y="562">field by field</text>
+
+  <rect class="box" x="30" y="496" width="200" height="82" rx="3"></rect>
+  <text class="name" x="46" y="524">Learner</text>
+  <text class="sub"  x="46" y="544">sees only the feedback</text>
+  <text class="mono" x="46" y="562">never the oracle</text>
+
+  <path class="flow" d="M230,90 H484" marker-end="url(#ar1)"></path>
+  <text class="edge" x="357" y="76" text-anchor="middle">the 3 rules it is told</text>
+
+  <path class="flow" d="M440,190 H520 V128" marker-end="url(#ar1)"></path>
+  <text class="edge" x="486" y="207" text-anchor="middle">the rendered page</text>
+
+  <path class="flow" d="M340,238 V280" marker-end="url(#ar1)"></path>
+  <text class="edge" x="352" y="264">+ the structured fields</text>
+
+  <path class="flow" d="M640,122 V490" marker-end="url(#ar1)"></path>
+  <text class="edge" x="628" y="300" text-anchor="end">its 4-field answer</text>
+
+  <path class="flow" d="M360,446 V472 H530 V490" marker-end="url(#ar1)"></path>
+  <text class="edge" x="368" y="466">the gold answer</text>
+
+  <path class="flow" d="M490,537 H236" marker-end="url(#ar1)"></path>
+  <text class="edge" x="363" y="528" text-anchor="middle">approve · reason · silent edit · terse</text>
+
+  <path class="flow" d="M130,496 V128" marker-end="url(#ar1)"></path>
+  <text class="edge" x="118" y="320" text-anchor="end">writes sop/v1.md</text>
+</svg>
+</div>
+```
+
+One round is one pass around the loop. The agent gets the rendered page; the oracle also gets the structured fields the page never prints.
+:::

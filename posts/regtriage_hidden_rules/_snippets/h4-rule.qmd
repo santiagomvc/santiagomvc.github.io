@@ -1,0 +1,21 @@
+````python
+# H4. A word is a run of letters, so no digit is ever part of one: "12 CFR
+# Part 1026" holds two words, CFR and Part. The agent is told to report the
+# counts and is told nothing about these three choices.
+WORD = re.compile(r"[A-Za-z]+")
+LONG_WORD = 8
+
+
+def text_stats(doc: dict) -> dict:
+    """The counts, over exactly the text get_document returns.
+
+    Counted over env.render_document's output, which makes that function
+    gold-bearing: see its docstring.
+    """
+    words = WORD.findall(render_document(doc))
+    return {
+        "word_count": len(words),
+        "unique_word_count": len({w.lower() for w in words}),
+        "long_word_count": sum(1 for w in words if len(w) >= LONG_WORD),
+    }
+````

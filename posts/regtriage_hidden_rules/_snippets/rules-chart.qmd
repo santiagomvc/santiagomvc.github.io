@@ -1,0 +1,215 @@
+::: {#fig-rules}
+
+```{=html}
+<div class="run-filter" id="rules-filter"><span>run</span><label><input type="radio" name="rules-run" value="1"> 01</label><label><input type="radio" name="rules-run" value="2"> 02</label><label><input type="radio" name="rules-run" value="3"> 03</label><label><input type="radio" name="rules-run" value="4" checked> 04</label><label><input type="radio" name="rules-run" value="5"> 05</label><label><input type="radio" name="rules-run" value="6"> 06</label></div><script>document.querySelectorAll('#rules-filter input').forEach(function(r){r.addEventListener('change',function(){document.querySelectorAll('.rules-chart g[class^=run]').forEach(function(g){g.style.display=(g.getAttribute('class')==='run'+r.value)?'':'none'})})})</script><svg class="rules-chart" viewBox="0 0 380 236" role="img" aria-label="Per-rule accuracy by round for the selected run">
+<style>.grid{stroke:#dfe3ea;stroke-width:1}.tick{font:9.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;fill:#5d6672}.line{fill:none;stroke:var(--c);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}.dot{fill:var(--c);stroke:#fff;stroke-width:2}.end{font:10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;fill:#5d6672}.s1{--c:#2a78d6}.s2{--c:#eb6834}.s3{--c:#1baf7a}.s4{--c:#eda100}.s5{--c:#e87ba4}.s6{--c:#008300}.h1{--c:#86b6ef}.h2{--c:#5598e7}.h3{--c:#2a78d6}.h4{--c:#1c5cab}.h5{--c:#0d366b}</style>
+<rect width="380" height="236" fill="#ffffff" stroke="#dfe3ea"/>
+<line class="grid" x1="40" y1="206.0" x2="344" y2="206.0"/><text class="tick" x="34" y="209.5" text-anchor="end">0</text>
+<line class="grid" x1="40" y1="158.0" x2="344" y2="158.0"/><text class="tick" x="34" y="161.5" text-anchor="end">25</text>
+<line class="grid" x1="40" y1="110.0" x2="344" y2="110.0"/><text class="tick" x="34" y="113.5" text-anchor="end">50</text>
+<line class="grid" x1="40" y1="62.0" x2="344" y2="62.0"/><text class="tick" x="34" y="65.5" text-anchor="end">75</text>
+<line class="grid" x1="40" y1="14.0" x2="344" y2="14.0"/><text class="tick" x="34" y="17.5" text-anchor="end">100</text>
+<text class="tick" x="40.0" y="222" text-anchor="middle">v0</text>
+<text class="tick" x="115.0" y="222" text-anchor="middle">v1</text>
+<text class="tick" x="190.0" y="222" text-anchor="middle">v2</text>
+<text class="tick" x="265.0" y="222" text-anchor="middle">v3</text>
+<text class="tick" x="340.0" y="222" text-anchor="middle">v4</text>
+<g class="run1" style="display:none">
+<path class="h1 line" d="M40.0,167.6 L115.0,90.8 L190.0,71.6 L265.0,90.8 L340.0,71.6"/>
+<circle class="h1 dot" cx="40.0" cy="167.6" r="3.2"><title>01 · H1 · v0 · 20%</title></circle>
+<circle class="h1 dot" cx="115.0" cy="90.8" r="3.2"><title>01 · H1 · v1 · 60%</title></circle>
+<circle class="h1 dot" cx="190.0" cy="71.6" r="3.2"><title>01 · H1 · v2 · 70%</title></circle>
+<circle class="h1 dot" cx="265.0" cy="90.8" r="3.2"><title>01 · H1 · v3 · 60%</title></circle>
+<circle class="h1 dot" cx="340.0" cy="71.6" r="3.2"><title>01 · H1 · v4 · 70%</title></circle>
+<text class="end" x="347.0" y="75.1">H1</text>
+<path class="h2 line" d="M40.0,206.0 L115.0,14.0 L190.0,14.0 L265.0,33.2 L340.0,14.0"/>
+<circle class="h2 dot" cx="40.0" cy="206.0" r="3.2"><title>01 · H2 · v0 · 0%</title></circle>
+<circle class="h2 dot" cx="115.0" cy="14.0" r="3.2"><title>01 · H2 · v1 · 100%</title></circle>
+<circle class="h2 dot" cx="190.0" cy="14.0" r="3.2"><title>01 · H2 · v2 · 100%</title></circle>
+<circle class="h2 dot" cx="265.0" cy="33.2" r="3.2"><title>01 · H2 · v3 · 90%</title></circle>
+<circle class="h2 dot" cx="340.0" cy="14.0" r="3.2"><title>01 · H2 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="17.5">H2</text>
+<path class="h3 line" d="M40.0,206.0 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h3 dot" cx="40.0" cy="206.0" r="3.2"><title>01 · H3 · v0 · 0%</title></circle>
+<circle class="h3 dot" cx="115.0" cy="14.0" r="3.2"><title>01 · H3 · v1 · 100%</title></circle>
+<circle class="h3 dot" cx="190.0" cy="14.0" r="3.2"><title>01 · H3 · v2 · 100%</title></circle>
+<circle class="h3 dot" cx="265.0" cy="14.0" r="3.2"><title>01 · H3 · v3 · 100%</title></circle>
+<circle class="h3 dot" cx="340.0" cy="14.0" r="3.2"><title>01 · H3 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="28.5">H3</text>
+</g>
+<g class="run2" style="display:none">
+<path class="h1 line" d="M40.0,167.6 L115.0,90.8 L190.0,90.8 L265.0,90.8 L340.0,33.2"/>
+<circle class="h1 dot" cx="40.0" cy="167.6" r="3.2"><title>02 · H1 · v0 · 20%</title></circle>
+<circle class="h1 dot" cx="115.0" cy="90.8" r="3.2"><title>02 · H1 · v1 · 60%</title></circle>
+<circle class="h1 dot" cx="190.0" cy="90.8" r="3.2"><title>02 · H1 · v2 · 60%</title></circle>
+<circle class="h1 dot" cx="265.0" cy="90.8" r="3.2"><title>02 · H1 · v3 · 60%</title></circle>
+<circle class="h1 dot" cx="340.0" cy="33.2" r="3.2"><title>02 · H1 · v4 · 90%</title></circle>
+<text class="end" x="347.0" y="39.5">H1</text>
+<path class="h2 line" d="M40.0,206.0 L115.0,14.0 L190.0,14.0 L265.0,33.2 L340.0,14.0"/>
+<circle class="h2 dot" cx="40.0" cy="206.0" r="3.2"><title>02 · H2 · v0 · 0%</title></circle>
+<circle class="h2 dot" cx="115.0" cy="14.0" r="3.2"><title>02 · H2 · v1 · 100%</title></circle>
+<circle class="h2 dot" cx="190.0" cy="14.0" r="3.2"><title>02 · H2 · v2 · 100%</title></circle>
+<circle class="h2 dot" cx="265.0" cy="33.2" r="3.2"><title>02 · H2 · v3 · 90%</title></circle>
+<circle class="h2 dot" cx="340.0" cy="14.0" r="3.2"><title>02 · H2 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="17.5">H2</text>
+<path class="h3 line" d="M40.0,206.0 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h3 dot" cx="40.0" cy="206.0" r="3.2"><title>02 · H3 · v0 · 0%</title></circle>
+<circle class="h3 dot" cx="115.0" cy="14.0" r="3.2"><title>02 · H3 · v1 · 100%</title></circle>
+<circle class="h3 dot" cx="190.0" cy="14.0" r="3.2"><title>02 · H3 · v2 · 100%</title></circle>
+<circle class="h3 dot" cx="265.0" cy="14.0" r="3.2"><title>02 · H3 · v3 · 100%</title></circle>
+<circle class="h3 dot" cx="340.0" cy="14.0" r="3.2"><title>02 · H3 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="28.5">H3</text>
+<path class="h4 line" d="M40.0,167.6 L115.0,171.4 L190.0,167.6 L265.0,167.6 L340.0,167.6"/>
+<circle class="h4 dot" cx="40.0" cy="167.6" r="3.2"><title>02 · H4 · v0 · 20%</title></circle>
+<circle class="h4 dot" cx="115.0" cy="171.4" r="3.2"><title>02 · H4 · v1 · 18%</title></circle>
+<circle class="h4 dot" cx="190.0" cy="167.6" r="3.2"><title>02 · H4 · v2 · 20%</title></circle>
+<circle class="h4 dot" cx="265.0" cy="167.6" r="3.2"><title>02 · H4 · v3 · 20%</title></circle>
+<circle class="h4 dot" cx="340.0" cy="167.6" r="3.2"><title>02 · H4 · v4 · 20%</title></circle>
+<text class="end" x="347.0" y="171.1">H4</text>
+</g>
+<g class="run3" style="display:none">
+<path class="h1 line" d="M40.0,129.2 L115.0,110.0 L190.0,90.8 L265.0,33.2 L340.0,14.0"/>
+<circle class="h1 dot" cx="40.0" cy="129.2" r="3.2"><title>03 · H1 · v0 · 40%</title></circle>
+<circle class="h1 dot" cx="115.0" cy="110.0" r="3.2"><title>03 · H1 · v1 · 50%</title></circle>
+<circle class="h1 dot" cx="190.0" cy="90.8" r="3.2"><title>03 · H1 · v2 · 60%</title></circle>
+<circle class="h1 dot" cx="265.0" cy="33.2" r="3.2"><title>03 · H1 · v3 · 90%</title></circle>
+<circle class="h1 dot" cx="340.0" cy="14.0" r="3.2"><title>03 · H1 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="17.5">H1</text>
+<path class="h2 line" d="M40.0,186.8 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h2 dot" cx="40.0" cy="186.8" r="3.2"><title>03 · H2 · v0 · 10%</title></circle>
+<circle class="h2 dot" cx="115.0" cy="14.0" r="3.2"><title>03 · H2 · v1 · 100%</title></circle>
+<circle class="h2 dot" cx="190.0" cy="14.0" r="3.2"><title>03 · H2 · v2 · 100%</title></circle>
+<circle class="h2 dot" cx="265.0" cy="14.0" r="3.2"><title>03 · H2 · v3 · 100%</title></circle>
+<circle class="h2 dot" cx="340.0" cy="14.0" r="3.2"><title>03 · H2 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="28.5">H2</text>
+<path class="h3 line" d="M40.0,206.0 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h3 dot" cx="40.0" cy="206.0" r="3.2"><title>03 · H3 · v0 · 0%</title></circle>
+<circle class="h3 dot" cx="115.0" cy="14.0" r="3.2"><title>03 · H3 · v1 · 100%</title></circle>
+<circle class="h3 dot" cx="190.0" cy="14.0" r="3.2"><title>03 · H3 · v2 · 100%</title></circle>
+<circle class="h3 dot" cx="265.0" cy="14.0" r="3.2"><title>03 · H3 · v3 · 100%</title></circle>
+<circle class="h3 dot" cx="340.0" cy="14.0" r="3.2"><title>03 · H3 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="39.5">H3</text>
+<path class="h4 line" d="M40.0,167.6 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h4 dot" cx="40.0" cy="167.6" r="3.2"><title>03 · H4 · v0 · 20%</title></circle>
+<circle class="h4 dot" cx="115.0" cy="14.0" r="3.2"><title>03 · H4 · v1 · 100%</title></circle>
+<circle class="h4 dot" cx="190.0" cy="14.0" r="3.2"><title>03 · H4 · v2 · 100%</title></circle>
+<circle class="h4 dot" cx="265.0" cy="14.0" r="3.2"><title>03 · H4 · v3 · 100%</title></circle>
+<circle class="h4 dot" cx="340.0" cy="14.0" r="3.2"><title>03 · H4 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="50.5">H4</text>
+</g>
+<g class="run4">
+<path class="h1 line" d="M40.0,148.4 L115.0,71.6 L190.0,14.0 L265.0,33.2 L340.0,52.4"/>
+<circle class="h1 dot" cx="40.0" cy="148.4" r="3.2"><title>04 · H1 · v0 · 30%</title></circle>
+<circle class="h1 dot" cx="115.0" cy="71.6" r="3.2"><title>04 · H1 · v1 · 70%</title></circle>
+<circle class="h1 dot" cx="190.0" cy="14.0" r="3.2"><title>04 · H1 · v2 · 100%</title></circle>
+<circle class="h1 dot" cx="265.0" cy="33.2" r="3.2"><title>04 · H1 · v3 · 90%</title></circle>
+<circle class="h1 dot" cx="340.0" cy="52.4" r="3.2"><title>04 · H1 · v4 · 80%</title></circle>
+<text class="end" x="347.0" y="61.5">H1</text>
+<path class="h2 line" d="M40.0,186.8 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h2 dot" cx="40.0" cy="186.8" r="3.2"><title>04 · H2 · v0 · 10%</title></circle>
+<circle class="h2 dot" cx="115.0" cy="14.0" r="3.2"><title>04 · H2 · v1 · 100%</title></circle>
+<circle class="h2 dot" cx="190.0" cy="14.0" r="3.2"><title>04 · H2 · v2 · 100%</title></circle>
+<circle class="h2 dot" cx="265.0" cy="14.0" r="3.2"><title>04 · H2 · v3 · 100%</title></circle>
+<circle class="h2 dot" cx="340.0" cy="14.0" r="3.2"><title>04 · H2 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="17.5">H2</text>
+<path class="h3 line" d="M40.0,206.0 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h3 dot" cx="40.0" cy="206.0" r="3.2"><title>04 · H3 · v0 · 0%</title></circle>
+<circle class="h3 dot" cx="115.0" cy="14.0" r="3.2"><title>04 · H3 · v1 · 100%</title></circle>
+<circle class="h3 dot" cx="190.0" cy="14.0" r="3.2"><title>04 · H3 · v2 · 100%</title></circle>
+<circle class="h3 dot" cx="265.0" cy="14.0" r="3.2"><title>04 · H3 · v3 · 100%</title></circle>
+<circle class="h3 dot" cx="340.0" cy="14.0" r="3.2"><title>04 · H3 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="28.5">H3</text>
+<path class="h4 line" d="M40.0,167.6 L115.0,17.8 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h4 dot" cx="40.0" cy="167.6" r="3.2"><title>04 · H4 · v0 · 20%</title></circle>
+<circle class="h4 dot" cx="115.0" cy="17.8" r="3.2"><title>04 · H4 · v1 · 98%</title></circle>
+<circle class="h4 dot" cx="190.0" cy="14.0" r="3.2"><title>04 · H4 · v2 · 100%</title></circle>
+<circle class="h4 dot" cx="265.0" cy="14.0" r="3.2"><title>04 · H4 · v3 · 100%</title></circle>
+<circle class="h4 dot" cx="340.0" cy="14.0" r="3.2"><title>04 · H4 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="39.5">H4</text>
+<path class="h5 line" d="M40.0,129.2 L115.0,87.0 L190.0,44.7 L265.0,17.8 L340.0,17.8"/>
+<circle class="h5 dot" cx="40.0" cy="129.2" r="3.2"><title>04 · H5 · v0 · 40%</title></circle>
+<circle class="h5 dot" cx="115.0" cy="87.0" r="3.2"><title>04 · H5 · v1 · 62%</title></circle>
+<circle class="h5 dot" cx="190.0" cy="44.7" r="3.2"><title>04 · H5 · v2 · 84%</title></circle>
+<circle class="h5 dot" cx="265.0" cy="17.8" r="3.2"><title>04 · H5 · v3 · 98%</title></circle>
+<circle class="h5 dot" cx="340.0" cy="17.8" r="3.2"><title>04 · H5 · v4 · 98%</title></circle>
+<text class="end" x="347.0" y="50.5">H5</text>
+</g>
+<g class="run5" style="display:none">
+<path class="h1 line" d="M40.0,186.8 L115.0,33.2 L190.0,90.8 L265.0,110.0 L340.0,90.8"/>
+<circle class="h1 dot" cx="40.0" cy="186.8" r="3.2"><title>05 · H1 · v0 · 10%</title></circle>
+<circle class="h1 dot" cx="115.0" cy="33.2" r="3.2"><title>05 · H1 · v1 · 90%</title></circle>
+<circle class="h1 dot" cx="190.0" cy="90.8" r="3.2"><title>05 · H1 · v2 · 60%</title></circle>
+<circle class="h1 dot" cx="265.0" cy="110.0" r="3.2"><title>05 · H1 · v3 · 50%</title></circle>
+<circle class="h1 dot" cx="340.0" cy="90.8" r="3.2"><title>05 · H1 · v4 · 60%</title></circle>
+<text class="end" x="347.0" y="94.3">H1</text>
+<path class="h2 line" d="M40.0,186.8 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h2 dot" cx="40.0" cy="186.8" r="3.2"><title>05 · H2 · v0 · 10%</title></circle>
+<circle class="h2 dot" cx="115.0" cy="14.0" r="3.2"><title>05 · H2 · v1 · 100%</title></circle>
+<circle class="h2 dot" cx="190.0" cy="14.0" r="3.2"><title>05 · H2 · v2 · 100%</title></circle>
+<circle class="h2 dot" cx="265.0" cy="14.0" r="3.2"><title>05 · H2 · v3 · 100%</title></circle>
+<circle class="h2 dot" cx="340.0" cy="14.0" r="3.2"><title>05 · H2 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="17.5">H2</text>
+<path class="h3 line" d="M40.0,206.0 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h3 dot" cx="40.0" cy="206.0" r="3.2"><title>05 · H3 · v0 · 0%</title></circle>
+<circle class="h3 dot" cx="115.0" cy="14.0" r="3.2"><title>05 · H3 · v1 · 100%</title></circle>
+<circle class="h3 dot" cx="190.0" cy="14.0" r="3.2"><title>05 · H3 · v2 · 100%</title></circle>
+<circle class="h3 dot" cx="265.0" cy="14.0" r="3.2"><title>05 · H3 · v3 · 100%</title></circle>
+<circle class="h3 dot" cx="340.0" cy="14.0" r="3.2"><title>05 · H3 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="28.5">H3</text>
+<path class="h4 line" d="M40.0,167.6 L115.0,167.6 L190.0,167.6 L265.0,129.2 L340.0,129.2"/>
+<circle class="h4 dot" cx="40.0" cy="167.6" r="3.2"><title>05 · H4 · v0 · 20%</title></circle>
+<circle class="h4 dot" cx="115.0" cy="167.6" r="3.2"><title>05 · H4 · v1 · 20%</title></circle>
+<circle class="h4 dot" cx="190.0" cy="167.6" r="3.2"><title>05 · H4 · v2 · 20%</title></circle>
+<circle class="h4 dot" cx="265.0" cy="129.2" r="3.2"><title>05 · H4 · v3 · 40%</title></circle>
+<circle class="h4 dot" cx="340.0" cy="129.2" r="3.2"><title>05 · H4 · v4 · 40%</title></circle>
+<text class="end" x="347.0" y="132.7">H4</text>
+<path class="h5 line" d="M40.0,125.4 L115.0,106.2 L190.0,48.6 L265.0,98.5 L340.0,56.2"/>
+<circle class="h5 dot" cx="40.0" cy="125.4" r="3.2"><title>05 · H5 · v0 · 42%</title></circle>
+<circle class="h5 dot" cx="115.0" cy="106.2" r="3.2"><title>05 · H5 · v1 · 52%</title></circle>
+<circle class="h5 dot" cx="190.0" cy="48.6" r="3.2"><title>05 · H5 · v2 · 82%</title></circle>
+<circle class="h5 dot" cx="265.0" cy="98.5" r="3.2"><title>05 · H5 · v3 · 56%</title></circle>
+<circle class="h5 dot" cx="340.0" cy="56.2" r="3.2"><title>05 · H5 · v4 · 78%</title></circle>
+<text class="end" x="347.0" y="59.7">H5</text>
+</g>
+<g class="run6" style="display:none">
+<path class="h1 line" d="M40.0,186.8 L115.0,71.6 L190.0,33.2 L265.0,52.4 L340.0,14.0"/>
+<circle class="h1 dot" cx="40.0" cy="186.8" r="3.2"><title>06 · H1 · v0 · 10%</title></circle>
+<circle class="h1 dot" cx="115.0" cy="71.6" r="3.2"><title>06 · H1 · v1 · 70%</title></circle>
+<circle class="h1 dot" cx="190.0" cy="33.2" r="3.2"><title>06 · H1 · v2 · 90%</title></circle>
+<circle class="h1 dot" cx="265.0" cy="52.4" r="3.2"><title>06 · H1 · v3 · 80%</title></circle>
+<circle class="h1 dot" cx="340.0" cy="14.0" r="3.2"><title>06 · H1 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="17.5">H1</text>
+<path class="h2 line" d="M40.0,206.0 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h2 dot" cx="40.0" cy="206.0" r="3.2"><title>06 · H2 · v0 · 0%</title></circle>
+<circle class="h2 dot" cx="115.0" cy="14.0" r="3.2"><title>06 · H2 · v1 · 100%</title></circle>
+<circle class="h2 dot" cx="190.0" cy="14.0" r="3.2"><title>06 · H2 · v2 · 100%</title></circle>
+<circle class="h2 dot" cx="265.0" cy="14.0" r="3.2"><title>06 · H2 · v3 · 100%</title></circle>
+<circle class="h2 dot" cx="340.0" cy="14.0" r="3.2"><title>06 · H2 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="28.5">H2</text>
+<path class="h3 line" d="M40.0,206.0 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h3 dot" cx="40.0" cy="206.0" r="3.2"><title>06 · H3 · v0 · 0%</title></circle>
+<circle class="h3 dot" cx="115.0" cy="14.0" r="3.2"><title>06 · H3 · v1 · 100%</title></circle>
+<circle class="h3 dot" cx="190.0" cy="14.0" r="3.2"><title>06 · H3 · v2 · 100%</title></circle>
+<circle class="h3 dot" cx="265.0" cy="14.0" r="3.2"><title>06 · H3 · v3 · 100%</title></circle>
+<circle class="h3 dot" cx="340.0" cy="14.0" r="3.2"><title>06 · H3 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="39.5">H3</text>
+<path class="h4 line" d="M40.0,167.6 L115.0,14.0 L190.0,14.0 L265.0,14.0 L340.0,14.0"/>
+<circle class="h4 dot" cx="40.0" cy="167.6" r="3.2"><title>06 · H4 · v0 · 20%</title></circle>
+<circle class="h4 dot" cx="115.0" cy="14.0" r="3.2"><title>06 · H4 · v1 · 100%</title></circle>
+<circle class="h4 dot" cx="190.0" cy="14.0" r="3.2"><title>06 · H4 · v2 · 100%</title></circle>
+<circle class="h4 dot" cx="265.0" cy="14.0" r="3.2"><title>06 · H4 · v3 · 100%</title></circle>
+<circle class="h4 dot" cx="340.0" cy="14.0" r="3.2"><title>06 · H4 · v4 · 100%</title></circle>
+<text class="end" x="347.0" y="50.5">H4</text>
+<path class="h5 line" d="M40.0,117.7 L115.0,67.8 L190.0,44.7 L265.0,52.4 L340.0,40.9"/>
+<circle class="h5 dot" cx="40.0" cy="117.7" r="3.2"><title>06 · H5 · v0 · 46%</title></circle>
+<circle class="h5 dot" cx="115.0" cy="67.8" r="3.2"><title>06 · H5 · v1 · 72%</title></circle>
+<circle class="h5 dot" cx="190.0" cy="44.7" r="3.2"><title>06 · H5 · v2 · 84%</title></circle>
+<circle class="h5 dot" cx="265.0" cy="52.4" r="3.2"><title>06 · H5 · v3 · 80%</title></circle>
+<circle class="h5 dot" cx="340.0" cy="40.9" r="3.2"><title>06 · H5 · v4 · 86%</title></circle>
+<text class="end" x="347.0" y="61.5">H5</text>
+</g>
+</svg>
+```
+
+Per-rule accuracy by round for one run, picked above the chart. H1–H3 on the 10 dev documents where the rule fires; H4 is counts right; H5 is sentence accepted. A rule that was off in the run has no line.
+:::

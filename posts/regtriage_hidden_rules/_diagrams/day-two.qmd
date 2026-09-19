@@ -1,0 +1,91 @@
+::: {#fig-loop-day-two}
+
+```{=html}
+<div class="scroller">
+<svg class="diagram" viewBox="0 0 740 760" role="img"
+     aria-label="The day-two loop: the procedure states three rules and two tasks; the agent has five tools and answers in eight fields; the oracle applies four hidden rules and holds an expert model that reads the obligation sentence; the learner gets one bit on the sentence and can buy the reason for one wrong answer.">
+  <defs>
+    <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+    </marker>
+  </defs>
+
+  <rect class="box" x="30" y="40" width="200" height="96" rx="3"></rect>
+  <text class="name" x="46" y="66">SOP v0</text>
+  <text class="sub"  x="46" y="86">3 rules + 2 tasks it is told</text>
+  <text class="mono" x="46" y="104">relevance · class · action</text>
+  <text class="mono" x="46" y="120">count the text · one sentence</text>
+
+  <rect class="box" x="490" y="40" width="200" height="96" rx="3"></rect>
+  <text class="name" x="506" y="66">Agent</text>
+  <text class="sub"  x="506" y="86">5 tools, one runs Python</text>
+  <text class="mono" x="506" y="104">answers in 8 fields</text>
+  <text class="mono" x="506" y="120">claude-sonnet-5</text>
+
+  <rect class="ghost" x="240" y="170" width="200" height="70" rx="3"></rect>
+  <text class="name" x="256" y="194" style="font-size:14px">Episode</text>
+  <text class="sub"  x="256" y="212">1 of 37,073 real documents</text>
+  <text class="sub"  x="256" y="229">+ the register as of that day</text>
+
+  <rect class="box" x="215" y="290" width="270" height="242" rx="3"></rect>
+  <text class="name" x="231" y="316">Oracle</text>
+  <text class="mono" x="231" y="334">deterministic, except H5</text>
+  <line x1="231" y1="348" x2="469" y2="348" stroke="var(--rule-soft)" stroke-width="1"></line>
+  <text class="sub"  x="231" y="368">3 visible rules: the ones in the SOP</text>
+  <rect class="band" x="223" y="380" width="254" height="70" rx="2"></rect>
+  <text class="hotname" x="231" y="398">4 hidden rules</text>
+  <text class="hotmono" x="231" y="415">H1 correction · H2 same RIN</text>
+  <text class="hotmono" x="231" y="430">H3 open for comment</text>
+  <text class="hotmono" x="231" y="445">H4 how to count a word</text>
+  <rect class="band" x="223" y="460" width="254" height="62" rx="2"></rect>
+  <text class="hotname" x="231" y="478">H5 expert · claude-opus-5</text>
+  <text class="hotmono" x="231" y="495">holds the real SOP</text>
+  <text class="hotmono" x="231" y="510">reads the sentence · yes or no</text>
+
+  <rect class="box" x="30" y="640" width="200" height="96" rx="3"></rect>
+  <text class="name" x="46" y="666">Learner</text>
+  <text class="sub"  x="46" y="686">sees only the feedback</text>
+  <text class="mono" x="46" y="704">unforced first turn</text>
+  <text class="mono" x="46" y="720">told what words cost</text>
+
+  <rect class="box" x="490" y="640" width="200" height="96" rx="3"></rect>
+  <text class="name" x="506" y="666">Judge</text>
+  <text class="sub"  x="506" y="686">diffs the two answers</text>
+  <text class="mono" x="506" y="704">7 fields, one by one</text>
+
+  <path class="flow" d="M230,88 H484" marker-end="url(#ar2)"></path>
+  <text class="edge" x="357" y="74" text-anchor="middle">3 rules + 2 tasks it is told</text>
+
+  <path class="flow" d="M440,192 H520 V142" marker-end="url(#ar2)"></path>
+  <text class="edge" x="486" y="209" text-anchor="middle">the rendered page</text>
+
+  <path class="flow" d="M340,240 V284" marker-end="url(#ar2)"></path>
+  <text class="edge" x="352" y="266">+ the structured fields</text>
+
+  <path class="flow" d="M600,136 V330 H491" marker-end="url(#ar2)"></path>
+  <text class="edge" x="594" y="250" text-anchor="end">its obligation sentence</text>
+
+  <path class="flow" d="M640,136 V634" marker-end="url(#ar2)"></path>
+  <text class="edge" x="632" y="430" text-anchor="end">its 7 computable fields</text>
+
+  <path class="flow" d="M400,532 V570 H560 V634" marker-end="url(#ar2)"></path>
+  <text class="edge" x="408" y="562">the gold answer</text>
+
+  <path class="flow" d="M240,532 V560 H100 V634" marker-end="url(#ar2)"></path>
+  <text class="edge" x="150" y="553" text-anchor="middle">accepted · sent back: one bit</text>
+
+  <path class="flow" d="M140,640 V590 H300 V538" marker-end="url(#ar2)"></path>
+  <text class="edge" x="306" y="585">buys a reason</text>
+
+  <path class="flow" d="M530,640 V610 H170 V634" marker-end="url(#ar2)"></path>
+  <text class="edge" x="350" y="604" text-anchor="middle">approve · reason · silent edit · terse</text>
+
+  <path class="flow" d="M45,640 V142" marker-end="url(#ar2)"></path>
+  <text class="edge" x="58" y="330">writes sop/v1.md</text>
+  <text class="edge" x="58" y="346">minus k · growth²</text>
+</svg>
+</div>
+```
+
+The loop after day two: the agent runs Python and answers in eight fields; an expert model reads the sentence; the learner can buy a reason and is told what its words cost.
+:::
