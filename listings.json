@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/regtriage_hidden_rules/regtriage_hidden_rules.html",
       "/posts/rl_cpt/rl_cpt.html",
       "/posts/claude_code_intro/claude_code_intro.html",
       "/posts/quick_thoughts_on_openai_o3/quick_thoughts_on_openai_o3.html",

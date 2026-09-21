@@ -7,10 +7,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Santiago Velez">
-<meta name="dcterms.date" content="2024-12-21">
-<meta name="description" content="Comparing AI and Human decision making under risk">
+<meta name="dcterms.date" content="2026-09-03">
+<meta name="description" content="Why building with Language Models is still an experimentation problem">
 
-<title>AI and the irrationality of human behavior under risk – SMVC Notes</title>
+<title>AI Engineering needs experimentation – SMVC Notes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -71,36 +71,8 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<meta name="quarto:status" content="draft">
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="../../styles.css">
 </head>
@@ -108,7 +80,7 @@ window.Quarto = {
 <body class="nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
@@ -147,16 +119,17 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">AI and the irrationality of human behavior under risk</h1>
+      <h1 class="title">AI Engineering needs experimentation</h1>
                   <div>
         <div class="description">
-          Comparing AI and Human decision making under risk
+          Why building with Language Models is still an experimentation problem
         </div>
       </div>
                           <div class="quarto-categories">
-                <div class="quarto-category">reinforcement-learning</div>
-                <div class="quarto-category">behavioral-economics</div>
-                <div class="quarto-category">prospect-theory</div>
+                <div class="quarto-category">ai</div>
+                <div class="quarto-category">lm</div>
+                <div class="quarto-category">engineering</div>
+                <div class="quarto-category">experimentation</div>
               </div>
                   </div>
   </div>
@@ -174,14 +147,14 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">December 21, 2024</p>
+        <p class="date">September 3, 2026</p>
       </div>
     </div>
     
       <div>
       <div class="quarto-title-meta-heading">Modified</div>
       <div class="quarto-title-meta-contents">
-        <p class="date-modified">December 21, 2024</p>
+        <p class="date-modified">September 3, 2026</p>
       </div>
     </div>
       
@@ -1082,237 +1055,43 @@ window.Quarto = {
 
 
 
-<p>Current AI systems are undoublty making decisions and performing actions that humans usually do. How those decisions are made is likely to be pretty different though. Reinforcement Learning models are usually trained to maximize an expected return, while Language Models are trained with large amounts of digital data and then aligned to perform as useful assistants with methods like SFT, RLHF, and RLVR. The result is an assistant that is indeed useful and rational, in most cases. Human decision making on the other hand, while still largely a black box, has common demonstrations of irrationality and biases, with experiments replicating the results for multiple populations and decision making scenarios.</p>
-<p>In this post we compare the decision making of some AI systems (Reinforce, GPT-5-mini) with the average expected behavior of humans making decisions under risk. We will talk about the technical details on the next section, for now just try to put yourself in the position of the agent and imagine how you would make the decision.</p>
-<hr>
-<section id="the-setup" class="level2">
-<h2 class="anchored" data-anchor-id="the-setup">The Setup</h2>
-<p>You are controlling an agent in a grid world. Your goal is to reach the target position on the other side. The bottom edge of the grid is a cliff, fall off and the episode ends. At each step, a random wind may push you one row downward toward the cliff. Higher rows are safer (farther from the edge) but require more steps, which can be penalized. The central question: <strong>which path do you choose?</strong></p>
-</section>
-<section id="experiment-1-the-certainty-effect" class="level2">
-<h2 class="anchored" data-anchor-id="experiment-1-the-certainty-effect">Experiment 1: The Certainty Effect</h2>
+<p>A recent review of AI related job descriptions made me realize, though a bit unsurprisingly, that Data Science, Machine Learning and Applied Research engineering positions have mostly dissapeared, while the new and common AI Engineering roles swing significantly between backend and research. I also keep reading and hearing about customers actively disabling or avoiding AI features deployed in large traditional businesses. I think both ocurrences are related.</p>
+<p>The current AI Engineering practice is split in two camps: people who come from data science and machine learning, and people who come from web, infrastructure and traditional software engineering.</p>
+<p>I come from the first background, and to me AI Engineering is, in large part, an experimentation problem. There is a business need that a fixed set of rules cannot solve, so we run an experiment. We propose a hypothesis: a technical solution to the business problem. We define a test for it: a technical metric for the solution, and ideally a business metric for the real-world result. We then start hill climbing, an iterative experimentation process where we develop our solutions, test them against our metrics, and update accordingly. It’s very common to find along the way that our hypothesis was wrong, our metrics need changes, and other new and exciting problems. However, if we are lucky, we find a good enough solution to our problem, at least for a limited time. Though this approach wasn’t usually up to the standards of academic and scientific research, the loop of hypothesis, metric and iteration remained, and it let us build useful products. CRISP-DM is the usual diagram for this loop.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="images/env_exp1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+<p><img src="images/crisp_dm_process_diagram.png" class="img-fluid figure-img" style="width:60.0%"></p>
+<figcaption>CRISP-DM process diagram. Kenneth Jensen, <a href="https://creativecommons.org/licenses/by-sa/3.0">CC BY-SA 3.0</a>, via <a href="https://commons.wikimedia.org/wiki/File:CRISP-DM_Process_Diagram.png">Wikimedia Commons</a>.</figcaption>
 </figure>
 </div>
-<p>5x5 grid. Reaching the goal pays +100, falling off the cliff gives only +5. Light wind (5% chance each step). Each extra step shrinks your final reward by about 10% (γ = 0.90). <strong>Which path would you take?</strong></p>
-<div class="quarto-layout-panel" data-layout-ncol="3">
+<p>Language Models became more capable, more general, easier to use and harder to inspect. A second approach followed. The model is one component with a few settings, and the AI Engineer’s main job is to configure that component and integrate it into the rest of the system.</p>
+<div class="quarto-layout-panel" data-layout-ncol="2">
 <div class="quarto-layout-row">
-<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="outputs/reinforce_exp1_hp_gains_seed1/eval_4ep.gif" class="img-fluid figure-img" data-group="exp1"></p>
-<figcaption>REINFORCE</figcaption>
+<p><img src="images/gcp_agentic_ai_architecture_components.svg" class="img-fluid figure-img" data-group="architecture"></p>
+<figcaption>The architecture components of an agentic system. Source: <a href="https://docs.cloud.google.com/architecture/choose-agentic-ai-architecture-components">Google Cloud Architecture Center</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</figcaption>
 </figure>
 </div>
 </div>
-<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="outputs/cpt-pg_exp1_hp_gains_seed1/eval_4ep.gif" class="img-fluid figure-img" data-group="exp1"></p>
-<figcaption>CPT-PG</figcaption>
-</figure>
-</div>
-</div>
-<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="outputs/llm_exp1_hp_gains/eval_4ep.gif" class="img-fluid figure-img" data-group="exp1"></p>
-<figcaption>LLM Agent</figcaption>
+<p><img src="images/santeware_ai_architecture_healthcare.jpg" class="img-fluid figure-img" data-group="architecture"></p>
+<figcaption>AI architecture in healthcare. Source: <a href="https://santeware.com/ai-architecture-in-healthcare-vector-database-vs-sql-rest-vs-grpc-and-system-design-choices-that-scale/">Santeware</a>, 2026.</figcaption>
 </figure>
 </div>
 </div>
 </div>
 </div>
-<p>REINFORCE takes the risky shortcut every time, it’s the highest expected reward. CPT-PG plays it safe: the <em>certainty effect</em> makes humans risk-averse when a good outcome is likely, why gamble when you can lock in a sure win? The LLM also plays it mostly safe, behaving more like a cautious human than a rational optimizer.</p>
-</section>
-<section id="experiment-2-the-gamble" class="level2">
-<h2 class="anchored" data-anchor-id="experiment-2-the-gamble">Experiment 2: The Gamble</h2>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/env_exp2.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
-</figure>
-</div>
-<p>7x7 grid. Each step costs −1 and future rewards are discounted by 10% per step (γ = 0.90), reaching the goal pays +100, falling gives only +3. Strong wind (11%). The safe path is reliable but long, locking in a moderate loss from accumulated step costs. The short risky path could break even, but the wind makes falling likely. <strong>Which path would you take?</strong></p>
-<div class="quarto-layout-panel" data-layout-ncol="3">
-<div class="quarto-layout-row">
-<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="outputs/reinforce_exp3_lp_gains_seed4/eval_4ep.gif" class="img-fluid figure-img" data-group="exp2"></p>
-<figcaption>REINFORCE</figcaption>
-</figure>
-</div>
-</div>
-<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="outputs/cpt-pg_exp3_lp_gains_seed4/eval_4ep.gif" class="img-fluid figure-img" data-group="exp2"></p>
-<figcaption>CPT-PG</figcaption>
-</figure>
-</div>
-</div>
-<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="outputs/llm_exp3_lp_gains/eval_4ep.gif" class="img-fluid figure-img" data-group="exp2"></p>
-<figcaption>LLM Agent</figcaption>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<p>REINFORCE always plays safe, the expected value says don’t gamble. CPT-PG takes the risky path 28% of the time: the <em>reflection effect</em>, when facing a near-certain loss, humans prefer to gamble rather than accept it. The LLM sticks with the safe path like REINFORCE, sometimes going even safer, and rarely gambling.</p>
-</section>
-<section id="experiment-3-the-insurance-policy" class="level2">
-<h2 class="anchored" data-anchor-id="experiment-3-the-insurance-policy">Experiment 3: The Insurance Policy</h2>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/env_exp3.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
-</figure>
-</div>
-<p>4x8 grid. Everything costs you: each step −1, reaching the goal −1, falling off the cliff −30, and moderate wind (10% chance each step). <strong>Which path would you take?</strong></p>
-<div class="quarto-layout-panel" data-layout-ncol="4">
-<div class="quarto-layout-row">
-<div class="quarto-layout-cell" style="flex-basis: 25.0%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="outputs/reinforce_exp5_loss_aversion_seed4/eval_4ep.gif" class="img-fluid figure-img" data-group="exp3"></p>
-<figcaption>REINFORCE</figcaption>
-</figure>
-</div>
-</div>
-<div class="quarto-layout-cell" style="flex-basis: 25.0%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="outputs/cpt-pg_lambda_1.0_exp5_loss_aversion_seed4/eval_4ep.gif" class="img-fluid figure-img" data-group="exp3"></p>
-<figcaption>CPT-PG (<span class="math inline">\(\lambda\)</span>=1.0)</figcaption>
-</figure>
-</div>
-</div>
-<div class="quarto-layout-cell" style="flex-basis: 25.0%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="outputs/cpt-pg_exp5_loss_aversion_seed4/eval_4ep.gif" class="img-fluid figure-img" data-group="exp3"></p>
-<figcaption>CPT-PG (<span class="math inline">\(\lambda\)</span>=2.25)</figcaption>
-</figure>
-</div>
-</div>
-<div class="quarto-layout-cell" style="flex-basis: 25.0%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="outputs/llm_exp5_loss_aversion/eval_4ep.gif" class="img-fluid figure-img" data-group="exp3"></p>
-<figcaption>LLM Agent</figcaption>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<p>REINFORCE finds the middle ground, a moderate path balances step costs against cliff risk. CPT-PG with no risk aversion overweights the small cliff probability: the <em>insurance effect</em> — the rare catastrophe <em>feels</em> more dangerous than it is, pushing the agent to safety. Turn up loss aversion (<span class="math inline">\(\lambda = 2.25\)</span>) and the shift grows — a loss now <em>feels</em> more than twice as bad as an equivalent gain feels good, making even small risks intolerable. The LLM lands between the two CPT variants, taking the safest path 70% of the time.</p>
-</section>
-<section id="how-it-works" class="level2">
-<h2 class="anchored" data-anchor-id="how-it-works">How It Works</h2>
-<section id="the-grid-world" class="level3">
-<h3 class="anchored" data-anchor-id="the-grid-world">The Grid World</h3>
-<p>Our environment is a resizable grid world built on top of Gymnasium’s CliffWalking. The agent starts at the bottom-left and must reach the bottom-right (the goal). The bottom row is the cliff: falling off ends the episode with a configurable penalty. Wind is a stochastic perturbation — at each step, with probability <code>wind_prob</code>, the agent’s action is replaced with a downward push toward the cliff. Higher rows are safer but require more steps to traverse. Rewards for stepping, reaching the goal, and falling off the cliff are all independently configurable, letting us construct pure gains domains (positive goal, zero step cost), pure losses domains (negative step cost, negative cliff penalty), and mixed domains.</p>
-</section>
-<section id="reinforce-the-rational-agent" class="level3">
-<h3 class="anchored" data-anchor-id="reinforce-the-rational-agent">REINFORCE: The Rational Agent</h3>
-<p>REINFORCE is a Monte Carlo policy gradient algorithm. The agent runs complete episodes, computes discounted returns <span class="math inline">\(G_t = \sum_{k=0}^{T-t} \gamma^k r_{t+k}\)</span>, and updates its policy by ascending the gradient <span class="math inline">\(\nabla_\theta J = \mathbb{E}\left[\sum_t (G_t - b) \nabla_\theta \log \pi_\theta(a_t|s_t)\right]\)</span>. An exponential moving average baseline <span class="math inline">\(b\)</span> reduces variance. Entropy regularization encourages exploration early and is annealed down during training. The policy network is a two-layer MLP mapping one-hot state encodings to action probabilities. This is the “rational” agent: it converges to the policy that maximizes expected discounted return.</p>
-</section>
-<section id="cumulative-prospect-theory" class="level3">
-<h3 class="anchored" data-anchor-id="cumulative-prospect-theory">Cumulative Prospect Theory</h3>
-<p>Cumulative Prospect Theory models four systematic deviations from rational choice:</p>
-<ol type="1">
-<li><strong>Diminishing sensitivity</strong>: The value function is concave for gains and convex for losses (<span class="math inline">\(v(x) = x^\alpha\)</span> for <span class="math inline">\(x \geq 0\)</span>, <span class="math inline">\(v(x) = -\lambda|x|^\beta\)</span> for <span class="math inline">\(x &lt; 0\)</span>), so each additional dollar matters less.</li>
-<li><strong>Loss aversion</strong>: Losses are amplified by <span class="math inline">\(\lambda \approx 2.25\)</span>, so losing $100 feels as painful as gaining $225 feels good.</li>
-<li><strong>Probability weighting</strong>: Small probabilities are overweighted and large probabilities are underweighted via <span class="math inline">\(w(p) = p^\gamma / (p^\gamma + (1-p)^\gamma)^{1/\gamma}\)</span>.</li>
-<li><strong>Reference dependence</strong>: Outcomes are evaluated as gains or losses relative to a reference point, not in absolute terms.</li>
-</ol>
-<p>These four components predict a specific pattern of risk attitudes: risk-averse for likely gains, risk-seeking for likely losses, and risk-averse for unlikely losses, amplified further by loss aversion. Though individual behavior may vary, the patterns are consistent across populations and have replicated in experiments over the years.</p>
-</section>
-<section id="cpt-pg-combining-cumulative-prospect-theory-ideas-with-policy-gradient-learning-methods" class="level3">
-<h3 class="anchored" data-anchor-id="cpt-pg-combining-cumulative-prospect-theory-ideas-with-policy-gradient-learning-methods">CPT-PG: Combining Cumulative Prospect Theory ideas with Policy Gradient learning methods</h3>
-<p>CPT-PG (<a href="https://arxiv.org/abs/2410.02605">Lepel &amp; Barakat, 2024</a>) replaces REINFORCE’s raw returns with CPT-distorted weights <span class="math inline">\(\hat{\varphi}\)</span> computed from the batch of trajectories. For each episode <span class="math inline">\(i\)</span>, the algorithm computes the discounted return <span class="math inline">\(R_i\)</span>, applies the CPT value function to split it into gains <span class="math inline">\(u^+\)</span> and losses <span class="math inline">\(u^-\)</span> relative to the reference point, then integrates against the probability-weighted empirical survival function to obtain <span class="math inline">\(\hat{\varphi}(R_i)\)</span>. This scalar replaces <span class="math inline">\(G_t - b\)</span> in the policy gradient. Our experiments use Tversky and Kahneman’s original parameter estimates: <span class="math inline">\(\alpha = \beta = 0.88\)</span>, <span class="math inline">\(\lambda = 2.25\)</span>, <span class="math inline">\(\gamma^+ = 0.61\)</span>, <span class="math inline">\(\gamma^- = 0.69\)</span>.</p>
-<p>The <code>center_phi</code> normalization subtracts the batch mean <span class="math inline">\(\hat{\varphi}\)</span> to ensure the CPT-induced preference ordering is preserved even in pure domains where all <span class="math inline">\(\hat{\varphi}\)</span> values would otherwise have the same sign.</p>
-</section>
-<section id="technical-challenges" class="level3">
-<h3 class="anchored" data-anchor-id="technical-challenges">Technical challenges</h3>
-<p>Adapting CPT risk evaluation to Reinforcement Learning is challeging even with the great progress made by Lepel &amp; Barakat (2024) and other authors, which is mainly due to the fact that the original CPT theory was developed evaluation of complete outcomes, while RL operates on a per-step basis. Some of the main challenges we faced in this process were:</p>
-<ul>
-<li>The value function in CPT is not additive, which limits our ability to use the Bellman equation and other RL techniques.</li>
-<li>The probability distortions requires us to know (or approximate) the explicit outcome distribution, which requires additional work and approximations.</li>
-<li>In CPT-PG we broadcast the CPT-distorted return to all steps in the episode, making it harder to learn and blurring the credit assignment for important decisions.</li>
-<li>It’s not always clear how multiple different factors in a sequential decision making and learning scenario interact and what the final risk attitude will be.</li>
-<li>Most of the experiments we wanted to run required changes to the original cliff walking environment, including adding wind, changing the reward structure, and changing the grid size. In mostly positive domains, the discounted factor was specially important to create a balance between risky and safe prospects.</li>
-</ul>
-</section>
-<section id="results" class="level3">
-<h3 class="anchored" data-anchor-id="results">Results</h3>
-<p>The three experiments show significant behavioral shifts in the directions predicted by CPT. Each agent was trained across multiple seeds and evaluated over 20 episodes per seed.</p>
-<p><strong>Experiment 1 - The Certainty Effect</strong>: REINFORCE locks onto the riskiest path (Path 1 = 100%). CPT-PG shifts toward safety (Path 2 = 89%). Mann-Whitney <em>p</em> = 0.020, Cohen’s <em>d</em> = 16.7.</p>
-<div id="fig-exp1" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-exp1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/exp1_path_distribution.png" class="img-fluid figure-img">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exp1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Path distribution for Experiment 1
-</figcaption>
-</figure>
-</div>
-<p><strong>Experiment 2 - The Gamble</strong>: REINFORCE always plays safe (Path 2 = 100%). CPT-PG gambles on the risky path 28% of the time (Path 1 = 28%, Path 2 = 72%). <em>t</em>-test <em>p</em> = 0.000001, Cohen’s <em>d</em> = 4.04.</p>
-<div id="fig-exp2" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-exp2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/exp3_path_distribution.png" class="img-fluid figure-img">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exp2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Path distribution for Experiment 2
-</figcaption>
-</figure>
-</div>
-<p><strong>Experiment 3 - The Insurance Policy</strong>: REINFORCE favors the moderate path (Path 2 = 57%). CPT-PG with <span class="math inline">\(\lambda = 1.0\)</span> shifts toward the safest path (Path 3 = 58%). Mann-Whitney <em>p</em> = 0.009, Cohen’s <em>d</em> = 1.07. Adding loss aversion (<span class="math inline">\(\lambda = 2.25\)</span>) amplifies the shift dramatically (Path 3 = 79%). CPT(<span class="math inline">\(\lambda\)</span>=1.0) vs CPT(<span class="math inline">\(\lambda\)</span>=2.25): <em>p</em> = 0.005, <em>d</em> = 1.18. Full CPT vs REINFORCE: <em>p</em> = 7.4 <span class="math inline">\(\times\)</span> 10<sup>-6</sup>, <em>d</em> = 2.38.</p>
-<div id="fig-exp3a" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-exp3a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/exp4_path_distribution.png" class="img-fluid figure-img">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exp3a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Path distribution without loss aversion (<span class="math inline">\(\lambda\)</span>=1.0)
-</figcaption>
-</figure>
-</div>
-<div id="fig-exp3b" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-exp3b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/exp5_path_distribution.png" class="img-fluid figure-img">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exp3b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Path distribution with loss aversion (<span class="math inline">\(\lambda\)</span>=2.25)
-</figcaption>
-</figure>
-</div>
-</section>
-</section>
-<section id="conclusions" class="level2">
-<h2 class="anchored" data-anchor-id="conclusions">Conclusions</h2>
-<p>AI agents learn to behave in a different way than humans do, which is likely to generate difference in some of the decisions they make. Even large post trained language models are aligned to be useful assistants, which differs from humans expected behavior and goals. In the experiments we can see a few examples of how those differences manifest themselves in toy risk environments. It’s pretty plausible that these are also manifesting in more diffuse and important decisions every day as we relegate more work to AI agents, which is why this is an important topic to explore.</p>
-<p>However, the limited scope of Cumulative Prospect Theory, and the challenges of adapting it to Reinforcement Learning may not make it the better fit at the moment to map AI decision making to human expected behavior. Other interesting work like https://arxiv.org/abs/2602.03545 and https://huggingface.co/papers/2602.13949 is definitely worth exploring.</p>
-<p>The code for all experiments is available at https://github.com/santiagomvc/ai-behavior-under-risk.</p>
-</section>
-<section id="references" class="level2">
-<h2 class="anchored" data-anchor-id="references">References</h2>
-<ul>
-<li>Tversky, A., &amp; Kahneman, D. (1992). Advances in prospect theory: Cumulative representation of uncertainty. <em>Journal of Risk and Uncertainty</em>, 5(4), 297-323.</li>
-<li>Kahneman, D., &amp; Tversky, A. (1979). Prospect theory: An analysis of decision under risk. <em>Econometrica</em>, 47(2), 263-292.</li>
-<li>Lepel, T., &amp; Barakat, A. (2024). CPT-PG: Cumulative Prospect Theory in Policy Gradient. <em>arXiv:2410.02605</em>.</li>
-<li>Williams, R. J. (1992). Simple statistical gradient-following algorithms for connectionist reinforcement learning. <em>Machine Learning</em>, 8(3), 229-256.</li>
-</ul>
+<p>Though both perspectives are partly true and the split has existed for a while, I have seen the component approach grow as the primary focus in multiple companies.</p>
+<p>That’s the wrong approach in my experience. Connecting a closed Language Model API to a chat UI template usually ends in unhappy customers. Making it useful starts with open questions: how do we include our own data, which parts of it do we need, why do customers not read our outputs.</p>
+<p>Let’s create a simple policy analysis bot that track bills based on your feedback. The simple approach is to ask the customer a question, pass the user answer to the llm and ask him to a set of bills to track.</p>
+<p>These questions are open and specific to each business and its customers, so fixed rules are not enough. We are back to experimentation: error analysis over tool calls, metrics for unstructured outputs, A/B tests between approaches, and feedback loops for continued improvement and learning.</p>
+<p>A day may come when experimentation is not valuable to AI Engineering, but it’s not this day.</p>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
