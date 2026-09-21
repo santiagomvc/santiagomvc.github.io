@@ -1,5 +1,5 @@
 ---
-title: "SOP Recovery using Continual Harness Learning"
+title: "Standard Operating Procedure Recovery using Continual Harness Learning"
 description: "Learning implicit SOP rules in the regulatory domain by continual harness iteration"
 image: "thumbnail.png"
 categories: [llm, agents, evals, regtech]
