@@ -4,35 +4,12 @@ description: "Learning implicit SOP rules in the regulatory domain by continual 
 image: "thumbnail.png"
 categories: [llm, agents, evals, regtech]
 author: "Santiago Velez"
-date: "09/19/2026"
+date: "09/21/2026"
+date-modified: "09/21/2026"
 draft: true
 css: styles.css
 code-overflow: wrap
 ---
-
-<!--
-Numbers quoted in the prose, each with its source. Tables, charts and snippets are
-generated from final_run_data/ and the benchmark source by report/build.py and are not
-listed here.
-
-  37,073 documents; 305 dropped; train 17,897 / dev 50 / test 11,160 ... README.md
-  4 CFR titles, 9 agencies; judge mix 40/40/20; agent sonnet-5 medium, 20-call cap;
-  learner opus-5, window 50, 5 edits ................................ config.py, learner/propose.py
-  run 01: 44% -> 92% (peak 94% at v2); H2, H3 100% from v1; H1 60-70%; v1 436 words, 3 edits ... summary.csv, 01/sop/v1.meta.json
-  v0 exact 20% in runs 02-06; run 02: 20/18/20/20/20; H1-H3 at v4 90/100/100 ... summary.csv 02-*
-  40 of 50 rejects were count rejects, 15 had nothing else wrong; 5 exemplars .... learner/propose.py
-  forced 0 of 16, unforced 5 of 6; 16,000 vs 8,000 tokens ........... config.py, learner/propose.py
-  run 03: exact 20/90/92/98/100, counts 100% from v1, ceiling 100 .... summary.csv 03-*
-  runs 03, 04, 06 wrote [A-Za-z]+ at v1 ............................... */sop/v1.md
-  first edit matched gold in 4 of 5 unforced runs (03, 04, 06, 07 yes; 05 no) ... Table 3, curve.txt
-  run 04 sentence 40/62/84/98/98; v3 exact 96% vs ceiling 86% ........ summary.csv 04-*
-  questions bought 04: 3, 05: 3, 06: 4 ................................ */sop/v*.meta.json oracle_calls
-  ceiling sentence 86/82/82 in runs 04/05/06 .......................... summary.csv
-  run 06 v4 603 words, 86%, 79.0% penalized; run 04 v4 1,060 words, 94%;
-  94 - 0.08*(1060/311-1)^2 = 47.6; ceiling 970 words, 46.1% ........... summary.csv, arithmetic
-  run 05 applied 2/3/2/3 of 4/5/4/5; v4 34%, counts 40% ............... 05/sop/v*.meta.json, summary.csv
-  judge kinds 7; oracle predicates ...................................... judge.py KINDS, oracle.py
--->
 
 Written Standard Operating Procedures (SOP) rarely describe a process in enough detail to reproduce it exactly. Humans and agents fill the gaps, which creates unexpected behavior, especially where verification is weak, as in regulation. In this post we define a regulatory standard procedure, and use continual learning to help a learning agent recover parts of it from an incomplete state.
 
@@ -42,9 +19,9 @@ This post was written with the help of Claude Fable 5.1.
 
 ## Business problem, data, and learning loop
 
-### The regtriage problem
+### The RegTriage problem
 
-A company's compliance team reads Federal Register documents and decides whether it applies to the company, what obligation it creates, and what to do depending on the situation. An analyst follows a standard operating procedure (SOP); a senior reviewer corrects the records. The reviewer's corrections are the only training signal, and the procedure is what should improve. The benchmark reproduces this for Acme Pay, a fictional payments fintech with a bank charter.
+A company's compliance team reads Federal Register documents and decides whether each applies to the company, what obligation it creates, and what to do depending on the situation. An analyst follows a standard operating procedure (SOP); a senior reviewer corrects the records. The reviewer's corrections are the only training signal, and the procedure is what should improve. The benchmark reproduces this for Acme Pay, a fictional payments fintech with a bank charter.
 
 ### Data
 
@@ -108,7 +85,7 @@ The learner's v4 SOP recovers the three rules as overrides on the classification
 
 ## Increasing complexity and regularization
 
-Since the hidden SOP rules were relatively easy to learn, we expanded on two different avenues, making new harder tasks and adding constrains to the learning process.
+Since the hidden SOP rules were relatively easy to learn, we expanded on two different avenues, making new harder tasks and adding constraints to the learning process.
 
 {{< include _tables/t2.md >}}
 
@@ -222,15 +199,15 @@ Defining the problem and building the training loop was almost half a day and pr
 
 ### Relation between different SOPs tasks and general performance
 
-Despite the simplicity of H4 for humans and Language Models alike, the inclusion of the task reduced performance to zero in the first runs and took some time to fix. The reasons are two fold.
+Despite the simplicity of H4 for humans and Language Models alike, the inclusion of the task reduced performance to zero in the first runs and took some time to fix. The reasons are twofold.
 
-Since our initial hidden tasks were discovered with relative ease, the initial learner was a single model call with required structured response. However, Opus 5 does not think before calling when a tool is forced. On the same prompt, a forced call to `propose_edits` used 0 thinking tokens and an unforced one used 173. Anthropic's documentation explains why, specifically [Define tools: forcing tool use](https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools#forcing-tool-use) and [Thinking: response prefill and forced tool use](https://platform.claude.com/docs/en/build-with-claude/thinking#response-prefill-and-forced-tool-use). The Define tools page also notes that "testing has shown that this should not reduce performance"; on H4 it did. As a consequence, our learner lacked the reasoning ability to state the simple counting rule the task required. This problem was confounded by the learner focus only on fixing the new H4 problems, which in the first runs meant that simple rules learned in previous episodes were not found anymore. We decided to add a single turn auto tool selection to our learner and to group the feedback based on the specific task it was trying to fix, which helped significantly on the H4 task.
+Since our initial hidden tasks were discovered with relative ease, the initial learner was a single model call with required structured response. However, Opus 5 does not think before calling when a tool is forced. On the same prompt, a forced call to `propose_edits` used 0 thinking tokens and an unforced one used 173. Anthropic's documentation explains why, specifically [Define tools: forcing tool use](https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools#forcing-tool-use) and [Thinking: response prefill and forced tool use](https://platform.claude.com/docs/en/build-with-claude/thinking#response-prefill-and-forced-tool-use). The Define tools page also notes that "testing has shown that this should not reduce performance"; on H4 it did. As a consequence, our learner lacked the reasoning ability to state the simple counting rule the task required. This problem was compounded by the learner focus only on fixing the new H4 problems, which in the first runs meant that simple rules learned in previous episodes were not found anymore. We decided to add a single turn auto tool selection to our learner and to group the feedback based on the specific task it was trying to fix, which helped significantly on the H4 task.
 
 We also saw an interesting change when we enabled the H5 task. Since the learner should be able to choose if it asks a question or not, an additional auto tool step was added, which improved the learner reasoning abilities in other unrelated tasks.
 
 ### SOP Regularization
 
-Though experiments were limited, it's encouraging to see the results and metrics for the length penalty experiment, which reached 86% exact match against the unregularized experiment's 94% with 43% fewer words. Though some of this is format removal, there are significant changes in how the SOPs are represented, as it can be seen in the examples above. It was also interesting that this specific approach didn't present the regression on the H1 task that was visible in the unregularized experiments after multiple iterations.
+It's encouraging to see the results and metrics for the length penalty experiment, which reached 86% exact match against the unregularized experiment's 94% with 43% fewer words. Though some of this is format removal, there are significant changes in how the SOPs are represented, as can be seen in the examples above. It was also interesting that this specific approach didn't present the regression on the H1 task that was visible in the unregularized experiments after multiple iterations.
 
 ### Open research areas
 
@@ -252,13 +229,13 @@ Here's a final more subjective note on building it.
 
 ### Claude Code and Opus
 
-Not having Fable 5.1 was a significant drag for this project, which was managed in a way with large Opus 5 capacity. The main problem with Opus 5 as a coding agent came in the beginning by giving it some of the liberty I tend to have with Fable. As a consequence, the first project draft with Claude had dozens of files and thousands of unnecessary lines of code.
+I built this project with Opus 5 and not with Fable 5.1. The main problem with Opus 5 as a coding agent came in the beginning by giving it some of the liberty I tend to have with Fable. As a consequence, the first project draft with Claude had dozens of files and thousands of unnecessary lines of code.
 
 As a result, after starting from scratch, Opus 5 was able to help with the work but with a much more limited decision scope, requiring my help to build specific rules and files, and especially by reducing complexity and keeping the project in a compact and understandable state. Fable 5.1 did help with this blogpost.
 
 ### Version control and coding agents
 
-After the initial project setup was completed, version control was included to keep track and simplify agentic code review. This was fundamental for iterating while keeping project stability and comparable results. However it brought some negative consequences in the development speed, given how new is the project and how much the ideas proposed affected the same paths of code. Though stacked diffs were used when possible, the time between merging and running comparable experiments on a similar setup took a toll that impacted the number of experiments available.
+After the initial project setup was completed, version control was included to keep track and simplify agentic code review. This was fundamental for iterating while keeping project stability and comparable results. However it brought some negative consequences in the development speed, given how new the project is and how much the ideas proposed affected the same paths of code.
 
 ## Final thoughts
 
