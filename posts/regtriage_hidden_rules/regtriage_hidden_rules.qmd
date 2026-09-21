@@ -15,16 +15,14 @@ Numbers quoted in the prose, each with its source. Tables, charts and snippets a
 generated from final_run_data/ and the benchmark source by report/build.py and are not
 listed here.
 
-  37,073 documents; 305 dropped; train 17,897 / dev 50 / test 11,160 ... regbench/regtriage/README.md
+  37,073 documents; 305 dropped; train 17,897 / dev 50 / test 11,160 ... README.md
   4 CFR titles, 9 agencies; judge mix 40/40/20; agent sonnet-5 medium, 20-call cap;
-  learner opus-5, window 50, 5 edits ................................ regbench/regtriage/config.py, learner/propose.py
+  learner opus-5, window 50, 5 edits ................................ config.py, learner/propose.py
   run 01: 44% -> 92% (peak 94% at v2); H2, H3 100% from v1; H1 60-70%; v1 436 words, 3 edits ... summary.csv, 01/sop/v1.meta.json
-  $115.67 over 3,000 episodes; $16.63 in two killed partial runs .... final_run_data/README.md, budget.json
   v0 exact 20% in runs 02-06; run 02: 20/18/20/20/20; H1-H3 at v4 90/100/100 ... summary.csv 02-*
   40 of 50 rejects were count rejects, 15 had nothing else wrong; 5 exemplars .... learner/propose.py
   forced 0 of 16, unforced 5 of 6; 16,000 vs 8,000 tokens ........... config.py, learner/propose.py
   run 03: exact 20/90/92/98/100, counts 100% from v1, ceiling 100 .... summary.csv 03-*
-  run 07 (unpaid-turns branch, not a matrix row): exact 20/96/94/94/100 ... 07-think-h1234-unpaid-turns/curve.txt
   runs 03, 04, 06 wrote [A-Za-z]+ at v1 ............................... */sop/v1.md
   first edit matched gold in 4 of 5 unforced runs (03, 04, 06, 07 yes; 05 no) ... Table 3, curve.txt
   run 04 sentence 40/62/84/98/98; v3 exact 96% vs ceiling 86% ........ summary.csv 04-*
@@ -34,7 +32,6 @@ listed here.
   94 - 0.08*(1060/311-1)^2 = 47.6; ceiling 970 words, 46.1% ........... summary.csv, arithmetic
   run 05 applied 2/3/2/3 of 4/5/4/5; v4 34%, counts 40% ............... 05/sop/v*.meta.json, summary.csv
   judge kinds 7; oracle predicates ...................................... judge.py KINDS, oracle.py
-  12 PRs merged 2026-09-12 ............................................ git log
 -->
 
 Written Standard Operating Procedures (SOP) rarely describe a process in enough detail to reproduce it exactly. Humans and agents fill the gaps, which creates unexpected behavior, especially where verification is weak, as in regulation. In this post we define a regulatory standard procedure, and use continual learning to help a learning agent recover parts of it from an incomplete state.
@@ -45,7 +42,7 @@ This post was written with the help of Claude Fable 5.1.
 
 ## Business problem, data, and learning loop
 
-### The RegIntel problem
+### The regtriage problem
 
 A company's compliance team reads Federal Register documents and decides whether it applies to the company, what obligation it creates, and what to do depending on the situation. An analyst follows a standard operating procedure (SOP); a senior reviewer corrects the records. The reviewer's corrections are the only training signal, and the procedure is what should improve. The benchmark reproduces this for Acme Pay, a fictional payments fintech with a bank charter.
 
@@ -55,7 +52,7 @@ A company's compliance team reads Federal Register documents and decides whether
 
 ### Architecture
 
-{{< include _diagrams/day-one.qmd >}}
+{{< include _diagrams/first-phase.qmd >}}
 
 {{< include _tables/strip.md >}}
 
@@ -65,7 +62,7 @@ A company's compliance team reads Federal Register documents and decides whether
 
 Both files are procedures an analyst can follow top to bottom. The initial `v0.md` is 243 words in four steps: decide relevance from the company profile, classify by the SECTION line, set the register action from the class with a null target, submit. The oracle file is the same text plus three steps between classification and submit: Step 4 decides whether the document is a correction (the ACTION line or title says so, or the document number starts with `C1-`) and links it to the entry it corrects, or leaves the target null when there is none; Step 5 calls `query_register` with each RIN and turns a tracked rulemaking into an `update`; Step 6 turns a rule whose DATES text still invites comment into a `monitor`. Those three steps are what "hidden" means: the agent is graded on them and never reads them.
 
-{{< include _snippets/sop-day-one.qmd >}}
+{{< include _snippets/sop-first-phase.qmd >}}
 
 ### Judge and oracle
 
@@ -115,11 +112,11 @@ Since the hidden SOP rules were relatively easy to learn, we expanded on two dif
 
 {{< include _tables/t2.md >}}
 
-{{< include _diagrams/day-two.qmd >}}
+{{< include _diagrams/second-phase.qmd >}}
 
 `v0.md` grows to 311 words with two stated tasks, count the regulation text and write one sentence, and still says nothing about how to count or what a right sentence is; `v_oracle.md` grows to 970 words and states both.
 
-{{< include _snippets/sop-day-two.qmd >}}
+{{< include _snippets/sop-second-phase.qmd >}}
 
 ### A deterministic rule the agent must compute using python (H4)
 
@@ -191,7 +188,7 @@ Run 06's v4 is 603 words: 86% exact, 79.0% penalized. Run 04, the same settings 
 
 #### Description
 
-Proposed changes in the day one version are absolute, which lacks the gradual improvement present in optimization techniques like gradient descent. Inspired by this need, we use `--lr` as the share of proposed edits a round applies. Run 05 uses 0.5; every other run applies every edit.
+Proposed changes in the first-phase version are absolute, which lacks the gradual improvement present in optimization techniques like gradient descent. Inspired by this need, we use `--lr` as the share of proposed edits a round applies. Run 05 uses 0.5; every other run applies every edit.
 
 Mechanically, `sample_edits` gives each proposed edit a weight equal to the number of episode ids it cites (one when it cites none), draws ⌈lr × proposed⌉ of them without replacement with probability proportional to weight, and applies the drawn edits in their original order. Because edits address the original line numbers, dropping one cannot shift the others (@tbl-t6).
 
@@ -221,7 +218,7 @@ Run 05 applied 2, 3, 2 and 3 of the 4, 5, 4 and 5 edits proposed. H2 and H3 stil
 
 ### Continual learning problem definition
 
-Defining the problem and building the training loop was almost half a day and probably the most important part of the work. Defining the right problem for a continual learning approach, downloading and generating the data, writing complete and partial SOPs, shaping the outputs of the oracle and judge, and building the regulatory and learning agents was a thorough problem with hundreds of details that could doom the process without even starting. Though some changes had to be done during experimentation, having a fixed setup increased the speed of development and experimentation.
+Defining the problem and building the training loop was almost half a day and probably the most important part of the project. Defining the right problem for a continual learning approach, downloading and generating the data, writing complete and partial SOPs, shaping the outputs of the oracle and judge, and building the regulatory and learning agents was a thorough problem with hundreds of details that could doom the process without even starting. Though some changes had to be done during experimentation, having a fixed setup increased the speed of development and experimentation.
 
 ### Relation between different SOPs tasks and general performance
 
@@ -247,15 +244,15 @@ Here are some interesting ideas that I would love to explore:
 
 ### Additional ablations
 
-Given the limited time and cost constraints, only a few iterations were able to be completed, especially since the addition of H5 increased both time and cost. In addition to increasing the sample data and trying different seeds and models, it would be valuable to experiment on the learner sequential shape and different values of k and lr.
+Given the time and budget I set for this project, only a few iterations were able to be completed, especially since the addition of H5 increased both time and cost. In addition to increasing the sample data and trying different seeds and models, it would be valuable to experiment on the learner sequential shape and different values of k and lr.
 
 ## Development experience
 
-Here's a final more subjective note on the building process.
+Here's a final more subjective note on building it.
 
 ### Claude Code and Opus
 
-Not having Fable 5.1 was a significant drag for this process, which was managed in a way with large Opus 5 capacity. The main problem with Opus 5 as a coding agent came in the beginning by giving it some of the liberty I tend to have with Fable. As a consequence, the first project draft with Claude had dozens of files and thousands of unnecessary lines of code.
+Not having Fable 5.1 was a significant drag for this project, which was managed in a way with large Opus 5 capacity. The main problem with Opus 5 as a coding agent came in the beginning by giving it some of the liberty I tend to have with Fable. As a consequence, the first project draft with Claude had dozens of files and thousands of unnecessary lines of code.
 
 As a result, after starting from scratch, Opus 5 was able to help with the work but with a much more limited decision scope, requiring my help to build specific rules and files, and especially by reducing complexity and keeping the project in a compact and understandable state. Fable 5.1 did help with this blogpost.
 

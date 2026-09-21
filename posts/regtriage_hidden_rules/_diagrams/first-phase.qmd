@@ -1,9 +1,9 @@
-::: {#fig-loop-day-one}
+::: {#fig-loop-first-phase}
 
 ```{=html}
 <div class="scroller">
 <svg class="diagram" viewBox="0 0 720 620" role="img"
-     aria-label="The day-one loop: the procedure tells the agent three rules; the agent triages an episode and submits a four-field answer; the judge diffs it against the oracle, which applies three more hidden rules; the feedback goes to the learner, which writes the next procedure.">
+     aria-label="The first-phase loop: the procedure tells the agent three rules; the agent triages an episode and submits a four-field answer; the judge diffs it against the oracle, which applies three more hidden rules; the feedback goes to the learner, which writes the next procedure.">
   <defs>
     <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>

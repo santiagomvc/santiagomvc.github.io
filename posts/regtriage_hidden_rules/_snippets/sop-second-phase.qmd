@@ -1,4 +1,4 @@
-::: {.callout-note collapse="true" title="sop/v0.md on day two (311 words; Steps 4 and 5 are new)"}
+::: {.callout-note collapse="true" title="sop/v0.md in the second phase (311 words; Steps 4 and 5 are new)"}
 ````markdown
 # Regulatory triage procedure
 
@@ -70,7 +70,7 @@ Call `submit_triage` once with the complete record. That ends the task.
 ````
 
 :::
-::: {.callout-note collapse="true" title="sop/v_oracle.md on day two (970 words; Steps 7 and 8 state H4 and H5)"}
+::: {.callout-note collapse="true" title="sop/v_oracle.md in the second phase (970 words; Steps 7 and 8 state H4 and H5)"}
 ````markdown
 # Regulatory triage procedure
 
